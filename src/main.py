@@ -5,6 +5,7 @@ import sys
 import time
 
 import bno055
+import config
 import machine
 import network
 from config import MQTT_CONFIG
@@ -28,6 +29,8 @@ def web_page():
   h1{color: #0F3376; padding: 2vh;}p{font-size: 1.5rem;}.button{display: inline-block; background-color: #e7bd3b; border: none;
   border-radius: 4px; color: white; padding: 16px 40px; text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}
   .button2{background-color: #4286f4;}</style></head><body> <h1>ESP BO055 IMU</h1>"""
+    if mqtt:
+        html += "<p>Connected to mqtt://" + str(mqtt_host) + "</p>"
     if imu:
         html += (
             "<p>Temperature: <strong>"
@@ -51,6 +54,30 @@ def web_page():
     return html
 
 
+mqtt = None
+
+
+def mqtt_connect():
+    global mqtt
+    if not MQTT_CONFIG:
+        return
+    mqtt_host = MQTT_CONFIG["host"]
+    mqtt = MQTTClient(
+        machine_id,
+        mqtt_host,
+        port=MQTT_CONFIG["port"],
+        user=MQTT_CONFIG["user"],
+        password=MQTT_CONFIG["password"],
+    )
+    print("Connecting to mqtt://" + str(mqtt_host), end="...")
+    try:
+        mqtt.connect()
+        print("done.")
+        mqtt.publish("imu", json.dumps({"status": "connected"}))
+    except OSError as err:
+        print(err)
+
+
 station = network.WLAN(network.STA_IF)
 if station.isconnected():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -63,59 +90,64 @@ if station.isconnected():
         os.uname().sysname + "-" + "".join("%0X" % n for n in machine.unique_id())
     )
 
-    mqtt_host = MQTT_CONFIG["host"]
-    mqtt = MQTTClient(
-        machine_id,
-        mqtt_host,
-        port=MQTT_CONFIG["port"],
-        user=MQTT_CONFIG["user"],
-        password=MQTT_CONFIG["password"],
-    )
-    print("Connecting to mqtt://" + str(mqtt_host), end="...")
-    mqtt.connect()
-    print("done.")
-    mqtt.publish("imu", json.dumps({"status": "connected"}))
+    mqtt_connect()
 
 
 def publish_sensor_data():
-    data = (
-        {
-            "machine_id": machine_id,
-            "timestamp": time.ticks_ms(),
-            "temperature": imu.temperature(),
-            "accelerometer": imu.accelerometer(),
-            "magnetometer": imu.magnetometer(),
-            "gyroscope": imu.gyroscope(),
-            "euler": imu.euler(),
-        }
-        if imu
-        else {
-            "machine_id": machine_id,
-            "platform": sys.platform,
-            "sysname": os.uname().sysname,
-            "nodename": os.uname().nodename,
-            "machine": os.uname().machine,
-            "machine_freq": machine.freq(),
-            "timestamp": time.ticks_ms(),
-        }
-    )
+    """Publish the sensor data. If no IMU is present, publish the system
+    identification instead.
+
+    If there's no MQTT connection and config.SEND_SERIAL_SENSOR_DATA is set,
+    send the data on the serial port.
+    """
     if mqtt:
-        print("publishing", data)
+        data = (
+            {
+                "machine_id": machine_id,
+                "timestamp": time.ticks_ms(),
+                "temperature": imu.temperature(),
+                "accelerometer": imu.accelerometer(),
+                "magnetometer": imu.magnetometer(),
+                "gyroscope": imu.gyroscope(),
+                "euler": imu.euler(),
+            }
+            if imu
+            else {
+                "machine_id": machine_id,
+                "platform": sys.platform,
+                "sysname": os.uname().sysname,
+                "nodename": os.uname().nodename,
+                "machine": os.uname().machine,
+                "machine_freq": machine.freq(),
+                "timestamp": time.ticks_ms(),
+            }
+        )
         mqtt.publish("imu", json.dumps(data))
-
-
-publish_sensor_data()
+    elif config.SEND_SERIAL_SENSOR_DATA:
+        data = imu.accelerometer() if imu else (1.1, 2.2, 3.3)
+        print(";".join(k + "=" + str(v) for k, v in zip(["ax", "ay", "az"], data)))
 
 
 while True:
-    conn, addr = sock.accept()
+    # Publish the sensor data each time through the loop.
+    # If HTTPS_SERVER is set, this publishes the data once per web request.
+    # Else, it publishes it in a tight loop.
     publish_sensor_data()
-    print("Received HTTP request from", addr)
-    request = conn.recv(1024)
-    print("Content =", request)
-    response = web_page()
-    conn.send(b"HTTP/1.1 200 OK\n")
-    conn.send(b"Content-Type: text/html\n")
-    conn.send(b"Connection: close\n\n")
-    conn.sendall(response)
-    conn.close()
+    if not config.HTTPS_SERVER:
+        continue
+
+    try:
+        conn, addr = sock.accept()
+        connected = True
+    except OSError:  # EAGAIN
+        connected = False
+    if connected:
+        print("Received HTTP request from", addr)
+        request = conn.recv(1024)
+        # print("Content =", request)
+        response = web_page()
+        conn.send(b"HTTP/1.1 200 OK\n")
+        conn.send(b"Content-Type: text/html\n")
+        conn.send(b"Connection: close\n\n")
+        conn.sendall(response)
+        conn.close()

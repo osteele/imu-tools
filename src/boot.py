@@ -18,7 +18,7 @@ station = network.WLAN(network.STA_IF)
 def wifi_connect():
     station.active(True)
     if station.isconnected():
-        print("Connected to", station.config("essid"))
+        print('Connected to WiFi network "' + station.config("essid") + '"')
     else:
         ssids = [service[0].decode() for service in station.scan()]
         known_ssids = [ssid for ssid in ssids if ssid in ssid_passwords]

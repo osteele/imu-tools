@@ -8,7 +8,7 @@ import bno055
 import config
 import machine
 import network
-from config import MQTT_CONFIG
+from config import config
 from machine import I2C, Pin
 from umqtt.simple import MQTTClient
 

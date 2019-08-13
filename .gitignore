@@ -1,3 +1,2 @@
-
+scripts/config.py
 src/config.py
-test/mqtt_config.py

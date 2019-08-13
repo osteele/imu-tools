@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+import json
+
+import paho.mqtt.client as mqtt
+
+import config as MQTT_CONFIG
+
+
+# Called on a CONNACK response from the server.
+def on_connect(client, userdata, flags, rc):
+    print(f"Connected with result code {rc}")
+    client.subscribe("#")
+
+
+# Called when a PUBLISH message is received from the server.
+def on_message(client, userdata, msg):
+    data = msg.payload
+    try:
+        data = data.decode()
+    except UnicodeError:
+        pass
+    try:
+        data = json.loads(data)
+    except json.JSONDecodeError:
+        pass
+    except Exception as e:
+        print("error", e)
+    print(f"Message: topic={msg.topic} payload={data}")
+
+
+def on_subscribe(mqttc, obj, mid, granted_qos):
+    print(f"Subscribed: id={mid} qos={list(granted_qos)}")
+
+
+client = mqtt.Client()
+client.on_connect = on_connect
+client.on_message = on_message
+client.on_subscribe = on_subscribe
+client.on_log = True
+
+if MQTT_CONFIG.user:
+    client.username_pw_set(MQTT_CONFIG.user, password=MQTT_CONFIG.password)
+client.connect(MQTT_CONFIG.host, MQTT_CONFIG.port)
+
+try:
+    client.loop_forever()
+except KeyboardInterrupt:
+    pass

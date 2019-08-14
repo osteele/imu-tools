@@ -3,35 +3,40 @@
 MicroPython code that runs on an ESP connected to a BNO055 IMU, that relays the
 sensor readings to a web page, an MQTT connection, or the serial port.
 
-The serial port format is compatible with osteele/microbit-sensor-relay.
+The serial port format is compatible with
+[osteele/microbit-sensor-relay](https://github.com/osteele/microbit-sensor-relay).
 
-## Installation and Development
+## Installation
 
-- Install the SLAB_USBtoUART drivers.
+1. Install the [SLAB_USBtoUART
+drivers](https://rehmann.co/blog/drivers-for-slab_usbtouart/) and rshell: `pip
+install rshell`.
 
-`screen` connects your terminal to a remote shell or REPL (like MicroPython) running on the serial port.
+2. Copy `src/config.py.tmpl` to `src/config.py`, and fill in the values.
 
-- `screen /dev/tty.SLAB_USBtoUART 115200` connects to a REPL running on an ESP.  (Different devices uses different ports.)
-- To quit `screen`, press ⌃A+k+y . This leaves my terminal messed up where programs that print line feeds just do the line feed w/out the carriage return. The `reset` command fixes this.
+3. Download the sources:
+    ```shell
+    rshell /dev/tty.SLAB_USBtoUART 115200
+    sync -v src /pyboard
+    ```
 
-Using the REPL:
+  `rshell` will hang if the board is already running a loop. See the MicroPython
+  Development notes for instructions about what to do in this case.
 
-- ⌃D reboots the board. This will run `boot.py` and then `main.py`. If one of these files contains an infinite loop (for example, to run a web server or to continuously print or upload sensor values), you won't see the `>>>` prompt again. In this case, press ⌃C to get back to the prompt.
+4. Now reboot the board. From `rshell`, enter `repl` and then `⌃D`. Or just press
+   the button. (The latter may be necessary to get the board to re-scan for WiFi
+   networks.)
 
-`ampy` is a command-line tool that manipulates the file system.
+[MicroPython Development
+Notes](https://paper.dropbox.com/doc/MicroPython-Development--Ai1pmnXzhBdkxZ6SuEPMTDiDAg-sAf2oqgmH5yIbmx27kZqs)
+contains notes on developing MicroPython on the ESP.
 
-- Install `pip3 install -u adafruit-ampy`
-- `ampy -p /dev/tty.SLAB_USBtoUART put file.py` copies a file from the host current directory to an ESP.
+## Interactive Testing
 
-`rshell` opens an interactive shell with commands that support the functionality of both `screen` and `ampy`.
-
-- Install `pip3 install -u adafruit-ampy`
-- `rshell -p /dev/tty.SLAB_USBtoUART` creates an rshell connection.
-    - `rshell` may be unable to connect, if the MCU is running a loop that doesn’t return to the MicroPython prompt. (I think it hangs at `Testing if ubinascii.unhexlify exists`.) In this case, use `screen` (above) to connect, press ⌃C to quit the MicroPython prompt (you should then see the `>>>` prompt), quit `screen`, and try `rshell` again.
-- While running `rshell`, you have access to these commands:
-    - `repl` opens an Python REPL.
-    - `ls /pyboard` lists installed files.
-    - `rsync . /pyboard` copies new and changed files from the current host directory to the MCU.
+1. Install `paho-mqtt`: `pip3 install paho-mqtt`
+2. Copy `scripts/config.py.tmpl` to `scripts/config.py` and fill in the values.
+3. Run `./scripts/mqtt_sub` to run an MQTT client that prints messages to the
+   terminal. Run `./scripts/mqtt_pub` to publish a single message to the server.
 
 ## References
 

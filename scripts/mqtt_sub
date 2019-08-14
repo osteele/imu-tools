@@ -8,8 +8,12 @@ import config as MQTT_CONFIG
 
 # Called on a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
-    print(f"Connected with result code {rc}")
+    print(f"Connected(rc={rc})")
     client.subscribe("#")
+
+
+def on_subscribe(client, userdata, mid, granted_qos):
+    print(f"Subscribed(id={mid} qos={list(granted_qos)})")
 
 
 # Called when a PUBLISH message is received from the server.
@@ -25,11 +29,7 @@ def on_message(client, userdata, msg):
         pass
     except Exception as e:
         print("error", e)
-    print(f"Message: topic={msg.topic} payload={data}")
-
-
-def on_subscribe(mqttc, obj, mid, granted_qos):
-    print(f"Subscribed: id={mid} qos={list(granted_qos)}")
+    print(f"Message(topic={msg.topic}): {data}")
 
 
 client = mqtt.Client()

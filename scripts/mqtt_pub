@@ -7,8 +7,8 @@ import paho.mqtt.publish as publish
 import config as MQTT_CONFIG
 
 
-def on_publish(mqttc, obj, mid):
-    print(f"Published id={mid}")
+def on_publish(client, userdata, mid):
+    print(f"Published(id={mid})")
 
 
 client = mqtt.Client()
@@ -19,5 +19,5 @@ if MQTT_CONFIG.user:
     client.username_pw_set(MQTT_CONFIG.user, password=MQTT_CONFIG.password)
 client.connect(MQTT_CONFIG.host, MQTT_CONFIG.port)
 
-infot = client.publish("imu", payload="mqtt_pub")
-infot.wait_for_publish()
+info = client.publish("imu", payload="sender: mqtt_pub.py")
+info.wait_for_publish()

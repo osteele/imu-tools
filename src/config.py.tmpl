@@ -1,3 +1,4 @@
+# If host is None, the software won't try to connect.
 MQTT_CONFIG = {
     "host": "m10.cloudmqtt.com",
     "port": ...,
@@ -5,7 +6,14 @@ MQTT_CONFIG = {
     "password": "...",
 }
 
-WIFI_NETWORKS = {"home": "...", "Oliver's iPhone": "..."}
+# { ssid_name: password | None }
+WIFI_NETWORKS = {
+    "home": "...",
+    "Oliver's iPhone": "..."
+}
 
+# Send data on the serial port
 SEND_SERIAL_SENSOR_DATA = True
-HTTPS_SERVER = False
+
+# Run on HTTP server
+RUN_RUN_HTTP_SERVER = False

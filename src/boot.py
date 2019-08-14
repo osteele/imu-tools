@@ -27,17 +27,17 @@ def wifi_connect():
             ssid = known_ssids[0]
             password = ssid_passwords[ssid]
             station.connect(ssid, password)
-            print("Connecting to", ssid)
-
-            print(end=".")
+            print('Connecting to WiFi network "' + ssid + '"', end="...")
             while not station.isconnected():
                 utime.sleep_ms(250)
                 print(end=".")
 
             ip_address, subnet_mask, gateway, dns_server = station.ifconfig()
             print("success.\n", "IP address =", ip_address)
-        else:
+        elif ssids:
             print("No known WiFi network in", ssids)
+        else:
+            print("No WiFi networks found")
 
 
 wifi_connect()

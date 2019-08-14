@@ -55,18 +55,6 @@ class BNO055:
         with self.i2c as i2c:
             i2c.write(self.buffer)
 
-    # @property
-    # def mode(self):
-    #     return self._read_register(_MODE_REGISTER)
-
-    # @mode.setter
-    # def mode(self, new_mode):
-    #     self._write_register(_MODE_REGISTER, CONFIG_MODE)  # Empirically necessary
-    #     time.sleep(0.02)  # Datasheet table 3.6
-    #     if new_mode != CONFIG_MODE:
-    #         self._write_register(_MODE_REGISTER, new_mode)
-    #         time.sleep(0.01)  # Table 3.6
-
     def _registers(self, register, struct, value=None, scale=1):
         if value is None:
             size = ustruct.calcsize(struct)

@@ -8,7 +8,7 @@ import bno055
 import config
 import machine
 import network
-from config import config
+from config import MQTT_CONFIG
 from machine import I2C, Pin
 from umqtt.simple import MQTTClient
 
@@ -20,6 +20,10 @@ if 40 in i2c.scan():
     imu.operation_mode(bno055.NDOF_MODE)
 else:
     print("No IMU detected")
+    print("No IMU detected; using dummy data")
+    import bno055_fake
+
+    imu = bno055_fake.BNO055()
 
 
 def web_page():

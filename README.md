@@ -8,11 +8,11 @@ The serial port format is compatible with
 
 ## Installation
 
-1. Install the [SLAB_USBtoUART
-drivers](https://rehmann.co/blog/drivers-for-slab_usbtouart/) and rshell: `pip
-install rshell`.
+1. Install the [SLAB_USBtoUART drivers](https://rehmann.co/blog/drivers-for-slab_usbtouart/) 
 
-2. Copy `src/config.py.tmpl` to `src/config.py`, and fill in the values.
+2. Install `rshell`: `pip install rshell`.
+
+3. Copy `src/config.py.tmpl` to `src/config.py`. Edit the latter file to fill in the values.
 
 3. Download the sources:
     ```shell

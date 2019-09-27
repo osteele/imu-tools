@@ -1,0 +1,17 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[scripts]
+mqtt-pub = "python bin/mqtt-pub"
+mqtt-sub = "python bin/mqtt-sub"
+mqtt-imu-sub = "python bin/mqtt-imu-sub"
+
+[packages]
+paho-mqtt = "*"
+
+[requires]
+python_version = "3.7"

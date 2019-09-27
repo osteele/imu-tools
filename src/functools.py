@@ -7,12 +7,12 @@ def partial(func, *args, **kwargs):
     return _partial
 
 
-def update_wrapper(wrapper, wrapped):
+def update_wrapper(wrapper, _wrapped):
     # Dummy impl
     return wrapper
 
 
-def wraps(wrapped):
+def wraps(_wrapped):
     # Dummy impl
     return lambda x: x
 

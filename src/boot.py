@@ -2,7 +2,6 @@
 #     import usocket as socket
 # except ImportError:
 import gc
-import socket
 
 import esp
 import network
@@ -32,7 +31,7 @@ def wifi_connect():
                 utime.sleep_ms(250)
                 print(end=".")
 
-            ip_address, subnet_mask, gateway, dns_server = station.ifconfig()
+            ip_address, _subnet_mask, _gateway, _dns_server = station.ifconfig()
             print("success.\n", "IP address =", ip_address)
         elif ssids:
             print("No known WiFi network in", ssids)

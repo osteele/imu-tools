@@ -1,11 +1,10 @@
 from functools import partial
 
-from micropython import const
-
 import ustruct
 import utime
+from micropython import const
 
-_CHIP_ID = const(0xa0)
+_CHIP_ID = const(0xA0)
 
 CONFIG_MODE = const(0x00)
 ACCONLY_MODE = const(0x01)
@@ -17,9 +16,9 @@ MAGGYRO_MODE = const(0x06)
 AMG_MODE = const(0x07)
 IMUPLUS_MODE = const(0x08)
 COMPASS_MODE = const(0x09)
-M4G_MODE = const(0x0a)
-NDOF_FMC_OFF_MODE = const(0x0b)
-NDOF_MODE = const(0x0c)
+M4G_MODE = const(0x0A)
+NDOF_FMC_OFF_MODE = const(0x0B)
+NDOF_MODE = const(0x0C)
 
 _POWER_NORMAL = const(0x00)
 _POWER_LOW = const(0x01)
@@ -74,21 +73,21 @@ class BNO055:
         self._registers(register, struct=struct, value=(value,))
 
     _chip_id = partial(_register, register=0x00, value=None)
-    _power_mode = partial(_register, register=0x3e)
-    _system_trigger = partial(_register, register=0x3f)
+    _power_mode = partial(_register, register=0x3E)
+    _system_trigger = partial(_register, register=0x3F)
     _page_id = partial(_register, register=0x07)
-    operation_mode = partial(_register, register=0x3d)
+    operation_mode = partial(_register, register=0x3D)
     temperature = partial(_register, register=0x34, value=None)
     accelerometer = partial(
         _registers, register=0x08, struct="<hhh", value=None, scale=1 / 100
     )
     magnetometer = partial(
-        _registers, register=0x0e, struct="<hhh", value=None, scale=1 / 16
+        _registers, register=0x0E, struct="<hhh", value=None, scale=1 / 16
     )
     gyroscope = partial(
         _registers, register=0x14, struct="<hhh", value=None, scale=1 / 900
     )
-    euler = partial(_registers, register=0x1a, struct="<hhh", value=None, scale=1 / 16)
+    euler = partial(_registers, register=0x1A, struct="<hhh", value=None, scale=1 / 16)
     quaternion = partial(
         _registers, register=0x20, struct="<hhhh", value=None, scale=1 / (1 << 14)
     )
@@ -96,7 +95,7 @@ class BNO055:
         _registers, register=0x28, struct="<hhh", value=None, scale=1 / 100
     )
     gravity = partial(
-        _registers, register=0x2e, struct="<hhh", value=None, scale=1 / 100
+        _registers, register=0x2E, struct="<hhh", value=None, scale=1 / 100
     )
 
     def init(self, mode=NDOF_MODE):

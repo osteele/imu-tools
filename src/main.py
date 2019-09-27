@@ -2,12 +2,12 @@ import json
 import os
 import socket
 import sys
-import time
 
 import bno055
 import config
 import machine
 import network
+import utime as time
 from config import MQTT_CONFIG
 from machine import I2C, Pin
 from umqtt.simple import MQTTClient
@@ -36,6 +36,7 @@ else:
 
 
 def create_web_page_content():
+    # pylint: disable=line-too-long
     html = """<html><head> <title>ESP BO055 IMU</title> <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="refresh" content="1">
   <link rel="icon" href="data:,"> <style>html{font-family: Helvetica; display:inline-block; margin: 0px auto; text-align: center;}
@@ -75,7 +76,7 @@ def start_http_server():
     http_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     http_socket.bind(("", 80))
     http_socket.listen(5)
-    ip_address, subnet_mask, gateway, dns_server = station.ifconfig()
+    ip_address, _subnet_mask, _gateway, _dns_server = station.ifconfig()
     print("Listening on http://" + ip_address)
 
 

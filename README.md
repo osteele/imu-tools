@@ -8,22 +8,23 @@ The serial port format is compatible with
 
 ## Installation
 
-1. Install the [SLAB_USBtoUART drivers](https://rehmann.co/blog/drivers-for-slab_usbtouart/) 
+1. Install the [SLAB_USBtoUART drivers](https://rehmann.co/blog/drivers-for-slab_usbtouart/)
 
 2. Install `rshell`: `pip install rshell`.
 
 3. Copy `src/config.py.tmpl` to `src/config.py`. Edit the latter file to fill in the values.
 
-3. Download the sources:
+4. Download the sources:
+
     ```shell
     rshell /dev/tty.SLAB_USBtoUART 115200
     sync -v src /pyboard
     ```
 
-  `rshell` will hang if the board is already running a loop. See the MicroPython
-  Development notes for instructions about what to do in this case.
+   `rshell` will hang if the board is already running a loop. See the MicroPython
+   Development notes for instructions about what to do in this case.
 
-4. Now reboot the board. From `rshell`, enter `repl` and then `⌃D`. Or just press
+5. Now reboot the board. From `rshell`, enter `repl` and then `⌃D`. Or just press
    the button. (The latter may be necessary to get the board to re-scan for WiFi
    networks.)
 

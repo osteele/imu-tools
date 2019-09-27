@@ -10,15 +10,15 @@ The serial port format is compatible with
 
 1. Install the [SLAB_USBtoUART drivers](https://rehmann.co/blog/drivers-for-slab_usbtouart/)
 
-2. Install `rshell`: `pip install rshell`.
+2. Install `rshell`: `pip3 install rshell`.
 
 3. Copy `src/config.py.tmpl` to `src/config.py`. Edit the latter file to fill in the values.
 
 4. Download the sources:
 
     ```shell
-    rshell /dev/tty.SLAB_USBtoUART 115200
-    sync -v src /pyboard
+    rshell -p /dev/tty.SLAB_USBtoUART -b 115200
+    rsync src /pyboard
     ```
 
    `rshell` will hang if the board is already running a loop. See the MicroPython

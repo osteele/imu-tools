@@ -1,3 +1,5 @@
 [MASTER]
 init-hook='import sys; sys.path.insert(0,"stubs");'
-disable=invalid-name, missing-class-docstring, missing-docstring, missing-function-docstring, missing-module-docstring, ungrouped-imports
+disable=invalid-name,
+    missing-class-docstring, missing-docstring, missing-function-docstring,
+    missing-module-docstring, ungrouped-imports

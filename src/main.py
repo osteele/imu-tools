@@ -4,6 +4,7 @@ import socket
 import sys
 
 import bno055
+import bno055_fake
 import config
 import machine
 import network
@@ -20,15 +21,19 @@ machine_id = os.uname().sysname + "-" + "".join("%0X" % n for n in machine.uniqu
 
 scl, sda = (Pin(22), Pin(23)) if sys.platform == "esp32" else (Pin(5), Pin(4))
 i2c = I2C(scl=scl, sda=sda, timeout=1000)  # HUZZAH8266
-imu = None
-if 40 in i2c.scan():
-    imu = bno055.BNO055(i2c)
-    imu.operation_mode(bno055.NDOF_MODE)
-else:
-    print("No IMU detected; using dummy data")
-    import bno055_fake
 
-    imu = bno055_fake.BNO055()
+
+def get_imu():
+    if 40 in i2c.scan():
+        imu = bno055.BNO055(i2c)
+        imu.operation_mode(bno055.NDOF_MODE)
+        return imu
+    else:
+        print("No IMU detected; using dummy data")
+        return bno055_fake.BNO055()
+
+
+imu = get_imu()
 
 #
 # Web Server

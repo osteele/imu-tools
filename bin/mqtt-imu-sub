@@ -2,40 +2,37 @@
 import json
 import time
 
-import paho.mqtt.client as mqtt
-
 import config as MQTT_CONFIG
+import paho.mqtt.client as mqtt
 
 
 # The callback for when the client receives a CONNACK response from the server.
-def on_connect(client, userdata, flags, rc):
+def on_connect(client, userdata, _flags, rc):
     print(f"Connected to {userdata} with result code {rc}")
     client.subscribe("imu")
 
 
-start_time, samples = time.time(), 0
+start_time, sample_count = time.time(), 0
 show_samples = False
 show_frame_rate = True
 
 # The callback for when a PUBLISH message is received from the server.
 
 
-def on_message(client, userdata, msg):
-    global start_time, samples
+def on_message(_client, _userdata, msg):
+    global start_time, sample_count
     data = json.loads(msg.payload)
     if show_samples:
         print(data)
     if "accelerometer" in data:
-        # print(data["accelerometer"])
         now = time.time()
         elapsed = now - start_time
-        # print(elapsed)
+        sample_count += 1
         if elapsed > 1:
             if show_frame_rate:
                 # logger.info("{:0.1f} samples/sec", samples / elapsed)
-                print(f"{samples} samples/sec")
-            start_time, samples = now, 0
-        samples += 1
+                print(f"{sample_count} samples/sec")
+            start_time, sample_count = now, 0
 
 
 client = mqtt.Client(userdata="client")

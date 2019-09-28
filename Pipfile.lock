@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "dab22aeccc4e20ac2a8be87d30803d91a62c1f2e1c41072cdd2174a762c0e243"
+            "sha256": "fc1c7a5c2a14180a22fa2cf4ef6a893038b301fdb2e56b284093cbcad51eb8de"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -18,11 +18,37 @@
     "default": {
         "paho-mqtt": {
             "hashes": [
-                "sha256:2ca78db4c51995eb4f1cd993b265d9b1e9a295c91c82fe00d375a5645be2b9f0",
                 "sha256:e440a052b46d222e184be3be38676378722072fcd4dfd2c8f509fb861a7b0b79"
             ],
             "index": "pypi",
             "version": "==1.4.0"
+        },
+        "pyserial": {
+            "hashes": [
+                "sha256:6e2d401fdee0eab996cf734e67773a0143b932772ca8b42451440cfed942c627",
+                "sha256:e0770fadba80c31013896c7e6ef703f72e7834965954a78e71a3049488d4d7d8"
+            ],
+            "version": "==3.4"
+        },
+        "pyudev": {
+            "hashes": [
+                "sha256:094b7a100150114748aaa3b70663485dd360457a709bfaaafe5a977371033f2b"
+            ],
+            "version": "==0.21.0"
+        },
+        "rshell": {
+            "hashes": [
+                "sha256:cc447a3c9853a50585d7fdd6356922e8a89debb67932e60cf241f23fbd72db16"
+            ],
+            "index": "pypi",
+            "version": "==0.0.26"
+        },
+        "six": {
+            "hashes": [
+                "sha256:3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c",
+                "sha256:d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"
+            ],
+            "version": "==1.12.0"
         }
     },
     "develop": {}

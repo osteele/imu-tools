@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-from time import sleep
-
 import config as MQTT_CONFIG
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 
 
-def on_publish(client, userdata, mid):
+def on_publish(_client, userdata, mid):
     print(f"Published(id={mid}) to {userdata}")
 
 

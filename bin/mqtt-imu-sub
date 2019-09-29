@@ -22,29 +22,31 @@ sample_period = 10
 
 
 def on_message(_client, _userdata, msg):
-    global start_time, sample_count
+    global sample_start_time, sample_count
     data = json.loads(msg.payload)
     if show_samples:
         print(data)
     if "accelerometer" in data:
-        now = time.time()
-        elapsed = now - start_time
         sample_count += 1
-        if elapsed > 1:
+        now = time.time()
+        elapsed = now - sample_start_time
+        # print(".", elapsed, end="", flush=True)
+        if elapsed >= sample_period:
             if show_frame_rate:
                 # logger.info("{:0.1f} samples/sec", samples / elapsed)
-                print(f"{sample_count} samples/sec")
-            start_time, sample_count = now, 0
+                print(f"{sample_count / elapsed:0.1f} samples/sec")
+            sample_start_time = now
+            sample_count = 0
 
 
-client = mqtt.Client(userdata="client")
+client = mqtt.Client(userdata=MQTT_CONFIG.host)
 client.on_connect = on_connect
 client.on_message = on_message
 client.on_log = True
 
 if MQTT_CONFIG.user:
     client.username_pw_set(MQTT_CONFIG.user, password=MQTT_CONFIG.password)
-print("Connecting to", MQTT_CONFIG.host, end="...")
+print(f"Connecting to {MQTT_CONFIG.host}...")
 client.connect(MQTT_CONFIG.host, MQTT_CONFIG.port)
 
 client.loop_forever()

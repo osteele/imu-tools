@@ -24,10 +24,10 @@ i2c = I2C(scl=scl, sda=sda, timeout=1000)  # HUZZAH8266
 
 
 def get_imu():
-    if 40 not in i2c.scan():
-        imu = bno055.BNO055(i2c)
-        imu.operation_mode(bno055.NDOF_MODE)
-        return imu
+    if 40 in i2c.scan():
+        bno = bno055.BNO055(i2c)
+        bno.operation_mode(bno055.NDOF_MODE)
+        return bno
     else:
         print("No IMU detected; using dummy data")
         return bno055_fake.BNO055()

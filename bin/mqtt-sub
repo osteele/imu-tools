@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import json
 
-import config as MQTT_CONFIG
 import paho.mqtt.client as mqtt
+
+import config as MQTT_CONFIG
 
 
 # Called on a CONNACK response from the server.
-def on_connect(_client, _userdata, flags, rc):
+def on_connect(_client, _userdata, _flags, rc):
     print(f"Connected(rc={rc})")
     client.subscribe("#")
 
@@ -26,7 +27,7 @@ def on_message(_client, _userdata, msg):
         data = json.loads(data)
     except json.JSONDecodeError:
         pass
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         print("Error:", e)
     print(f"Message(topic={msg.topic}): {data}")
 

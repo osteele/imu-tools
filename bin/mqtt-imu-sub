@@ -2,19 +2,21 @@
 import json
 import time
 
-import config as MQTT_CONFIG
 import paho.mqtt.client as mqtt
+
+import config as MQTT_CONFIG
 
 
 # The callback for when the client receives a CONNACK response from the server.
-def on_connect(client, userdata, _flags, rc):
+def on_connect(_client, userdata, _flags, rc):
     print(f"Connected to {userdata} with result code {rc}")
     client.subscribe("imu")
 
 
-start_time, sample_count = time.time(), 0
+sample_start_time, sample_count = time.time(), 0
 show_samples = False
 show_frame_rate = True
+sample_period = 10
 
 # The callback for when a PUBLISH message is received from the server.
 

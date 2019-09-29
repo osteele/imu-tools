@@ -177,6 +177,8 @@ if station.isconnected():
     if MQTT_CONFIG and MQTT_CONFIG["host"]:
         mqtt_connect()
 
+sample_start_time, sample_count = time.time(), 0
+sample_period = 10
 
 while True:
     # Publish the sensor data each time through the loop.
@@ -186,5 +188,16 @@ while True:
         publish_sensor_data()
     if config.SEND_SERIAL_SENSOR_DATA:
         send_serial_data()
+    else:
+        sample_count += 1
+        current_time = time.time()
+        if current_time - sample_start_time >= sample_period:
+            print(
+                "{:0.1f} samples/sec".format(
+                    sample_count / (current_time - sample_start_time)
+                )
+            )
+            sample_start_time = current_time
+            sample_count = 0
     if config.RUN_RUN_HTTP_SERVER:
         service_http_request()

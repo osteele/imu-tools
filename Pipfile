@@ -3,8 +3,6 @@ name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
-[dev-packages]
-
 [scripts]
 mqtt-pub = "python bin/mqtt-pub"
 mqtt-sub = "python bin/mqtt-sub"
@@ -15,6 +13,9 @@ mcu-repl = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200"
 [packages]
 paho-mqtt = "*"
 rshell = "*"
+
+[dev-packages]
+pylint = "*"
 
 [requires]
 python_version = "3.7"

@@ -1,5 +1,6 @@
 [MASTER]
-init-hook='import sys; sys.path.insert(0,"stubs");'
+init-hook='import os,sys; sys.path.insert(0,os.environ["MICROPYTHON_STUBS_PATH"])'
+;init-hook='import os,sys; sys.path.insert(0,os.environ.get("MICROPYTHON_STUBS_PATH", "."))'
 disable=
     global-statement,
     invalid-name,

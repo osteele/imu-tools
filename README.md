@@ -10,21 +10,13 @@ The serial port format is compatible with
 
 1. Install the [SLAB_USBtoUART drivers](https://rehmann.co/blog/drivers-for-slab_usbtouart/)
 
-2. Install `rshell`: `pip3 install rshell`.
+2. Copy `src/config.py.tmpl` to `src/config.py`. Edit the latter file to fill in the values.
 
-3. Copy `src/config.py.tmpl` to `src/config.py`. Edit the latter file to fill in the values.
+3. Download the sources to the board:
 
-4. Download the sources:
+    ```pipenv mcu-sync```
 
-    ```shell
-    rshell -p /dev/tty.SLAB_USBtoUART -b 115200
-    rsync src /pyboard
-    ```
-
-   `rshell` will hang if the board is already running a loop. See the MicroPython
-   Development notes for instructions about what to do in this case.
-
-5. Now reboot the board. From `rshell`, enter `repl` and then `⌃D`. Or just press
+4. Now reboot the board. Run `pipenv mcu-repl` and press `⌃D`. Or just press
    the button. (The latter may be necessary to get the board to re-scan for WiFi
    networks.)
 
@@ -34,10 +26,9 @@ contains notes on developing MicroPython on the ESP.
 
 ## Interactive Testing
 
-1. Install `paho-mqtt`: `pip3 install paho-mqtt`
-2. Copy `scripts/config.py.tmpl` to `scripts/config.py` and fill in the values.
-3. Run `./scripts/mqtt_sub` to run an MQTT client that prints messages to the
-   terminal. Run `./scripts/mqtt_pub` to publish a single message to the server.
+1. Copy `scripts/config.py.tmpl` to `scripts/config.py` and fill in the values.
+2. Run `pipenv run mqtt_sub` to run an MQTT client that prints messages to the
+   terminal. Run `pipenv run mqtt_pub` to publish a single message to the server.
 
 ## References
 

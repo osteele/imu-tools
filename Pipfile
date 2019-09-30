@@ -8,7 +8,8 @@ mqtt-pub = "python bin/mqtt-pub"
 mqtt-sub = "python bin/mqtt-sub"
 mqtt-sub-imu = "python bin/mqtt-imu-sub"
 mcu-sync = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200 rsync src /pyboard"
-mcu-repl = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200"
+mcu-repl = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200 repl"
+mcu-screen = "screen /dev/tty.SLAB_USBtoUART 115200"
 
 [packages]
 paho-mqtt = "*"

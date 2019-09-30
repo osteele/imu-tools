@@ -120,7 +120,12 @@ def mqtt_connect():
         user=MQTT_CONFIG["user"],
         password=MQTT_CONFIG["password"],
     )
-    print("Connecting to mqtt://" + mqtt_client.server, end="...")
+    mqtt_client_url = (
+        "mqtt://{user}@{host}:{port}/".format(**MQTT_CONFIG)
+        .replace("//@", "")
+        .replace(":1883/", "/")
+    )
+    print("Connecting to " + mqtt_client_url, end="...")
     try:
         mqtt_client.connect()
         print("done.")
@@ -158,7 +163,9 @@ def publish_sensor_data():
         "gyroscope": imu.gyroscope(),
         "euler": imu.euler(),
     }
-    mqtt_client.publish("imu", json.dumps(data))
+    payload = json.dumps(data)
+    if mqtt_client:
+        mqtt_client.publish("imu", payload)
 
 
 def send_serial_data():
@@ -184,7 +191,7 @@ while True:
     # Publish the sensor data each time through the loop.
     # If RUN_RUN_HTTP_SERVER is set, this publishes the data once per web request.
     # Else, it publishes it in a tight loop.
-    if mqtt_client:
+    if config.SEND_MQTT_SENSOR_DATA:
         publish_sensor_data()
     if config.SEND_SERIAL_SENSOR_DATA:
         send_serial_data()

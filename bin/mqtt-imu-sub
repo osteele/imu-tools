@@ -4,7 +4,7 @@ import time
 
 import paho.mqtt.client as mqtt
 
-import config as MQTT_CONFIG
+from config import MQTT_CONFIG
 
 
 # The callback for when the client receives a CONNACK response from the server.
@@ -39,14 +39,14 @@ def on_message(_client, _userdata, msg):
             sample_count = 0
 
 
-client = mqtt.Client(userdata=MQTT_CONFIG.host)
+client = mqtt.Client(userdata=MQTT_CONFIG["host"])
 client.on_connect = on_connect
 client.on_message = on_message
 client.on_log = True
 
-if MQTT_CONFIG.user:
-    client.username_pw_set(MQTT_CONFIG.user, password=MQTT_CONFIG.password)
-print(f"Connecting to {MQTT_CONFIG.host}...")
-client.connect(MQTT_CONFIG.host, MQTT_CONFIG.port)
+if MQTT_CONFIG["user"]:
+    client.username_pw_set(MQTT_CONFIG["user"], password=MQTT_CONFIG["password"])
+print(f"Connecting to {MQTT_CONFIG['host']}...")
+client.connect(MQTT_CONFIG["host"], MQTT_CONFIG["port"])
 
 client.loop_forever()

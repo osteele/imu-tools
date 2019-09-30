@@ -3,7 +3,7 @@ import json
 
 import paho.mqtt.client as mqtt
 
-import config as MQTT_CONFIG
+from config import MQTT_CONFIG
 
 
 # Called on a CONNACK response from the server.
@@ -38,9 +38,9 @@ client.on_message = on_message
 client.on_subscribe = on_subscribe
 client.on_log = True
 
-if MQTT_CONFIG.user:
-    client.username_pw_set(MQTT_CONFIG.user, password=MQTT_CONFIG.password)
-client.connect(MQTT_CONFIG.host, MQTT_CONFIG.port)
+if MQTT_CONFIG["user"]:
+    client.username_pw_set(MQTT_CONFIG["user"], password=MQTT_CONFIG["password"])
+client.connect(MQTT_CONFIG["host"], MQTT_CONFIG["port"])
 
 try:
     client.loop_forever()

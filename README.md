@@ -26,7 +26,7 @@ contains notes on developing MicroPython on the ESP.
 
 ## Interactive Testing
 
-1. Copy `scripts/config.py.tmpl` to `scripts/config.py` and fill in the values.
+1. Copy `config/network.ini.tmpl` to `config/network.ini` and fill in the values.
 2. Run `pipenv run mqtt_sub` to run an MQTT client that prints messages to the
    terminal. Run `pipenv run mqtt_pub` to publish a single message to the server.
 

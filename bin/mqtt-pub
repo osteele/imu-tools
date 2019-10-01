@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+import itertools
+import json as json_enc
+import time
+
+import click
 import paho.mqtt.client as mqtt
 
 from config import MQTT_CONFIG
@@ -7,14 +12,40 @@ from config import MQTT_CONFIG
 def on_publish(_client, userdata, mid):
     print(f"Published(id={mid}) to {userdata}")
 
+def gen_samples():
+    for i in itertools.count(0):
+        frac = (i % 1000) / 1000
+        yield {
+            "machine_id": "abcdef",
+            "timestamp": int(time.time() * 1000),
+            "temperature": 37.5,
+            "accelerometer": (11 + frac, 21 + frac, 3.1 + frac),
+            "magnetometer": (41 + frac, 51 + frac, 6.1 + frac),
+            "gyroscope": (71 + frac, 81 + frac, 9.1 + frac),
+            "euler": (101 + frac, 111 + frac, 12.1 + frac),
+        }
 
-client = mqtt.Client(userdata=MQTT_CONFIG["host"])
-client.on_publish = on_publish
-client.on_log = True
+@click.command()
+@click.option("--json", is_flag=True)
+@click.option("--repeat", is_flag=True)
+def main(json=False, repeat=False):
+    global client  # TODO: why is this necessary
+    client = mqtt.Client(userdata=MQTT_CONFIG["host"])
+    client.on_publish = on_publish
+    client.on_log = True
 
-if MQTT_CONFIG["user"]:
-    client.username_pw_set(MQTT_CONFIG["user"], password=MQTT_CONFIG["password"])
-client.connect(MQTT_CONFIG["host"], MQTT_CONFIG["port"])
+    if MQTT_CONFIG["user"]:
+        client.username_pw_set(MQTT_CONFIG["user"], password=MQTT_CONFIG["password"])
+    client.connect(MQTT_CONFIG["host"], MQTT_CONFIG["port"])
 
-info = client.publish("imu", payload="sender: mqtt_pub.py")
-info.wait_for_publish()
+    samples = map(json_enc.dumps, gen_samples()) if json else itertools.repeat("sender: mqtt_pub")
+    if not repeat:
+        samples = itertools.islice(samples, 1)
+
+    for payload in samples:
+        info = client.publish("imu", payload=payload)
+        info.wait_for_publish()
+
+
+if __name__ == "__main__":
+    main()

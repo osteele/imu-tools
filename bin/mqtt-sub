@@ -7,8 +7,8 @@ from config import MQTT_CONFIG
 
 
 # Called on a CONNACK response from the server.
-def on_connect(_client, _userdata, _flags, rc):
-    print(f"Connected(rc={rc})")
+def on_connect(_client, userdata, _flags, rc):
+    print(f"Connected(host={userdata}, rc={rc})")
     client.subscribe("#")
 
 
@@ -32,7 +32,7 @@ def on_message(_client, _userdata, msg):
     print(f"Message(topic={msg.topic}): {data}")
 
 
-client = mqtt.Client()
+client = mqtt.Client(userdata=MQTT_CONFIG["host"])
 client.on_connect = on_connect
 client.on_message = on_message
 client.on_subscribe = on_subscribe

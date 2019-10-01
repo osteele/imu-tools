@@ -10,6 +10,7 @@ mqtt-sample-rate = "python bin/mqtt-sub --show-sample-rate"
 mcu-sync = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200 rsync src /pyboard"
 mcu-repl = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200 repl"
 mcu-screen = "screen /dev/tty.SLAB_USBtoUART 115200"
+webserver = "python -m http.server -b 127.0.0.1 -d web"
 
 [packages]
 paho-mqtt = "*"

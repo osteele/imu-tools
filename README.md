@@ -37,6 +37,7 @@ To install a local broker:
 1. Install RabbitMQ. On macOS with HomeBrew: `brew install rabbitmq`, and `brew
    services start rabbitmq`.
 2. Install the MQTT plugin: `rabbitmq-plugins enable rabbitmq_mqtt`
+3. Install the Web MQTT plugin: `rabbitmq-plugins enable rabbitmq_web_mqtt`
 
 ## References
 

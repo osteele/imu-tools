@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import itertools
 import json as json_enc
+import math
 import sys
 import time
 
@@ -20,15 +21,30 @@ def on_publish(_client, userdata, mid):
 
 def gen_samples():
     for i in itertools.count(0):
+        s = i / 100
         frac = (i % 1000) / 1000
         yield {
             "timestamp": int(time.time() * 1000),
             "temperature": 27 + frac,
-            "accelerometer": (20 + frac, 21 + frac, 22 + frac),
+            "accelerometer": (
+                2048 * math.cos(s),
+                2048 * math.cos(1.2 * s),
+                2048 * math.cos(1.6 * s),
+            ),
             "magnetometer": (30 + frac, 31 + frac, 32 + frac),
             "gyroscope": (40 + frac, 41 + frac, 42 + frac),
             "euler": (50 + frac, 51 + frac, 52 + frac),
         }
+
+def iter_throttle(iter, freq=200):
+    last_sample_time = 0
+    intersample_time = 1 / freq
+    for item in iter:
+        delay = last_sample_time + intersample_time - time.time()
+        last_sample_time = time.time()
+        if delay > 0:
+            time.sleep(delay)
+        yield item
 
 
 @click.command()
@@ -52,10 +68,10 @@ def main(json=False, repeat=False):
     if not repeat:
         samples = itertools.islice(samples, 1) if json else ["sender=mqtt_pub"]
 
-    client_id = 'mqtt-pub'
-    for payload in samples:
+    client_id = "mqtt-pub"
+    for payload in iter_throttle(samples):
         info = client.publish(f"imu/{client_id}", payload=payload)
-        info.wait_for_publish()
+    info.wait_for_publish()
 
 
 if __name__ == "__main__":

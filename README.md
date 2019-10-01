@@ -30,8 +30,21 @@ contains notes on developing MicroPython on the ESP.
 2. Run `pipenv run mqtt_sub` to run an MQTT client that prints messages to the
    terminal. Run `pipenv run mqtt_pub` to publish a single message to the server.
 
+## MQTT Broker
+
+To install a local broker:
+
+1. Install RabbitMQ. On macOS with HomeBrew: `brew install rabbitmq`, and `brew
+   services start rabbitmq`.
+2. Install the MQTT plugin: `rabbitmq-plugins enable rabbitmq_mqtt`
+
 ## References
 
 * [Paho MQTT](https://pypi.org/project/paho-mqtt/)
 * [MicroPython](http://docs.micropython.org/en/latest/)
 * [MicroPython MQTT](https://github.com/micropython/micropython-lib/tree/master/umqtt.simple)
+
+## Credits
+
+`BNO055.py` and `functools.py` are adapted from
+Radomir Dopieralski's [`deshipu/micropython-bno055`](https://github.com/deshipu/micropython-bno055).

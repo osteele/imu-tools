@@ -15,6 +15,7 @@ mcu-screen = "screen /dev/tty.SLAB_USBtoUART 115200"
 paho-mqtt = "*"
 rshell = "*"
 click = "*"
+loguru = "*"
 
 [dev-packages]
 pylint = "*"

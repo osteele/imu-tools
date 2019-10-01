@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
 import json
+import sys
 import time
 
 import click
 import paho.mqtt.client as mqtt
+from loguru import logger
 
 from config import MQTT_CONFIG
 
+logger.remove()
+logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO")
 
 # Called on a CONNACK response from the server.
 def on_connect(client, userdata, _flags, rc):
     hostname, *_ = userdata
-    print(f"Connected(host={hostname}, rc={rc})")
+    logger.info("Connected(host={}, rc={})", hostname, rc)
     client.subscribe("#")
 
 
 def on_subscribe(_client, _userdata, mid, granted_qos):
-    print(f"Subscribed(id={mid} qos={list(granted_qos)})")
+    logger.info("Subscribed(id={} qos={})", mid, list(granted_qos))
 
 
 def sample_rate_reporter_gen(sample_period=10):
@@ -53,13 +57,14 @@ def on_message(_client, userdata, msg):
     if sample_rate_reporter:
         next(sample_rate_reporter)
     else:
-        print(f"Message(topic={msg.topic}): {data}")
+        logger.info("Message(topic={}): {}", msg.topic, data)
+        # print(f"Message(topic={msg.topic}): {data}")
 
 
 @click.command()
 @click.option("--show-sample-rate", is_flag=True)
 def main(show_sample_rate=False):
-    sample_rate_reporter = sample_rate_reporter_gen()
+    sample_rate_reporter = show_sample_rate and sample_rate_reporter_gen()
     client = mqtt.Client(userdata=(MQTT_CONFIG["host"], sample_rate_reporter))
     client.on_connect = on_connect
     client.on_message = on_message

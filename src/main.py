@@ -20,7 +20,7 @@ machine_id = os.uname().sysname + "-" + "".join("%0X" % n for n in machine.uniqu
 #
 
 scl, sda = (Pin(22), Pin(23)) if sys.platform == "esp32" else (Pin(5), Pin(4))
-i2c = I2C(scl=scl, sda=sda, timeout=1000)  # HUZZAH8266
+i2c = I2C(scl=scl, sda=sda, timeout=1000)
 
 
 def get_imu():
@@ -185,9 +185,22 @@ if station.isconnected():
         mqtt_connect()
 
 
-def loop_forever():
+def sample_rate_gen():
     sample_start_time, sample_count = time.time(), 0
     sample_period = 10
+    while True:
+        yield
+        sample_count += 1
+        current_time = time.time()
+        if current_time - sample_start_time >= sample_period:
+            sample_rate = sample_count / (current_time - sample_start_time)
+            print("{:0.1f} samples/sec".format(sample_rate))
+            sample_start_time = current_time
+            sample_count = 0
+
+
+def loop_forever():
+    sample_rate_iter = sample_rate_gen()
     while True:
         # Publish the sensor data each time through the loop.
         # If RUN_RUN_HTTP_SERVER is set, this publishes the data once per web request.
@@ -197,13 +210,7 @@ def loop_forever():
         if config.SEND_SERIAL_SENSOR_DATA:
             send_serial_data()
         else:
-            sample_count += 1
-            current_time = time.time()
-            if current_time - sample_start_time >= sample_period:
-                sample_rate = sample_count / (current_time - sample_start_time)
-                print("{:0.1f} samples/sec".format(sample_rate))
-                sample_start_time = current_time
-                sample_count = 0
+            next(sample_rate_iter)
         if config.RUN_RUN_HTTP_SERVER:
             service_http_request()
 

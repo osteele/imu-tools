@@ -181,30 +181,31 @@ if station.isconnected():
     if config.RUN_RUN_HTTP_SERVER:
         start_http_server()
 
-    if MQTT_CONFIG and MQTT_CONFIG["host"]:
+    if config.SEND_MQTT_SENSOR_DATA:
         mqtt_connect()
 
-sample_start_time, sample_count = time.time(), 0
-sample_period = 10
 
-while True:
-    # Publish the sensor data each time through the loop.
-    # If RUN_RUN_HTTP_SERVER is set, this publishes the data once per web request.
-    # Else, it publishes it in a tight loop.
-    if config.SEND_MQTT_SENSOR_DATA:
-        publish_sensor_data()
-    if config.SEND_SERIAL_SENSOR_DATA:
-        send_serial_data()
-    else:
-        sample_count += 1
-        current_time = time.time()
-        if current_time - sample_start_time >= sample_period:
-            print(
-                "{:0.1f} samples/sec".format(
-                    sample_count / (current_time - sample_start_time)
-                )
-            )
-            sample_start_time = current_time
-            sample_count = 0
-    if config.RUN_RUN_HTTP_SERVER:
-        service_http_request()
+def loop_forever():
+    sample_start_time, sample_count = time.time(), 0
+    sample_period = 10
+    while True:
+        # Publish the sensor data each time through the loop.
+        # If RUN_RUN_HTTP_SERVER is set, this publishes the data once per web request.
+        # Else, it publishes it in a tight loop.
+        if config.SEND_MQTT_SENSOR_DATA:
+            publish_sensor_data()
+        if config.SEND_SERIAL_SENSOR_DATA:
+            send_serial_data()
+        else:
+            sample_count += 1
+            current_time = time.time()
+            if current_time - sample_start_time >= sample_period:
+                sample_rate = sample_count / (current_time - sample_start_time)
+                print("{:0.1f} samples/sec".format(sample_rate))
+                sample_start_time = current_time
+                sample_count = 0
+        if config.RUN_RUN_HTTP_SERVER:
+            service_http_request()
+
+
+loop_forever()

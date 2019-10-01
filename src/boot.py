@@ -11,10 +11,9 @@ from config import WIFI_NETWORKS as ssid_passwords
 esp.osdebug(None)
 gc.collect()
 
-station = network.WLAN(network.STA_IF)
-
 
 def wifi_connect():
+    station = network.WLAN(network.STA_IF)
     station.active(True)
     if station.isconnected():
         print('Connected to WiFi network "' + station.config("essid") + '"')
@@ -39,4 +38,4 @@ def wifi_connect():
             print("No WiFi networks found")
 
 
-wifi_connect()
+WIFI_STATION = wifi_connect()

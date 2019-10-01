@@ -81,7 +81,7 @@ def start_http_server():
     http_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     http_socket.bind(("", 80))
     http_socket.listen(5)
-    ip_address, _subnet_mask, _gateway, _dns_server = station.ifconfig()
+    ip_address, _subnet_mask, _gateway, _dns_server = WIFI_STATION.ifconfig()
     print("Listening on http://" + ip_address)
 
 
@@ -137,7 +137,6 @@ def mqtt_connect():
 
 def publish_machine_identifier():
     data = {
-        "machine_id": machine_id,
         "platform": sys.platform,
         "sysname": os.uname().sysname,
         "nodename": os.uname().nodename,
@@ -145,7 +144,7 @@ def publish_machine_identifier():
         "machine_freq": machine.freq(),
         "timestamp": time.ticks_ms(),
     }
-    mqtt_client.publish("imu", json.dumps(data))
+    mqtt_client.publish("imu/" + machine_id, json.dumps(data))
 
 
 def publish_sensor_data():
@@ -155,7 +154,6 @@ def publish_sensor_data():
     If config.SEND_SERIAL_SENSOR_DATA is set, send the data on the serial port.
     """
     data = {
-        "machine_id": machine_id,
         "timestamp": time.ticks_ms(),
         "temperature": imu.temperature(),
         "accelerometer": imu.accelerometer(),
@@ -165,7 +163,7 @@ def publish_sensor_data():
     }
     payload = json.dumps(data)
     if mqtt_client:
-        mqtt_client.publish("imu", payload)
+        mqtt_client.publish("imu/" + machine_id, payload)
 
 
 def send_serial_data():
@@ -176,11 +174,11 @@ def send_serial_data():
 #
 # WiFi Connection
 #
-station = network.WLAN(network.STA_IF)
-if station.isconnected():
+
+WIFI_STATION = network.WLAN(network.STA_IF)
+if WIFI_STATION.isconnected():
     if config.RUN_RUN_HTTP_SERVER:
         start_http_server()
-
     if config.SEND_MQTT_SENSOR_DATA:
         mqtt_connect()
 

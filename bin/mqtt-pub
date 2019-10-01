@@ -22,13 +22,12 @@ def gen_samples():
     for i in itertools.count(0):
         frac = (i % 1000) / 1000
         yield {
-            "machine_id": "abcdef",
             "timestamp": int(time.time() * 1000),
-            "temperature": 37.5,
-            "accelerometer": (11 + frac, 21 + frac, 3.1 + frac),
-            "magnetometer": (41 + frac, 51 + frac, 6.1 + frac),
-            "gyroscope": (71 + frac, 81 + frac, 9.1 + frac),
-            "euler": (101 + frac, 111 + frac, 12.1 + frac),
+            "temperature": 27 + frac,
+            "accelerometer": (20 + frac, 21 + frac, 22 + frac),
+            "magnetometer": (30 + frac, 31 + frac, 32 + frac),
+            "gyroscope": (40 + frac, 41 + frac, 42 + frac),
+            "euler": (50 + frac, 51 + frac, 52 + frac),
         }
 
 
@@ -53,8 +52,9 @@ def main(json=False, repeat=False):
     if not repeat:
         samples = itertools.islice(samples, 1) if json else ["sender=mqtt_pub"]
 
+    client_id = 'mqtt-pub'
     for payload in samples:
-        info = client.publish("imu", payload=payload)
+        info = client.publish(f"imu/{client_id}", payload=payload)
         info.wait_for_publish()
 
 

@@ -8,7 +8,7 @@ class BNO055:
         frac = self.__counter / 1000
         self.__counter += 1
         self.__counter %= 1000
-        return 1 + frac
+        return 27 + frac
 
     def accelerometer(self):
         frac = self.__counter / 1000

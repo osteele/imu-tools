@@ -13,8 +13,8 @@ from config import MQTT_CONFIG
 from machine import I2C, Pin
 from umqtt.simple import MQTTClient
 
-DEVICE_ID = "".join("%0X" % n for n in machine.unique_id())
-print("Device id = ", DEVICE_ID)
+DEVICE_ID = "".join(map("{:02x}".format, machine.unique_id()))
+print("Device id =", DEVICE_ID)
 
 #
 # IMU Connection
@@ -26,10 +26,11 @@ def get_imu():
     i2c = I2C(scl=Pin(scl), sda=Pin(sda), timeout=1000)
     if 40 in i2c.scan():
         bno = bno055.BNO055(i2c)
+        print("Using BNO connected to scl={}, sda={}".format(scl, sda))
         bno.operation_mode(bno055.NDOF_MODE)
         return bno
     else:
-        print("No IMU detected on scl={}, sda={}; using dummy data".format(scl, sda))
+        print("No IMU detected on scl={}, sda={}. Using dummy data.".format(scl, sda))
         return bno055_fake.BNO055()
 
 

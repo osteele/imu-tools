@@ -1,49 +1,3 @@
-const mqttHost = 'localhost';
-const mqttPort = 15675;
-const topicString = 'imu/#';
-var chart;
-var dataTopics = new Array();
-
-// console.info('connecting to ' + mqttHost);
-var client = new Paho.Client(mqttHost, mqttPort, "/ws",
-    "myclientid_" + parseInt(Math.random() * 100, 10));
-client.onMessageArrived = onMessageArrived;
-client.onConnectionLost = onConnectionLost;
-
-var mqttConnectionOptions = {
-    timeout: 3,
-    onSuccess: function () {
-        console.log("Connected to mqtt://" + mqttHost + ":" + mqttPort);
-        client.subscribe(topicString, { qos: 1 });
-    },
-    onFailure: function (message) {
-        console.log("MQTT connection failed: " + message.errorMessage);
-    }
-};
-
-function onConnectionLost(responseObject) {
-    console.log("MQTT connection lost: " + responseObject.errorMessage);
-    setTimeout(startSensorSubscription, 1000);
-};
-
-function onMessageArrived(message) {
-    const device_id = message.topic.split('/').pop()
-    const [e0, e1, e2] = JSON.parse(message.payloadString)['euler'];
-    plotSample({ device_id, e0, e1, e2 })
-    // let [g0, g1, g2] = JSON.parse(message.payloadString)['gyroscope'];
-    // g0 *= 1000
-    // g1 *= 1000
-    // g2 *= 1000
-    // plotSample({ device_id, g0, g1, g2 })
-    // const [ax, ay, az] = JSON.parse(message.payloadString)['accelerometer'];
-    // plotSample({ device_id, ax, ay, az })
-}
-
-function startSensorSubscription() {
-    client.connect(mqttConnectionOptions);
-};
-
-
 // D3
 //
 // Adapted from http://bl.ocks.org/simenbrekken/6634070
@@ -149,3 +103,9 @@ function plotSample(sample) {
         pendingSamples.push(sample)
     }
 };
+
+function onSensorData(data) {
+    const device_id = data
+    const [e0, e1, e2] = data.accelerometer
+    plotSample({ device_id, e0, e1, e2 })
+}

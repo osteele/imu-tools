@@ -104,8 +104,8 @@ function plotSample(sample) {
     }
 };
 
-function onSensorData(data) {
+onSensorData(function (data) {
     const device_id = data
-    const [e0, e1, e2] = data.accelerometer
+    const [e0, e1, e2] = data.euler
     plotSample({ device_id, e0, e1, e2 })
-}
+})

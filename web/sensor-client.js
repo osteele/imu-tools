@@ -24,20 +24,27 @@ function onConnectionLost(responseObject) {
     setTimeout(startSensorSubscription, 1000);
 };
 
+let onSensorDataCallbacks = []
 let errored = false
 
 function onMessageArrived(message) {
     const device_id = message.topic.split('/').pop()
     const data = JSON.parse(message.payloadString)
     data.device_id = device_id
-    try {
-        onSensorData(data)
-    } catch (e) {
-        if (!errored) {
-            console.error('err', e)
-            errored = true
+    onSensorDataCallbacks.forEach(function (callback) {
+        try {
+            callback(data)
+        } catch (e) {
+            if (!errored) {
+                console.error('err', e)
+                errored = true
+            }
         }
-    }
+    });
+}
+
+function onSensorData(callback) {
+    onSensorDataCallbacks.push(callback)
 }
 
 function startSensorSubscription() {

@@ -2,14 +2,19 @@
 #     import usocket as socket
 # except ImportError:
 import gc
+import os
 
 import esp
+import machine
 import network
 import utime
 from config import WIFI_NETWORKS as ssid_passwords
 
 esp.osdebug(None)
 gc.collect()
+
+print("\nDevice type =", os.uname().sysname)
+print("HMAC =", ":".join(map("{:02x}".format, machine.unique_id())))
 
 
 def wifi_connect():
@@ -31,11 +36,11 @@ def wifi_connect():
                 print(end=".")
 
             ip_address, _subnet_mask, _gateway, _dns_server = station.ifconfig()
-            print("success.\n", "IP address =", ip_address)
+            print("success.\nIP address =", ip_address)
         elif ssids:
             print("No known WiFi network in", ssids)
         else:
             print("No WiFi networks found")
 
 
-WIFI_STATION = wifi_connect()
+wifi_connect()

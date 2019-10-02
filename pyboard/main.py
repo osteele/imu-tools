@@ -13,23 +13,23 @@ from config import MQTT_CONFIG
 from machine import I2C, Pin
 from umqtt.simple import MQTTClient
 
-machine_id = os.uname().sysname + "-" + "".join("%0X" % n for n in machine.unique_id())
+DEVICE_ID = "".join("%0X" % n for n in machine.unique_id())
+print("Device id = ", DEVICE_ID)
 
 #
 # IMU Connection
 #
 
-scl, sda = (Pin(22), Pin(23)) if sys.platform == "esp32" else (Pin(5), Pin(4))
-i2c = I2C(scl=scl, sda=sda, timeout=1000)
-
 
 def get_imu():
+    scl, sda = (22, 23) if sys.platform == "esp32" else (5, 4)
+    i2c = I2C(scl=Pin(scl), sda=Pin(sda), timeout=1000)
     if 40 in i2c.scan():
         bno = bno055.BNO055(i2c)
         bno.operation_mode(bno055.NDOF_MODE)
         return bno
     else:
-        print("No IMU detected; using dummy data")
+        print("No IMU detected on scl={}, sda={}; using dummy data".format(scl, sda))
         return bno055_fake.BNO055()
 
 
@@ -114,7 +114,7 @@ def mqtt_connect():
     global mqtt_client
     mqtt_host = MQTT_CONFIG["host"]
     mqtt_client = MQTTClient(
-        machine_id,
+        DEVICE_ID,
         mqtt_host,
         port=MQTT_CONFIG["port"],
         user=MQTT_CONFIG["user"],
@@ -144,7 +144,7 @@ def publish_machine_identifier():
         "machine_freq": machine.freq(),
         "timestamp": time.ticks_ms(),
     }
-    mqtt_client.publish("imu/" + machine_id, json.dumps(data))
+    mqtt_client.publish("imu/" + DEVICE_ID, json.dumps(data))
 
 
 def publish_sensor_data():
@@ -163,7 +163,7 @@ def publish_sensor_data():
     }
     payload = json.dumps(data)
     if mqtt_client:
-        mqtt_client.publish("imu/" + machine_id, payload)
+        mqtt_client.publish("imu/" + DEVICE_ID, payload)
 
 
 def send_serial_data():

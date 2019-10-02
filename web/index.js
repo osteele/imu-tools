@@ -18,22 +18,28 @@ var mqttConnectionOptions = {
     },
     onFailure: function (message) {
         console.log("MQTT connection failed: " + message.errorMessage);
-        // window.setTimeout(location.reload, 20000);
     }
 };
 
 function onConnectionLost(responseObject) {
     console.log("MQTT connection lost: " + responseObject.errorMessage);
-    // window.setTimeout(location.reload, 20000);
+    setTimeout(startSensorSubscription, 1000);
 };
 
 function onMessageArrived(message) {
     const device_id = message.topic.split('/').pop()
-    const [ax, ay, az] = JSON.parse(message.payloadString)['accelerometer'];
-    plotSample({ device_id, ax, ay, az })
+    const [e0, e1, e2] = JSON.parse(message.payloadString)['euler'];
+    plotSample({ device_id, e0, e1, e2 })
+    // let [g0, g1, g2] = JSON.parse(message.payloadString)['gyroscope'];
+    // g0 *= 1000
+    // g1 *= 1000
+    // g2 *= 1000
+    // plotSample({ device_id, g0, g1, g2 })
+    // const [ax, ay, az] = JSON.parse(message.payloadString)['accelerometer'];
+    // plotSample({ device_id, ax, ay, az })
 }
 
-function init() {
+function startSensorSubscription() {
     client.connect(mqttConnectionOptions);
 };
 
@@ -106,8 +112,8 @@ function addSample(sample) {
 
     for (var name in sample) {
         if (!sample.hasOwnProperty(name)) { continue }
-        const group = findGroup('device_id:' + name)
-        group.data.push(50 + sample[name] / 100)
+        const group = findGroup(device_id + ':' + name)
+        group.data.push(sample[name] / 10)
         group.path.attr('d', line)
     }
 
@@ -125,7 +131,7 @@ function addSample(sample) {
         .attr('transform', 'translate(' + x(now - (limit - 1) * duration) + ')')
 
     for (let name in sample) {
-        const group = findGroup('device_id:' + name)
+        const group = findGroup(device_id + ':' + name)
         group.data.shift()
     }
 }

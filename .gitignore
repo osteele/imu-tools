@@ -1,4 +1,4 @@
 .mypy_cache
 .pytest_cache
 config/network.ini
-src/config.py
+pyboard/config.py

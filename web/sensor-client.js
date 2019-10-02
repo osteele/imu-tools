@@ -19,6 +19,10 @@ var mqttConnectionOptions = {
     }
 };
 
+function startSensorSubscription() {
+    client.connect(mqttConnectionOptions);
+};
+
 function onConnectionLost(responseObject) {
     console.log("MQTT connection lost: " + responseObject.errorMessage);
     setTimeout(startSensorSubscription, 1000);
@@ -47,7 +51,15 @@ function onSensorData(callback) {
     onSensorDataCallbacks.push(callback)
 }
 
-function startSensorSubscription() {
-    client.connect(mqttConnectionOptions);
-};
-
+// Apply callback no more than once per animation frame
+function throttled(callback) {
+    const buffer = []
+    return function (data) {
+        if (buffer.length == 0) {
+            requestAnimationFrame(function () {
+                callback(buffer.pop())
+            })
+        }
+        buffer[0] = data
+    }
+}

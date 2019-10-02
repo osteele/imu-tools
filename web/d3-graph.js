@@ -90,22 +90,8 @@ function addSample(sample) {
     }
 }
 
-const pendingSamples = []
-
-function plotPendingSamples() {
-    addSample(pendingSamples.pop())
-    pendingSamples.splice(0)
-}
-
-function plotSample(sample) {
-    if (pendingSamples.length == 0) {
-        requestAnimationFrame(plotPendingSamples)
-        pendingSamples.push(sample)
-    }
-};
-
-onSensorData(function (data) {
+onSensorData(throttled(function (data) {
     const device_id = data
     const [e0, e1, e2] = data.euler
-    plotSample({ device_id, e0, e1, e2 })
-})
+    addSample({ device_id, e0, e1, e2 })
+}))

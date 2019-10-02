@@ -14,7 +14,7 @@ logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO"
 
 # Called on a CONNACK response from the server.
 def on_connect(client, userdata, _flags, rc):
-    hostname, *_ = userdata
+    hostname = userdata["hostname"]
     logger.info("Connected(host={}, rc={})", hostname, rc)
     client.subscribe("#")
 
@@ -42,7 +42,8 @@ def sample_rate_reporter_gen(sample_period=10):
 
 # Called when a PUBLISH message is received from the server.
 def on_message(_client, userdata, msg):
-    _, sample_rate_reporter = userdata
+    only = userdata["only"]
+    sample_rate_reporter = userdata["sample_rate_reporter"]
     data = msg.payload
     try:
         data = data.decode()
@@ -57,15 +58,22 @@ def on_message(_client, userdata, msg):
     if sample_rate_reporter:
         next(sample_rate_reporter)
     else:
+        if only:
+            data = data[only]
         logger.info("Message(topic={}): {}", msg.topic, data)
         # print(f"Message(topic={msg.topic}): {data}")
 
 
 @click.command()
+@click.option("--only")
 @click.option("--show-sample-rate", is_flag=True)
-def main(show_sample_rate=False):
-    sample_rate_reporter = show_sample_rate and sample_rate_reporter_gen()
-    client = mqtt.Client(userdata=(MQTT_CONFIG["host"], sample_rate_reporter))
+def main(only=None, show_sample_rate=False):
+    userdata = dict(
+        hostname=MQTT_CONFIG["host"],
+        only=only,
+        sample_rate_reporter=show_sample_rate and sample_rate_reporter_gen(),
+    )
+    client = mqtt.Client(userdata=userdata)
     client.on_connect = on_connect
     client.on_message = on_message
     client.on_subscribe = on_subscribe

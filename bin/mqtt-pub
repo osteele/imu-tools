@@ -31,26 +31,29 @@ def gen_samples():
                 2048 * math.cos(1.2 * s),
                 2048 * math.cos(1.6 * s),
             ),
-            "magnetometer": (30 + frac, 31 + frac, 32 + frac),
+            "euler": (math.cos(s), math.cos(1.2 * s), math.cos(1.6 * s)),
             "gyroscope": (40 + frac, 41 + frac, 42 + frac),
-            "euler": (50 + frac, 51 + frac, 52 + frac),
+            "magnetometer": (30 + frac, 31 + frac, 32 + frac),
         }
 
-def iter_throttle(iter, freq=200):
-    last_sample_time = 0
-    intersample_time = 1 / freq
+
+def iter_throttle(iter, freq=20):
+    next_time = 0
     for item in iter:
-        delay = last_sample_time + intersample_time - time.time()
-        last_sample_time = time.time()
+        now = time.time()
+        delay = next_time - now
         if delay > 0:
             time.sleep(delay)
+            now = time.time()
+        next_time = now + 1 / freq
         yield item
 
 
 @click.command()
 @click.option("--json", is_flag=True)
+@click.option("--rate", default=200)
 @click.option("--repeat", is_flag=True)
-def main(json=False, repeat=False):
+def main(json=False, repeat=False, rate=None):
     global client  # FIXME: w/out this info.wait_for_publish returns too early
     client = mqtt.Client(userdata=MQTT_CONFIG["host"])
     client.on_publish = on_publish
@@ -69,7 +72,7 @@ def main(json=False, repeat=False):
         samples = itertools.islice(samples, 1) if json else ["sender=mqtt_pub"]
 
     client_id = "mqtt-pub"
-    for payload in iter_throttle(samples):
+    for payload in iter_throttle(samples, rate):
         info = client.publish(f"imu/{client_id}", payload=payload)
     info.wait_for_publish()
 

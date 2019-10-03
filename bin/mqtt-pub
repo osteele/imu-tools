@@ -53,7 +53,7 @@ def iter_throttle(iter, freq=20):
 @click.option("--json", is_flag=True)
 @click.option("--rate", default=200)
 @click.option("--repeat", is_flag=True)
-def main(json=False, repeat=False, rate=None):
+def main(*, json, repeat, rate):
     global client  # FIXME: w/out this info.wait_for_publish returns too early
     client = mqtt.Client(userdata=MQTT_CONFIG["host"])
     client.on_publish = on_publish

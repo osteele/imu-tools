@@ -67,7 +67,7 @@ def on_message(_client, userdata, msg):
 @click.command()
 @click.option("--only")
 @click.option("--show-sample-rate", is_flag=True)
-def main(only=None, show_sample_rate=False):
+def main(*, only, show_sample_rate):
     userdata = dict(
         hostname=MQTT_CONFIG["host"],
         only=only,

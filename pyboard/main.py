@@ -49,8 +49,8 @@ def create_web_page_content():
   h1{color: #0F3376; padding: 2vh;}p{font-size: 1.5rem;}.button{display: inline-block; background-color: #e7bd3b; border: none;
   border-radius: 4px; color: white; padding: 16px 40px; text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}
   .button2{background-color: #4286f4;}</style></head><body> <h1>ESP BO055 IMU</h1>"""
-    if mqtt_client:
-        html += "<p>Connected to mqtt://" + mqtt_client.server + "</p>"
+    if MQTT_CLIENT:
+        html += "<p>Connected to mqtt://" + MQTT_CLIENT.server + "</p>"
     if imu:
         html += (
             "<p>Temperature: <strong>"
@@ -108,11 +108,11 @@ def service_http_request():
 #
 # MQTT Connection
 #
-mqtt_client = None
+MQTT_CLIENT = None
 
 
 def mqtt_connect():
-    global mqtt_client
+    global MQTT_CLIENT
     mqtt_host = MQTT_CONFIG["host"]
     mqtt_client = MQTTClient(
         DEVICE_ID,
@@ -121,22 +121,25 @@ def mqtt_connect():
         user=MQTT_CONFIG["user"],
         password=MQTT_CONFIG["password"],
     )
-    mqtt_client_url = (
+    broker_url = (
         "mqtt://{user}@{host}:{port}/".format(**MQTT_CONFIG)
         .replace("//@", "")
         .replace(":1883/", "/")
     )
-    print("Connecting to " + mqtt_client_url, end="...")
+    print("Connecting to " + broker_url, end="...")
     try:
         mqtt_client.connect()
         print("done.")
-        publish_machine_identifier()
+        publish_machine_identifier(mqtt_client)
+        mqtt_client.set_callback(on_mqtt_message)
+        mqtt_client.subscribe("imu/control/" + DEVICE_ID)
+        mqtt_client.subscribe("imu/control/*")
     except OSError as err:
         print(err)
-        mqtt_client = None
+    MQTT_CLIENT = mqtt_client
 
 
-def publish_machine_identifier():
+def publish_machine_identifier(mqtt_client):
     data = {
         "platform": sys.platform,
         "sysname": os.uname().sysname,
@@ -146,6 +149,11 @@ def publish_machine_identifier():
         "timestamp": time.ticks_ms(),
     }
     mqtt_client.publish("imu/" + DEVICE_ID, json.dumps(data))
+
+
+def on_mqtt_message(_topic, msg):
+    command = msg.decode()
+    print("Received:", command)
 
 
 def publish_sensor_data():
@@ -163,8 +171,8 @@ def publish_sensor_data():
         "euler": imu.euler(),
     }
     payload = json.dumps(data)
-    if mqtt_client:
-        mqtt_client.publish("imu/" + DEVICE_ID, payload)
+    if MQTT_CLIENT:
+        MQTT_CLIENT.publish("imu/" + DEVICE_ID, payload)
 
 
 def send_serial_data():
@@ -204,6 +212,8 @@ def loop_forever():
         # Publish the sensor data each time through the loop.
         # If RUN_RUN_HTTP_SERVER is set, this publishes the data once per web request.
         # Else, it publishes it in a tight loop.
+        if MQTT_CLIENT:
+            MQTT_CLIENT.check_msg()
         if config.SEND_MQTT_SENSOR_DATA:
             publish_sensor_data()
         if config.SEND_SERIAL_SENSOR_DATA:

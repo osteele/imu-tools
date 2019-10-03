@@ -24,14 +24,13 @@ print("Device id =", DEVICE_ID)
 def get_imu():
     scl, sda = (22, 23) if sys.platform == "esp32" else (5, 4)
     i2c = I2C(scl=Pin(scl), sda=Pin(sda), timeout=1000)
-    if 40 in i2c.scan():
-        bno = bno055.BNO055(i2c)
-        print("Using BNO connected to scl={}, sda={}".format(scl, sda))
-        bno.operation_mode(bno055.NDOF_MODE)
-        return bno
-    else:
-        print("No IMU detected on scl={}, sda={}. Using dummy data.".format(scl, sda))
+    if 40 not in i2c.scan():
+        print("No IMU @ I2C(scl={}, sda={}). Using dummy data.".format(scl, sda))
         return bno055_fake.BNO055()
+    bno = bno055.BNO055(i2c)
+    print("Using BNO055 @ I2C(scl={}, sda={})".format(scl, sda))
+    bno.operation_mode(bno055.NDOF_MODE)
+    return bno
 
 
 imu = get_imu()
@@ -166,9 +165,10 @@ def publish_sensor_data():
         "timestamp": time.ticks_ms(),
         "temperature": imu.temperature(),
         "accelerometer": imu.accelerometer(),
-        "magnetometer": imu.magnetometer(),
-        "gyroscope": imu.gyroscope(),
         "euler": imu.euler(),
+        "gyroscope": imu.gyroscope(),
+        "magnetometer": imu.magnetometer(),
+        "quaternion": imu.quaternion(),
     }
     payload = json.dumps(data)
     if MQTT_CLIENT:

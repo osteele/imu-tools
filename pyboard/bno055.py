@@ -1,8 +1,7 @@
-from functools import partial
-
 import ustruct
 import utime
 from micropython import const
+from ufunctools import partial
 
 _CHIP_ID = const(0xA0)
 
@@ -28,20 +27,6 @@ _POWER_SUSPEND = const(0x02)
 
 
 class BNO055:
-    """
-    Driver for the BNO055 9DOF IMU sensor.
-
-    Example::
-
-        import bno055
-        from machine import I2C, Pin
-
-        i2c = I2C(-1, Pin(5), Pin(4), timeout=1000)
-        s = bno055.BNO055(i2c)
-        print(s.temperature())
-        print(s.euler())
-    """
-
     def __init__(self, i2c, address=0x28):
         self.i2c = i2c
         self.buffer = bytearray(2)

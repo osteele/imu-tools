@@ -28,6 +28,10 @@ function onConnectionLost(responseObject) {
     setTimeout(startSensorSubscription, 1000);
 };
 
+document.addEventListener("DOMContentLoaded", function () {
+    startSensorSubscription();
+});
+
 let onSensorDataCallbacks = []
 let errored = false
 

@@ -1,8 +1,5 @@
 let bunny
-let zero
-let pitch = 0
-let roll = 0
-let yaw = 0
+let quat
 
 function setup() {
     createCanvas(800, 800, WEBGL)
@@ -14,27 +11,26 @@ function draw() {
     noStroke()
     lights()
 
-    const c1 = Math.cos(roll)
-    const s1 = Math.sin(roll)
-    const c2 = Math.cos(pitch)
-    const s2 = Math.sin(pitch)
-    const c3 = Math.cos(yaw)
-    const s3 = Math.sin(yaw)
-    applyMatrix(
-        c2 * c3, s1 * s3 + c1 * c3 * s2, c3 * s1 * s2 - c1 * s3, 0,
-        -s2, c1 * c2, c2 * s1, 0,
-        c2 * s3, c1 * s2 * s3 - c3 * s1, c1 * c3 + s1 * s2 * s3, 0,
-        0, 0, 0, 1);
+    if (quat) {
+        const [x, y, z, w] = quat
+        applyMatrix.apply(null, quatToMatrix(w, y, x, z))
+    }
+    rotateZ(Math.PI)
     model(bunny);
 }
 
+function quatToMatrix(w, x, y, z) {
+    const x2 = x ** 2, y2 = y ** 2, z2 = z ** 2,
+        wx = w * x, wy = w * y, wz = w * z,
+        xy = x * y, xz = x * z, yz = y * z
+    return [
+        1 - 2 * (y2 + z2), 2 * (xy - wz), 2 * (xz + wy), 0,
+        2 * (xy + wz), 1 - 2 * (x2 + z2), 2 * (yz - wx), 0,
+        2 * (xz - wy), 2 * (yz + wx), 1 - 2 * (x2 + y2), 0,
+        0, 0, 0, 1
+    ]
+}
+
 onSensorData(throttled(function (data) {
-    let euler = data.euler
-    if (!zero) {
-        zero = [...euler]
-    }
-    zero.forEach(function (x, i) { euler[i] -= x })
-    pitch = euler[2] * Math.PI / 180
-    yaw = euler[0] * Math.PI / 180
-    roll = euler[1] * Math.PI / 180 + Math.PI
+    quat = data.quaternion
 }))

@@ -1,9 +1,9 @@
-let bunny
+let obj
 let quat
 
 function setup() {
     createCanvas(800, 800, WEBGL)
-    bunny = loadModel('assets/bunny.obj', true)
+    obj = loadModel(getModelUrl('bunny'), true)
 }
 
 function draw() {
@@ -16,7 +16,7 @@ function draw() {
         applyMatrix.apply(null, quatToMatrix(w, y, x, z))
     }
     rotateZ(Math.PI)
-    model(bunny);
+    model(obj);
 }
 
 function quatToMatrix(w, x, y, z) {
@@ -34,3 +34,18 @@ function quatToMatrix(w, x, y, z) {
 onSensorData(throttled(function (data) {
     quat = data.quaternion
 }))
+
+function getModelUrl(defaultModelName) {
+    let modelName = defaultModelName
+    const m = document.location.search.match(/\?model=(.+)/)
+    if (m) {
+        modelName = decodeURIComponent(m[1])
+    }
+    if (!modelName.match(/\.obj$/)) {
+        modelName += '.obj'
+    }
+    if (!modelName.match(/^https?:/)) {
+        modelName = 'assets/' + modelName
+    }
+    return modelName
+}

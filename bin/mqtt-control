@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-import json as json_enc
 import sys
-import time
 
 import click
 import paho.mqtt.client as mqtt
@@ -18,7 +16,7 @@ def on_publish(_client, userdata, mid):
 
 
 @click.command()
-@click.argument('message', nargs=1, required=False)
+@click.argument("message", nargs=1, required=False)
 def main(*, message):
     client = mqtt.Client(userdata=MQTT_CONFIG["host"])
     client.on_publish = on_publish

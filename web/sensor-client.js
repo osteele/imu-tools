@@ -3,12 +3,12 @@ const mqttPort = 15675;
 const topicString = 'imu/#';
 
 // console.info('connecting to ' + mqttHost);
-var client = new Paho.Client(mqttHost, mqttPort, "/ws",
+const client = new Paho.Client(mqttHost, mqttPort, "/ws",
     "myclientid_" + parseInt(Math.random() * 100, 10));
 client.onMessageArrived = onMessageArrived;
 client.onConnectionLost = onConnectionLost;
 
-var mqttConnectionOptions = {
+const mqttConnectionOptions = {
     timeout: 3,
     onSuccess: function () {
         console.log("Connected to mqtt://" + mqttHost + ":" + mqttPort);
@@ -32,38 +32,38 @@ document.addEventListener("DOMContentLoaded", function () {
     startSensorSubscription();
 });
 
-let onSensorDataCallbacks = []
-let errored = false
+let onSensorDataCallbacks = [];
+let errored = false;
 
 function onMessageArrived(message) {
-    const device_id = message.topic.split('/').pop()
-    const data = JSON.parse(message.payloadString)
-    data.device_id = device_id
+    const device_id = message.topic.split('/').pop();
+    const data = JSON.parse(message.payloadString);
+    data.device_id = device_id;
     onSensorDataCallbacks.forEach(function (callback) {
         try {
-            callback(data)
+            callback(data);
         } catch (e) {
             if (!errored) {
-                console.error('err', e)
-                errored = true
+                console.error('err', e);
+                errored = true;
             }
         }
     });
 }
 
 function onSensorData(callback) {
-    onSensorDataCallbacks.push(callback)
+    onSensorDataCallbacks.push(callback);
 }
 
 // Apply callback no more than once per animation frame
 function throttled(callback) {
-    const buffer = []
+    const buffer = [];
     return function (data) {
         if (buffer.length == 0) {
             requestAnimationFrame(function () {
-                callback(buffer.pop())
+                callback(buffer.pop());
             })
         }
-        buffer[0] = data
+        buffer[0] = data;
     }
 }

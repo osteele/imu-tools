@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import itertools
 import json as json_enc
-import math
 import sys
 import time
+from math import cos, pi, sin
 
 import click
 import paho.mqtt.client as mqtt
@@ -18,28 +18,38 @@ logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO"
 def on_publish(_client, userdata, mid):
     logger.info("Published(id={}) to {}", mid, userdata)
 
-
 def gen_samples():
     for i in itertools.count(0):
         s = i / 100
         frac = (i % 1000) / 1000
+        euler = (pi/10*cos(1.2 * s), pi/10*cos(1.4 * s), s % (2 * pi))
         yield {
             "timestamp": int(time.time() * 1000),
             "temperature": 27 + frac,
             "accelerometer": (
-                2048 * math.cos(s),
-                2048 * math.cos(1.2 * s),
-                2048 * math.cos(1.6 * s),
+                2048 * cos(s),
+                2048 * cos(1.2 * s),
+                2048 * cos(1.6 * s),
             ),
-            "euler": (math.cos(s), math.cos(1.2 * s), math.cos(1.6 * s)),
+            "euler": euler,
+            "quaternion": euler2quat(*euler),
             "gyroscope": (40 + frac, 41 + frac, 42 + frac),
             "magnetometer": (30 + frac, 31 + frac, 32 + frac),
         }
 
+def euler2quat(yaw, pitch, roll):
+    c1, s1 = cos(yaw / 2), sin(yaw / 2)
+    c2, s2 = cos(pitch / 2), sin(pitch / 2)
+    c3, s3 = cos(roll / 2), sin(roll / 2)
+    w = c1 * c2 * c3 - s1 * s2 * s3
+    x = s1 * s2 * c3 + c1 * c2 * s3
+    y = s1 * c2 * c3 + c1 * s2 * s3
+    z = c1 * s2 * c3 - s1 * c2 * s3
+    return (x, y, z, w)
 
-def iter_throttle(iter, freq=20):
+def iter_throttle(iterable, freq=20):
     next_time = 0
-    for item in iter:
+    for item in iterable:
         now = time.time()
         delay = next_time - now
         if delay > 0:

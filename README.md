@@ -42,7 +42,18 @@ Copy `config/network.ini.tmpl` to `config/network.ini` and fill in the values.
 Run `pipenv run mqtt_sub` to run an MQTT client that prints messages to the
 terminal.
 
-Run `pipenv run mqtt_pub` to publish a single message to the server.
+Run `pipenv run mqtt_pub --json` to publish a single message to the server.
+
+Run `pipenv run mqtt_pub --json --repeat` to repeatedly publish messages.
+
+## Blender
+
+In two separates terminals:
+
+1. `pipenv run mqtt-sub --pipe`
+2. `/Applications/Blender.app/Contents/MacOS/Blender --python blender/motion.py model.blend`
+
+If the pipe buffer fills, the `mqtt-sub` process will hang.
 
 ## MQTT Broker
 

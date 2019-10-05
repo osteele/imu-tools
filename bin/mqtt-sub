@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import itertools
 import json
+import subprocess
 import sys
 import time
+from pathlib import Path
 
 import click
 import paho.mqtt.client as mqtt
@@ -48,10 +50,10 @@ def on_message(_client, userdata, msg):
         sample_rate_reporter = userdata["sample_rate_reporter"]
         sample_rate_reporter.send(msg)
     except Exception as e:  # pylint: disable=broad-except
-        print("Error:", e, file=sys.stderr)
+        print("MQTT on_message error:", e, file=sys.stderr, flush=True)
 
 
-def print_message(msg, *, only=None):
+def print_message(msg, *, only=None, output=None):
     if not msg:
         return
     data = msg.payload
@@ -63,6 +65,12 @@ def print_message(msg, *, only=None):
         data = json.loads(data)
     except json.JSONDecodeError:
         pass  # use the undecoded payload
+    if output:
+        print(
+            "quaternion: " + ", ".join(map(str, data["quaternion"])),
+            file=output,
+            flush=True,
+        )
     if only:
         data = data[only]
     logger.info("Message(topic={}): {}", msg.topic, data)
@@ -83,15 +91,23 @@ def iter_drop(iterable, n):
 
 @click.command()
 @click.option("--only")
+@click.option("--pipe", is_flag=True)
 @click.option("--sample-rate", is_flag=True)
 @click.option("--sample-period", default=1)
-def main(*, only, sample_rate, sample_period):
+def main(*, only, sample_rate, sample_period, pipe):
+    outpipe = None
+    if pipe:
+        pipe_path = Path("/tmp/imu-relay.pipe")
+        if not pipe_path.exists():
+            print("Creating named pipe", pipe_path)
+            subprocess.run(["mkfifo", pipe_path], check=True)
+        outpipe = open(pipe_path, "w")
     userdata = dict(
         hostname=MQTT_CONFIG["host"],
         sample_rate_reporter=iter_drop(
             sample_rate_reporter_gen(sample_period)
             if sample_rate
-            else make_consuming_generator(print_message, only=only),
+            else make_consuming_generator(print_message, only=only, output=outpipe),
             1,
         ),
     )

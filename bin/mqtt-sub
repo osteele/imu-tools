@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import itertools
 import json
 import sys
 import time
@@ -27,8 +28,9 @@ def sample_rate_reporter_gen(sample_period=10):
     sample_start_time, sample_count = time.time(), 0
     show_frame_rate = True
     while True:
-        yield
-        sample_count += 1
+        msg = yield
+        if msg:
+            sample_count += 1
         now = time.time()
         elapsed = now - sample_start_time
         # print(".", elapsed, end="", flush=True)
@@ -42,36 +44,56 @@ def sample_rate_reporter_gen(sample_period=10):
 
 # Called when a PUBLISH message is received from the server.
 def on_message(_client, userdata, msg):
-    only = userdata["only"]
-    sample_rate_reporter = userdata["sample_rate_reporter"]
+    try:
+        sample_rate_reporter = userdata["sample_rate_reporter"]
+        sample_rate_reporter.send(msg)
+    except Exception as e:  # pylint: disable=broad-except
+        print("Error:", e, file=sys.stderr)
+
+
+def print_message(msg, *, only=None):
+    if not msg:
+        return
     data = msg.payload
     try:
         data = data.decode()
     except UnicodeError:
-        pass
+        pass  # use the undecoded payload
     try:
         data = json.loads(data)
     except json.JSONDecodeError:
-        pass
-    except Exception as e:  # pylint: disable=broad-except
-        print("Error:", e)
-    if sample_rate_reporter:
-        next(sample_rate_reporter)
-    else:
-        if only:
-            data = data[only]
-        logger.info("Message(topic={}): {}", msg.topic, data)
-        # print(f"Message(topic={msg.topic}): {data}")
+        pass  # use the undecoded payload
+    if only:
+        data = data[only]
+    logger.info("Message(topic={}): {}", msg.topic, data)
+
+
+def make_consuming_generator(fn, **kwargs):
+    while True:
+        data = yield
+        fn(data, **kwargs)
+
+
+# like iter.islice, but works with consuming generators
+def iter_drop(iterable, n):
+    for _ in range(n):
+        next(iterable)
+    return iterable
 
 
 @click.command()
 @click.option("--only")
-@click.option("--show-sample-rate", is_flag=True)
-def main(*, only, show_sample_rate):
+@click.option("--sample-rate", is_flag=True)
+@click.option("--sample-period", default=1)
+def main(*, only, sample_rate, sample_period):
     userdata = dict(
         hostname=MQTT_CONFIG["host"],
-        only=only,
-        sample_rate_reporter=show_sample_rate and sample_rate_reporter_gen(),
+        sample_rate_reporter=iter_drop(
+            sample_rate_reporter_gen(sample_period)
+            if sample_rate
+            else make_consuming_generator(print_message, only=only),
+            1,
+        ),
     )
     client = mqtt.Client(userdata=userdata)
     client.on_connect = on_connect
@@ -85,9 +107,15 @@ def main(*, only, show_sample_rate):
 
     try:
         client.loop_forever()
+        # TODO: add race prevention
+        # client.loop_start()
+        # while True:
+        #     from time import sleep
+        #     sleep(0.1)
+        #     userdata['sample_rate_reporter'].send(None)
     except KeyboardInterrupt:
         pass
 
 
 if __name__ == "__main__":
-    main()
+    main()  # pylint: disable=missing-kwoa

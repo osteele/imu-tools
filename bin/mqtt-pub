@@ -18,24 +18,22 @@ logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO"
 def on_publish(_client, userdata, mid):
     logger.info("Published(id={}) to {}", mid, userdata)
 
+
 def gen_samples():
     for i in itertools.count(0):
         s = i / 100
         frac = (i % 1000) / 1000
-        euler = (pi/10*cos(1.2 * s), pi/10*cos(1.4 * s), s % (2 * pi))
+        euler = (pi / 10 * cos(1.2 * s), pi / 10 * cos(1.4 * s), s % (2 * pi))
         yield {
             "timestamp": int(time.time() * 1000),
             "temperature": 27 + frac,
-            "accelerometer": (
-                2048 * cos(s),
-                2048 * cos(1.2 * s),
-                2048 * cos(1.6 * s),
-            ),
+            "accelerometer": (2048 * cos(s), 2048 * cos(1.2 * s), 2048 * cos(1.6 * s)),
             "euler": euler,
             "quaternion": euler2quat(*euler),
             "gyroscope": (40 + frac, 41 + frac, 42 + frac),
             "magnetometer": (30 + frac, 31 + frac, 32 + frac),
         }
+
 
 def euler2quat(yaw, pitch, roll):
     c1, s1 = cos(yaw / 2), sin(yaw / 2)
@@ -46,6 +44,7 @@ def euler2quat(yaw, pitch, roll):
     y = s1 * c2 * c3 + c1 * s2 * s3
     z = c1 * s2 * c3 - s1 * c2 * s3
     return (x, y, z, w)
+
 
 def iter_throttle(iterable, freq=20):
     next_time = 0
@@ -64,7 +63,8 @@ def iter_throttle(iterable, freq=20):
 @click.option("--rate", default=200)
 @click.option("--repeat", is_flag=True)
 def main(*, json, repeat, rate):
-    global client  # FIXME: w/out this info.wait_for_publish returns too early
+    # FIXME: w/out this info.wait_for_publish returns too early
+    global client  # pylint: disable=global-variable-undefined
     client = mqtt.Client(userdata=MQTT_CONFIG["host"])
     client.on_publish = on_publish
     client.on_log = True
@@ -88,4 +88,4 @@ def main(*, json, repeat, rate):
 
 
 if __name__ == "__main__":
-    main()
+    main()  # pylint: disable=missing-kwoa

@@ -1,9 +1,9 @@
-const mqttHost = 'localhost';
-const mqttPort = 15675;
+const mqttConnectionSettings = { hostname: 'localhost', port: 15675, userName: '', password: '' }
 const topicString = 'imu/#';
 
-// console.info('connecting to ' + mqttHost);
-const client = new Paho.Client(mqttHost, mqttPort, "/ws",
+
+// console.info('connecting to ' + mqttConnectionSettings.hostname);
+const client = new Paho.Client(mqttConnectionSettings.hostname, Number(mqttConnectionSettings.port || 15675), "/ws",
     "myclientid_" + parseInt(Math.random() * 100, 10));
 client.onMessageArrived = onMessageArrived;
 client.onConnectionLost = onConnectionLost;
@@ -11,7 +11,7 @@ client.onConnectionLost = onConnectionLost;
 const mqttConnectionOptions = {
     timeout: 3,
     onSuccess: function () {
-        console.log("Connected to mqtt://" + mqttHost + ":" + mqttPort);
+        console.log("Connected to mqtt://" + mqttConnectionSettings.hostname + ":" + mqttConnectionSettings.port);
         client.subscribe(topicString, { qos: 1 });
     },
     onFailure: function (message) {
@@ -20,6 +20,12 @@ const mqttConnectionOptions = {
 };
 
 function startSensorSubscription() {
+    ['userName', 'password'].forEach(function (key) {
+        const value = mqttConnectionSettings[key].trim();
+        if (value) {
+            mqttConnectionOptions[key] = value;
+        }
+    });
     client.connect(mqttConnectionOptions);
 };
 
@@ -29,6 +35,16 @@ function onConnectionLost(responseObject) {
 };
 
 document.addEventListener("DOMContentLoaded", function () {
+    if (window.dat) {
+        const gui = new dat.GUI();
+        gui.remember(mqttConnectionSettings);
+        gui.add(mqttConnectionSettings, 'hostname');
+        gui.add(mqttConnectionSettings, 'userName');
+        gui.add(mqttConnectionSettings, 'password');
+        gui.useLocalStorage = true;
+        gui.hide();
+    }
+
     startSensorSubscription();
 });
 

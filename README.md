@@ -14,21 +14,35 @@ The serial port format is compatible with
 
 3. Download the sources to the board:
 
-    ```pipenv mcu-sync```
+    ```shell
+    pipenv mcu-sync
+    ```
 
-4. Now reboot the board. Run `pipenv mcu-repl` and press `⌃D`. Or just press
-   the button. (The latter may be necessary to get the board to re-scan for WiFi
+4. Now reboot the board. Run `pipenv mcu-repl` and press `⌃D`. Or just press the
+   button. (The latter may be necessary to get the board to re-scan for WiFi
    networks.)
 
 [MicroPython Development
 Notes](https://paper.dropbox.com/doc/MicroPython-Development--Ai1pmnXzhBdkxZ6SuEPMTDiDAg-sAf2oqgmH5yIbmx27kZqs)
 contains notes on developing MicroPython on the ESP.
 
-## Interactive Testing
+## Web Clients
 
-1. Copy `config/network.ini.tmpl` to `config/network.ini` and fill in the values.
-2. Run `pipenv run mqtt_sub` to run an MQTT client that prints messages to the
-   terminal. Run `pipenv run mqtt_pub` to publish a single message to the server.
+Run `pipenv run webserver` to start the web server.
+
+<http://localhost:8000/model.html> yokes a 3D model to the IMU orientation.
+Press H to display the MQTT connection settings, and reload the page once
+they're saved. (Press H twice the first time.) The `?model=` query parameter
+specifies the URL to an OBJ model.
+
+## Command-Line Testing
+
+Copy `config/network.ini.tmpl` to `config/network.ini` and fill in the values.
+
+Run `pipenv run mqtt_sub` to run an MQTT client that prints messages to the
+terminal.
+
+Run `pipenv run mqtt_pub` to publish a single message to the server.
 
 ## MQTT Broker
 
@@ -47,5 +61,5 @@ To install a local broker:
 
 ## Credits
 
-`BNO055.py` and `functools.py` are adapted from
-Radomir Dopieralski's [`deshipu/micropython-bno055`](https://github.com/deshipu/micropython-bno055).
+`BNO055.py` and `functools.py` are adapted from Radomir Dopieralski's
+[`deshipu/micropython-bno055`](https://github.com/deshipu/micropython-bno055).

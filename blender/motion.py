@@ -1,47 +1,36 @@
-import math
 import os
 import re
-import sys
-import time
-from math import *
-from pathlib import Path
 
 import bpy
 import mathutils
 
-FLOAT_RE = re.compile(r"\d+(?:\.\d*)?")
+BONE = "forearmR"
+FLOAT_RE = re.compile(r"\d+(?:\.\d*(?:e[-+]\d+)?)?")
 PIPE_PATH = "/tmp/imu-relay.pipe"
 
 fp = None
 active = False
 
+print("objects =", bpy.data.objects.keys())
 ob = bpy.data.objects["Armature"]
-
-
-def updateAngles():
-    s = time.time()
-    euler = (pi / 10 * cos(1.2 * s), pi / 10 * cos(1.4 * s), s % (2 * pi))
-    ob.pose.bones["armR"].rotation_quaternion = mathutils.Vector(euler2quat(*euler))
-
-
-def euler2quat(yaw, pitch, roll):
-    c1, s1 = cos(yaw / 2), sin(yaw / 2)
-    c2, s2 = cos(pitch / 2), sin(pitch / 2)
-    c3, s3 = cos(roll / 2), sin(roll / 2)
-    w = c1 * c2 * c3 - s1 * s2 * s3
-    x = s1 * s2 * c3 + c1 * c2 * s3
-    y = s1 * c2 * c3 + c1 * s2 * s3
-    z = c1 * s2 * c3 - s1 * c2 * s3
-    return (x, y, z, w)
+print("bones =", ob.pose.bones.keys())
 
 
 def update_angle():
     if not active or not fp:
         return 0.1
-    line = fp.readline()
+    line = None
+    while True:
+        line2 = fp.readline()
+        if not line2:
+            break
+        line = line2
     if line and line.startswith("quaternion"):
         q_angle = [float(s) for s in re.findall(FLOAT_RE, line)]
-        ob.pose.bones["armR"].rotation_quaternion = mathutils.Vector(q_angle)
+        if len(q_angle) == 4:
+            ob.pose.bones[BONE].rotation_quaternion = mathutils.Vector(q_angle)
+        else:
+            print("Skipping:", line)
     return 0.05
 
 

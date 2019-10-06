@@ -7,6 +7,7 @@ verify_ssl = true
 mqtt-pub = "python bin/mqtt-pub"
 mqtt-sub = "python bin/mqtt-sub"
 mqtt-sample-rate = "python bin/mqtt-sub --sample-rate"
+mqtt2pipe = "python bin/mqtt-sub --pipe"
 mcu-sync = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200 rsync pyboard /pyboard"
 mcu-repl = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200 repl"
 mcu-screen = "screen /dev/tty.SLAB_USBtoUART 115200"

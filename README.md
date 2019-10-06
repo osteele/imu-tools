@@ -42,9 +42,9 @@ Copy `config/network.ini.tmpl` to `config/network.ini` and fill in the values.
 Run `pipenv run mqtt_sub` to run an MQTT client that prints messages to the
 terminal.
 
-Run `pipenv run mqtt_pub --json` to publish a single message to the server.
+Run `pipenv run mqtt_pub` to publish a single message to the server.
 
-Run `pipenv run mqtt_pub --json --repeat` to repeatedly publish messages.
+Run `pipenv run mqtt_pub --repeat` to repeatedly publish messages.
 
 ## Blender
 

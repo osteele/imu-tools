@@ -59,27 +59,42 @@ def iter_throttle(iterable, freq=20):
 
 
 @click.command()
-@click.option("--json", is_flag=True)
-@click.option("--rate", default=200)
-@click.option("--repeat", is_flag=True)
-def main(*, json, repeat, rate):
+@click.option(
+    "--message",
+    type=str,
+    metavar="MESSAGE",
+    help="Send MESSAGE instead of synthetic sensor readings",
+)
+@click.option(
+    "--rate",
+    metavar="RATE",
+    default=200,
+    help="Messages per second for use with --repeat",
+)
+@click.option("--repeat", is_flag=True, help="Keep sending messages at RATE/second")
+def main(*, message, repeat, rate):
+    """Send MQTT messages.
+
+    In a MESSAGE string, {i} is replaced by the message count, and {time} by the
+    Epoch seconds. This is useful in combination with --repeat."""
     # FIXME: w/out this info.wait_for_publish returns too early
     global client  # pylint: disable=global-variable-undefined
     client = mqtt.Client(userdata=MQTT_CONFIG["host"])
     client.on_publish = on_publish
     client.on_log = True
 
-    if MQTT_CONFIG["user"]:
-        client.username_pw_set(MQTT_CONFIG["user"], password=MQTT_CONFIG["password"])
+    user, password = MQTT_CONFIG["user"], MQTT_CONFIG["password"]
+    if user:
+        client.username_pw_set(user, password=password)
     client.connect(MQTT_CONFIG["host"], MQTT_CONFIG["port"])
 
     samples = (
-        map(json_enc.dumps, gen_samples())
-        if json
-        else map("sender=mqtt_pub({})".format, itertools.count())
+        (message.format(i=i, time=time.time()) for i in itertools.count())
+        if message is not None
+        else map(json_enc.dumps, gen_samples())
     )
     if not repeat:
-        samples = itertools.islice(samples, 1) if json else ["sender=mqtt_pub"]
+        samples = itertools.islice(samples, 1)
 
     client_id = "mqtt-pub"
     for payload in iter_throttle(samples, rate):

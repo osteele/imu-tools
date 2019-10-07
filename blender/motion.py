@@ -1,5 +1,7 @@
 import os
 import re
+import subprocess
+from pathlib import Path
 
 import bpy
 import mathutils
@@ -25,7 +27,7 @@ def update_angle():
         if not line2:
             break
         line = line2
-    if line and line.startswith("quaternion"):
+    if line and line.startswith("quaternion:"):
         q_angle = [float(s) for s in re.findall(FLOAT_RE, line)]
         if len(q_angle) == 4:
             ob.pose.bones[BONE].rotation_quaternion = mathutils.Vector(q_angle)
@@ -65,6 +67,8 @@ class ModalOperator(bpy.types.Operator):
     def invoke(self, _context, _event):
         global active, fp
         active = True
+        if not Path(PIPE_PATH).exists():
+            subprocess.run(["mkfifo", PIPE_PATH], check=True)
         fp = open(
             PIPE_PATH, "r", opener=lambda p, _f: os.open(p, os.O_RDONLY | os.O_NONBLOCK)
         )

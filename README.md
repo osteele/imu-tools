@@ -51,7 +51,7 @@ Run `pipenv run mqtt_pub --repeat` to repeatedly publish messages.
 In two separates terminals:
 
 1. `pipenv run mqtt2pipe`
-2. `/Applications/Blender.app/Contents/MacOS/Blender --python blender/motion.py model.blend`
+2. `/Applications/Blender.app/Contents/MacOS/Blender model.blend --python blender/motion.py`
 
 If the pipe buffer fills, the `mqtt-sub` process will hang.
 

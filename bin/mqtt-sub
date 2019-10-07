@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import os
 import subprocess
 import sys
 import time
@@ -50,6 +51,8 @@ def on_message(_client, userdata, msg):
     try:
         sample_rate_reporter = userdata["sample_rate_reporter"]
         sample_rate_reporter.send(msg)
+    except StopIteration:
+        sys.exit(1)
     except Exception as err:  # pylint: disable=broad-except
         print(f"MQTT on_message error: {err}", file=sys.stderr, flush=True)
 
@@ -89,6 +92,13 @@ def iter_drop(iterable, n):
         next(iterable)
     return iterable
 
+def create_output_pipe():
+    pipe_path = Path(PIPE_PATH)
+    if not pipe_path.exists():
+        print("Creating named pipe", pipe_path)
+        subprocess.run(["mkfifo", pipe_path], check=True)
+    return open(pipe_path, "w")
+
 
 @click.command()
 @click.option("--only", help="Print only the specified field")
@@ -99,19 +109,13 @@ def iter_drop(iterable, n):
 @click.option("--sample-period", default=1.0, metavar="SECONDS")
 def main(*, only, sample_rate, sample_period, pipe):
     """Relay MQTT messages to standard output, and optionally to a named pipe."""
-    outpipe = None
-    if pipe:
-        pipe_path = Path(PIPE_PATH)
-        if not pipe_path.exists():
-            print("Creating named pipe", pipe_path)
-            subprocess.run(["mkfifo", pipe_path], check=True)
-        outpipe = open(pipe_path, "w")
+    output_pipe = create_output_pipe() if pipe else None
     userdata = dict(
         hostname=MQTT_CONFIG["host"],
         sample_rate_reporter=iter_drop(
             sample_rate_reporter_gen(sample_period)
             if sample_rate
-            else make_consuming_generator(print_message, only=only, output=outpipe),
+            else make_consuming_generator(print_message, only=only, output=output_pipe),
             1,
         ),
     )

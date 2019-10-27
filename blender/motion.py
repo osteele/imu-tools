@@ -6,7 +6,7 @@ from pathlib import Path
 import bpy
 import mathutils
 
-BONE = "forearmR"
+BONE = "forearm.R"
 FLOAT_RE = re.compile(r"\d+(?:\.\d*(?:e[-+]\d+)?)?")
 PIPE_PATH = "/tmp/imu-relay.pipe"
 
@@ -14,7 +14,7 @@ fp = None
 active = False
 
 print("objects =", bpy.data.objects.keys())
-ob = bpy.data.objects["Armature"]
+ob = bpy.data.objects["free3dmodel_skeleton"]
 print("bones =", ob.pose.bones.keys())
 
 

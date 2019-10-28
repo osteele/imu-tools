@@ -46,31 +46,37 @@ contains notes on developing MicroPython on the ESP.
 
 Run `pipenv run webserver` to start a web server.
 
-<http://127.0.0.1:8000>
-displays a live graph of the position coordinates.
+<http://127.0.0.1:8000> displays a directory of the other web pages in this
+directory.
+
+<http://127.0.0.1:8000> displays a live D3 graph of the orientation coordinates.
 
 <http://127.0.0.1:8000/chart.html> uses HighCharts to display another live
-graph, that atuomatically scales the y axis as data arrives.
+graph, that automatically scales the y axis as data arrives.
 
 <http://localhost:8000/model.html> displays the bunny, with its orientation
 yolked to the IMU orientation. Press H to display the MQTT connection settings,
 and reload the page once they're saved. (Press H twice the first time.) An
 optional `?model=` query parameter specifies the URL to an OBJ model.
 
+To switch the MQTT broker for any of these web pages, press the "h" key, edit in
+the new value, and then reload the page. Note: Each page has its own copy of
+these settings. Changing one will not change the others.
+
 ## Command-Line Testing
 
 Copy `config/network.ini.tmpl` to `config/network.ini` and fill in the values.
 
-Run `pipenv run mqtt_sub` to run an MQTT client that prints messages to the
+Run `pipenv run mqtt-sub` to run an MQTT client that prints messages to the
 terminal.
 
-Run `pipenv run mqtt_pub` to publish a single message to the server.
+Run `pipenv run mqtt-pub` to publish a single message to the server.
 
-Run `pipenv run mqtt_pub --repeat` to repeatedly publish messages.
+Run `pipenv run mqtt-pub --repeat` to repeatedly publish messages.
 
 ## Blender
 
-In two separates terminals:
+In two separate terminals:
 
 1. `pipenv run mqtt2pipe`
 2. `/Applications/Blender.app/Contents/MacOS/Blender model.blend --python blender/motion.py`

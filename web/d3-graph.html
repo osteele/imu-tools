@@ -2,23 +2,19 @@
 
 <head>
     <meta charset="utf-8">
-    <title>IMU Index</title>
-
+    <title>IMU Graph</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"
         integrity="sha256-HJ7j+71YYw6Kcs8THwQV9lXmPOcR0eXlg7n8KRTZsyA=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"
         integrity="sha256-rYN+IEl1EAPituFi5xX/uFkd/9OFfAAedRa7WZURoeY=" crossorigin="anonymous"></script>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
 </head>
 
 <body>
-    <ul>
-        <li><a href="d3-graph.html">D3 Graph</a></li>
-        <li><a href="chart.html">Highcharts Graph</a></li>
-        <li><a href="model.html">3D Model</a></li>
-    </ul>
+    <div class="graph"></div>
 </body>
-
 <script type="text/javascript" src="./sensor-client.js"></script>
+<script type="text/javascript" src="./d3-graph.js"></script>
 
 </html>

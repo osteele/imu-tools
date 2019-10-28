@@ -43,7 +43,6 @@ const paths = svg.append('g')
 function findGroup(name) {
     let group = groups[name]
     if (!group) {
-        console.info('creating', name)
         const colors = ['orange', 'green', 'gray']
         group = {
             value: 0,

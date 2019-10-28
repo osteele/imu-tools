@@ -16,6 +16,7 @@ from umqtt.simple import MQTTClient
 DEVICE_ID = "".join(map("{:02x}".format, machine.unique_id()))
 print("Device id =", DEVICE_ID)
 
+
 #
 # IMU Connection
 #
@@ -27,7 +28,7 @@ def get_imu():
     if 40 not in i2c.scan():
         print("No IMU @ I2C(scl={}, sda={}). Using dummy data.".format(scl, sda))
         return bno055_fake.BNO055()
-    bno = bno055.BNO055(i2c)
+    bno = bno055.BNO055(i2c, verbose=config.TRACE_SPI)
     print("Using BNO055 @ I2C(scl={}, sda={})".format(scl, sda))
     bno.operation_mode(bno055.NDOF_MODE)
     return bno

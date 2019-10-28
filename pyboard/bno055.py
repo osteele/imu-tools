@@ -27,29 +27,38 @@ _POWER_SUSPEND = const(0x02)
 
 
 class BNO055:
-    def __init__(self, i2c, address=0x28):
+    def __init__(self, i2c, address=0x28, verbose=False):
         self.i2c = i2c
         self.buffer = bytearray(2)
         self.address = address
+        self._is_verbose = verbose
         self.init()
+
+    def _verbose(self, *args):
+        if self._is_verbose:
+            print(*args)
 
     def _write_register(self, register, value):
         self.buffer[0] = register
         self.buffer[1] = value
+        self._verbose("i2c.write", hex(register), "<-", value)
         with self.i2c as i2c:
             i2c.write(self.buffer)
 
     def _registers(self, register, struct, value=None, scale=1):
         if value is None:
             size = ustruct.calcsize(struct)
+            self._verbose("i2c.read", hex(register), "->")
             data = self.i2c.readfrom_mem(self.address, register, size)
             value = ustruct.unpack(struct, data)
+            self._verbose("  ", data)
             if scale != 1:
                 value = tuple(v * scale for v in value)
             return value
         if scale != 1:
             value = tuple(v / scale for v in value)
         data = ustruct.pack(struct, *value)
+        self._verbose("i2c.write", hex(register), "<-", data)
         self.i2c.writeto_mem(self.address, register, data)
 
     def _register(self, value=None, register=0x00, struct="B"):

@@ -2,3 +2,4 @@
 .pytest_cache
 config/network.ini
 pyboard/config.py
+esp32-*.bin

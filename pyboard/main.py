@@ -24,9 +24,16 @@ print("Device id =", DEVICE_ID)
 
 def get_imu():
     scl, sda = (22, 23) if sys.platform == "esp32" else (5, 4)
-    i2c = I2C(scl=Pin(scl), sda=Pin(sda), timeout=1000)
-    if 40 not in i2c.scan():
-        print("No IMU @ I2C(scl={}, sda={}). Using dummy data.".format(scl, sda))
+    i2c = I2C(scl=Pin(scl), sda=Pin(sda), freq=100000, timeout=1000)
+    devices = i2c.scan()
+    print("I2C scan ->", devices)
+    if 40 not in devices:
+        if devices:
+            print("I2C(scl={}, sda={}) devices:".format(scl, sda), devices)
+        missing_imu_msg = "No IMU @ I2C(scl={}, sda={})".format(scl, sda)
+        if not config.USE_DUMMY_IMU:
+            raise Exception(missing_imu_msg)
+        print(missing_imu_msg + ". Using dummy data.")
         return bno055_fake.BNO055()
     bno = bno055.BNO055(i2c, verbose=config.TRACE_SPI)
     print("Using BNO055 @ I2C(scl={}, sda={})".format(scl, sda))

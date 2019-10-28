@@ -38,7 +38,9 @@ def wifi_connect():
             ip_address, _subnet_mask, _gateway, _dns_server = station.ifconfig()
             print("success.\nIP address =", ip_address)
         elif ssids:
-            print("No known WiFi network in", ssids)
+            ssid_names = list(dict([(s, 1) for s in ssids]).keys())
+            ssid_names.sort(key=lambda s: s.lower())
+            print("No known WiFi network in", ", ".join(ssid_names))
         else:
             print("No WiFi networks found")
 

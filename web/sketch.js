@@ -32,7 +32,12 @@ function quatToMatrix(w, x, y, z) {
 }
 
 onSensorData(throttled(function (data) {
-    quat = data.quaternion;
+    const q = data.quaternion;
+    // discard invalid quaternions from the Gravity
+    const sum = q[0] ** 2 + q[1] ** 2 + q[2] ** 2 + q[3] ** 2;
+    if (Math.abs(sum - 1.0) < 1e-1) {
+        quat = q;
+    }
 }));
 
 function getModelUrl(defaultModelName) {

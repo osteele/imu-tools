@@ -1,0 +1,301 @@
+#!/usr/bin/env python3
+"""Read data from the serial port.
+
+Usage:
+
+    python collect_samples.py
+    python collect_samples.py --csv | tee data/samples.csv
+"""
+import argparse
+import itertools
+import json
+import random
+import struct
+import sys
+import time
+from collections import namedtuple
+from dataclasses import dataclass
+from glob import glob
+from json.decoder import JSONDecodeError
+from typing import Dict, Iterator, List, Optional, Union
+
+import serial
+from loguru import logger
+
+logger.remove()
+logger.add(sys.stderr, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO")
+
+devices: Dict[int, List[Optional[int]]] = {}
+
+
+@dataclass
+class Options:
+    direct: bool = False
+    include_partial_samples: bool = False
+    gryo: bool = False
+    verbose: bool = False
+
+
+class SerialDevice:
+    """Read and write lines to a USB serial device.
+
+    This assumes a single device at /dev/tty.usbmode*.
+    """
+
+    def __init__(self, verbose=False):
+        """If verbose is true, log sent and received lines."""
+        ttys = glob("/dev/tty.SLAB_USBtoUART") + glob("/dev/tty.usbmodem*")
+        if len(ttys) > 1:
+            raise ValueError("I'm not prepared to handle this many MCUs")
+        if not ttys:
+            raise ValueError("Device not found")
+        self._tty = ttys[0]
+        self._ser = serial.Serial(self._tty, 115200)
+        self.verbose = verbose
+
+    def write(self, line: str):
+        if self.verbose:
+            logger.info("→ {}", line)
+        self._ser.write(f"{line}\n".encode())
+        self._ser.flush()
+
+    def readline(self) -> Union[bytes, str]:
+        """Read one line, where “line” is a sequence of bytes ending with b'\n'.
+
+        Lines that begin with '@' are returned as bytes following the '@'.
+
+        Lines that begin with '#' are optionally logged, but not returned.
+
+        Other lines are returned as decoded strings.
+
+        The return values does not contain the line terminator."""
+        while True:
+            line = self._ser.readline()
+            if not (line and line[0] == ord("@")):
+                try:
+                    line = line.decode().rstrip()
+                except UnicodeDecodeError as e:
+                    sys.stderr.write(f"Error while decoding {line}:\n{e}\n")
+                    continue
+            if self.verbose:
+                logger.info("← {}", line.strip())
+            if line and line[0] == "#":
+                continue
+            return line
+
+    def lines(self) -> Iterator[Union[bytes, str]]:
+        """Generate a series of lines."""
+        try:
+            while True:
+                yield self.readline()
+        finally:
+            self._ser.close()
+
+
+class IMUConfig:
+    compass: bool = False
+    direct: bool = False
+    mode: str = "direct"
+    tilt: bool = False
+
+
+class SerialSensorDevice(SerialDevice):
+    board_type: Optional[str] = None
+    device_id: Optional[str] = None
+    sequence_number: int = random.randint(0, 1000) * 1000
+
+    def connect(self, config: IMUConfig):
+        self._board_type = "esp" if "SLAB_USBtoUART" in self._tty else "microbit"
+        self._ping()
+        self._configure(config)
+
+    def _command(self, cmd: str, ping=True):
+        self.write(f":{cmd}")
+        if ping:
+            self._ping()
+
+    def _configure(self, config: IMUConfig):
+        if self._board_type == "esp":
+            self._command("device_id?", ping=False)
+            for _ in range(50):
+                line = self.readline()
+                if not line.startswith("!device_id="):
+                    continue
+                self.device_id = line.split("=")[1]
+                break
+            if not self.device_id:
+                sys.stderr.write("Board didn't respond to ping\n")
+        else:
+            mode = "direct" if config.direct else "relay"
+            self._command(f"mode={mode}")
+            self._command(f"compass={str(config.compass).lower()}")
+            self._command(f"tilt={str(config.tilt).lower()}")
+
+    def _ping(self):
+        self.sequence_number = self.sequence_number + 1
+        sequence_id = str(self.sequence_number)
+        self._ser.reset_input_buffer()
+        self.write(f":ping {sequence_id}")
+        expect = f"!pong {sequence_id}"
+        # This is a nested loop because it used to try sending the ping again,
+        # and I might want that back
+        for _ in range(5):
+            for _ in range(10):
+                line = self.readline()
+                if line == expect:
+                    break
+            if line == expect:
+                break
+        if line != expect:
+            sys.stderr.write("Board didn't respond to ping\n")
+
+
+def _iter_samples(options=Options()) -> Iterator[dict]:
+    """Generate a series of samples, as dicts."""
+    device = SerialSensorDevice(options.verbose)
+    device.connect(options)
+
+    for line in device.lines():
+        if not line:
+            continue
+        elif isinstance(line, bytes):
+            sample = {"t": time.time()}
+            line = line[1:]
+            while line:
+                key, line = line.split(b"=", 1)
+                if len(line) < 4:
+                    line += b"\n"
+                value, = struct.unpack_from("!i", line)
+                sample[key.decode()] = value
+                assert len(line) <= 4 or line[4] == ord(";")
+                line = line[4:]
+            yield sample
+        elif line.startswith("# "):
+            logger.info("{}", line[2:])
+            continue
+        elif "{" in line:
+            data = json.loads(line)
+            if device.device_id:
+                data["device_id"] = device.device_id
+            if "accelerometer" in data:
+                data = {k: v for k, v in zip(["ax", "ay", "az"], data["accelerometer"])}
+            yield data
+        elif "=" in line:
+            sample = {"t": time.time()}
+            for field in filter(None, line.split(";")):
+                try:
+                    key, value = field.split("=", 1)
+                    sample[key] = float(value) if "." in value else int(value)
+                except ValueError as e:
+                    sys.stderr.write(f"{e} while processing {field} in {line}:\n")
+                    raise e
+            yield sample
+        elif line[0] == "!":
+            continue
+        else:
+            try:
+                # raise Exception(f"unimplemented: parsing for {line!r}")
+                print(f"Parse error: {line!r}", file=sys.stdout)
+            except (UnicodeDecodeError, JSONDecodeError) as e:
+                sys.stderr.write(f"error {e} in {line}\n")
+                continue
+
+
+def iter_samples(options=Options()):
+    """Generate a series of namedtuples."""
+    samples = _iter_samples(options)
+    next(samples)  # skip the first sample, in case it's from a partial line
+    if options.count:
+        samples = itertools.islice(samples, options.count)
+
+    # create a type from the first sample
+    sample_dict = next(samples)
+    sampleType = namedtuple("Sample", list(sample_dict.keys()))
+    sample = sampleType(*sample_dict.values())
+    yield sample
+
+    previous_sample = sample
+    samples = (sampleType(*sample.values()) for sample in samples)
+    for sample in samples:
+        if options.dedup and sample[1:] == previous_sample[1:]:
+            continue
+        previous_sample = sample
+        yield sample
+
+
+def samples2csv(options):
+    first_time = True
+    for sample in iter_samples(options):
+        if first_time:
+            print(",".join(sample._fields))
+            first_time = False
+        print(",".join(map(str, sample)), flush=True)
+
+
+def show_framerate(options):
+    start_time, samples = time.time(), 0
+    for _ in iter_samples(options):
+        now = time.time()
+        elapsed = now - start_time
+        if elapsed > 1:
+            logger.info("{:0.1f} samples/sec", samples / elapsed)
+            start_time, samples = now, 0
+        samples += 1
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--compass", action="store_true", help="Read compass settings.")
+    parser.add_argument(
+        "--csv",
+        action="store_true",
+        default=not sys.stdout.isatty(),
+        help="Write samples to a CSV file",
+    )
+    parser.add_argument("--no-csv", action="store_false", dest="csv")
+    parser.add_argument(
+        "--count", action="store", type=int, help="Return the first N samples."
+    )
+    parser.add_argument(
+        "--dedup", action="store_true", default=True, help="Skip duplicate samples"
+    )
+    parser.add_argument("--no-dedup", action="store_false", dest="dedup")
+    parser.add_argument(
+        "--direct",
+        action="store_true",
+        default=True,
+        help="Read samples from the connected micro:bit's own sensors.",
+    )
+    parser.add_argument(
+        "--only", action="store", type=str, help="Print only the named field."
+    )
+    parser.add_argument("--relay", action="store_false", dest="direct")
+    parser.add_argument("--framerate", action="store_true")
+    parser.add_argument(
+        "--include-partial-samples",
+        action="store_true",
+        help="Print or relay each sample, without waiting for missing fields.",
+    )
+    parser.add_argument("--tilt", action="store_true", help="Read tilt settings.")
+    parser.add_argument("--no-tilt", action="store_false", dest="tilt")
+    parser.add_argument("--verbose", action="store_true")
+    args = parser.parse_args()
+
+    try:
+        if args.csv:
+            samples2csv(args)
+        elif args.framerate:
+            show_framerate(args)
+        elif args.only:
+            for sample in iter_samples(args):
+                ix = sample._fields.index(args.only)
+                print(sample[ix])
+        else:
+            for sample in iter_samples(args):
+                print(sample, flush=True)
+    except KeyboardInterrupt:
+        pass
+
+
+if __name__ == "__main__":
+    main()

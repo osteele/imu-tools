@@ -1,4 +1,5 @@
 import json
+import select
 import os
 import socket
 import sys
@@ -220,6 +221,16 @@ def loop_forever():
         # Publish the sensor data each time through the loop.
         # If RUN_RUN_HTTP_SERVER is set, this publishes the data once per web request.
         # Else, it publishes it in a tight loop.
+        if config.SEND_SERIAL_SENSOR_DATA and select.select([sys.stdin], [], [], 0)[0]:
+            cmd = sys.stdin.readline().strip()
+            print("# cmd =", repr(cmd))
+            if cmd.startswith(":ping "):
+                sequence_id = cmd.split(" ")[1]
+                print("!pong " + sequence_id)
+            elif cmd == ":ping":
+                print("!pong")
+            elif cmd == ":device_id?":
+                print("!device_id=" + DEVICE_ID)
         if MQTT_CLIENT:
             MQTT_CLIENT.check_msg()
         if config.SEND_MQTT_SENSOR_DATA:

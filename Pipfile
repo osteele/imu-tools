@@ -18,6 +18,7 @@ paho-mqtt = "*"
 rshell = "*"
 click = "*"
 loguru = "*"
+pyserial = "*"
 
 [dev-packages]
 pylint = "*"

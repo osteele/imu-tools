@@ -1,10 +1,13 @@
+<!DOCTYPE html>
 <html>
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>IMU Web Client Index</title>
 
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css"
+        integrity="sha256-vK3UTo/8wHbaUn+dTQD0X6dzidqc5l7gczvH+Bnowwk=" crossorigin="anonymous" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"
         integrity="sha256-HJ7j+71YYw6Kcs8THwQV9lXmPOcR0eXlg7n8KRTZsyA=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"
@@ -12,12 +15,16 @@
 </head>
 
 <body>
-    <h2>Web Interfaces</h2>
-    <ul>
-        <li><a href="d3-graph.html">D3 Graph</a></li>
-        <li><a href="highcharts-chart.html">Highcharts Chart</a></li>
-        <li><a href="3d-model.html">3D Model</a></li>
-    </ul>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">Web Interfaces</h1>
+            <ul>
+                <li><a href="d3-graph.html">D3 Graph</a></li>
+                <li><a href="highcharts-chart.html">Highcharts Chart</a></li>
+                <li><a href="3d-model.html">3D Model</a></li>
+            </ul>
+        </div>
+    </section>
 </body>
 
 <script type="text/javascript" src="./sensor-client.js"></script>

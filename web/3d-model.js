@@ -10,6 +10,7 @@ function draw() {
     background(200, 200, 212);
     noStroke();
     lights();
+    orbitControl();
 
     Object.values(deviceStates).forEach(function (data) {
         const quat = data.quaternion;

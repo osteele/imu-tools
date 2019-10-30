@@ -36,7 +36,11 @@ def get_imu():
             raise Exception(missing_imu_msg)
         print(missing_imu_msg + ". Using dummy data.")
         return bno055_fake.BNO055()
-    bno = bno055.BNO055(i2c, verbose=config.TRACE_SPI)
+    try:
+        bno = bno055.BNO055(i2c, verbose=config.TRACE_SPI)
+    except OSError as err:
+        print(err)
+        bno = bno055.BNO055(i2c, verbose=config.TRACE_SPI)
     print("Using BNO055 @ I2C(scl={}, sda={})".format(scl, sda))
     bno.operation_mode(bno055.NDOF_MODE)
     return bno
@@ -170,15 +174,23 @@ def publish_sensor_data():
 
     If config.SEND_SERIAL_SENSOR_DATA is set, send the data on the serial port.
     """
-    data = {
-        "timestamp": time.ticks_ms(),
-        "temperature": imu.temperature(),
-        "accelerometer": imu.accelerometer(),
-        "euler": imu.euler(),
-        "gyroscope": imu.gyroscope(),
-        "magnetometer": imu.magnetometer(),
-        "quaternion": imu.quaternion(),
-    }
+    try:
+        data = {
+            "timestamp": time.ticks_ms(),
+            "temperature": imu.temperature(),
+            "accelerometer": imu.accelerometer(),
+            "euler": imu.euler(),
+            "gyroscope": imu.gyroscope(),
+            "magnetometer": imu.magnetometer(),
+            "quaternion": imu.quaternion(),
+        }
+    except OSError as err:
+        if err.errno == 19:
+            print(err)
+            return
+        raise err
+    if hasattr(imu, "bmp280"):
+        data["pressure"] = imu.bmp280.pressure
     payload = json.dumps(data)
     if MQTT_CLIENT:
         MQTT_CLIENT.publish("imu/" + DEVICE_ID, payload)

@@ -227,12 +227,26 @@ def sample_rate_gen():
             sample_count = 0
 
 
+def blinker_gen():
+    led = Pin(2, Pin.OUT)
+    next_blink_ms = 0
+    while True:
+        yield
+        if time.ticks_ms() > next_blink_ms:
+            next_blink_ms = time.ticks_ms() + 1000
+            led.toggle()
+
+
+# BLINK_ITER = blinker_gen()
+
+
 def loop_forever():
     sample_rate_iter = sample_rate_gen()
     while True:
         # Publish the sensor data each time through the loop.
         # If RUN_RUN_HTTP_SERVER is set, this publishes the data once per web request.
         # Else, it publishes it in a tight loop.
+        # next(BLINK_ITER)
         if config.SEND_SERIAL_SENSOR_DATA and select.select([sys.stdin], [], [], 0)[0]:
             cmd = sys.stdin.readline().strip()
             print("# cmd =", repr(cmd))

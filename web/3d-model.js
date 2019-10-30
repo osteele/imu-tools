@@ -1,5 +1,5 @@
 let obj;
-let quat = null;
+let deviceStates = {};
 
 function setup() {
     createCanvas(800, 800, WEBGL);
@@ -11,12 +11,19 @@ function draw() {
     noStroke();
     lights();
 
-    if (quat) {
+    Object.values(deviceStates).forEach(function (data) {
+        const quat = data.quaternion;
+        if (!quat) {
+            return;
+        }
+        const age = Math.max(0, +new Date() - 200 - data.local_timestamp);
+        const alpha = Math.max(5, 255 - age / 10);
         const [x, y, z, w] = quat;
         applyMatrix.apply(null, quatToMatrix(w, y, x, z));
-    }
-    rotateZ(Math.PI);
-    model(obj);
+        rotateZ(Math.PI);
+        fill(255, 255, 255, alpha);
+        model(obj);
+    });
 }
 
 function quatToMatrix(w, x, y, z) {
@@ -31,14 +38,9 @@ function quatToMatrix(w, x, y, z) {
     ];
 }
 
-onSensorData(throttled(function (data) {
-    const q = data.quaternion;
-    // discard invalid quaternions from the Gravity
-    const sum = q[0] ** 2 + q[1] ** 2 + q[2] ** 2 + q[3] ** 2;
-    if (Math.abs(sum - 1.0) < 1e-1) {
-        quat = q;
-    }
-}));
+onSensorData(function (data, states) {
+    deviceStates = states;
+});
 
 function getModelUrl(defaultModelName) {
     let modelName = defaultModelName;

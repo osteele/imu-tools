@@ -10,14 +10,14 @@ The serial port format is compatible with
 
 1. Install the [SLAB_USBtoUART drivers](https://rehmann.co/blog/drivers-for-slab_usbtouart/)
 
-2. Copy `src/config.py.tmpl` to `src/config.py`. Edit the latter file to fill in the values.
+2. Copy `pyboard/config.py.tmpl` to `pyboard/config.py`. Edit the latter file to fill in the values.
 
 3. Follow the instructions
    [here](https://docs.micropython.org/en/latest/esp32/tutorial/intro.html) to
    install MicroPython on the ESP32.
 
    1. Download the highest-numbered firmware whose name has the form
-      `esp32-20190529-v1.11.bin`, firmware from [the MicroPython download
+      `esp32-20190529-v1.11.bin` from [the MicroPython download
       page](https://micropython.org/download#esp32).
    2. Run the following shell commands. Replace `esp32-20190529-v1.11.bin` by
       the file that you downloaded in the previous step.

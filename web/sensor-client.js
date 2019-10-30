@@ -48,27 +48,35 @@ document.addEventListener("DOMContentLoaded", function () {
     startSensorSubscription();
 });
 
-let onSensorDataCallbacks = [];
-let errored = false;
+const _onSensorDataCallbacks = [];
+const _deviceStates = {};
+let _errored = false;
 
 function onMessageArrived(message) {
     const device_id = message.topic.split('/').pop();
     const data = JSON.parse(message.payloadString);
+    // discard invalid quaternions from the Gravity
+    const q = data.quaternion;
+    if (q && Math.abs(q[0] ** 2 + q[1] ** 2 + q[2] ** 2 + q[3] ** 2 - 1.0) > 1e-1) {
+        return;
+    }
+    _deviceStates[device_id] = data;
     data.device_id = device_id;
-    onSensorDataCallbacks.forEach(function (callback) {
+    data.local_timestamp = +new Date();
+    _onSensorDataCallbacks.forEach(function (callback) {
         try {
-            callback(data);
+            callback(data, _deviceStates);
         } catch (e) {
-            if (!errored) {
+            if (!_errored) {
                 console.error('err', e);
-                errored = true;
+                _errored = true;
             }
         }
     });
 }
 
 function onSensorData(callback) {
-    onSensorDataCallbacks.push(callback);
+    _onSensorDataCallbacks.push(callback);
 }
 
 // Apply callback no more than once per animation frame

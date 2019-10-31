@@ -1,8 +1,16 @@
-const mqttConnectionSettings = { hostname: 'localhost', port: 15675, userName: '', password: '' }
-const topicString = 'imu/#';
+const mqttConnectionSettings = { hostname: 'localhost', port: 15675, user: '', password: '' }
+const topicString = '#';
 
+if (window.dat) {
+    const gui = new dat.GUI();
+    gui.remember(mqttConnectionSettings);
+    gui.add(mqttConnectionSettings, 'hostname');
+    gui.add(mqttConnectionSettings, 'user');
+    gui.add(mqttConnectionSettings, 'password');
+    gui.useLocalStorage = true;
+    gui.hide();
+}
 
-// console.info('connecting to ' + mqttConnectionSettings.hostname);
 const client = new Paho.Client(mqttConnectionSettings.hostname, Number(mqttConnectionSettings.port || 15675), "/ws",
     "myclientid_" + parseInt(Math.random() * 100, 10));
 client.onMessageArrived = onMessageArrived;
@@ -20,12 +28,10 @@ const mqttConnectionOptions = {
 };
 
 function startSensorSubscription() {
-    ['userName', 'password'].forEach(function (key) {
-        const value = mqttConnectionSettings[key].trim();
-        if (value) {
-            mqttConnectionOptions[key] = value;
-        }
-    });
+    const user = mqttConnectionSettings.user.trim();
+    const password = mqttConnectionSettings.password.trim();
+    if (user) { mqttConnectionOptions.userName = user; }
+    if (password) { mqttConnectionOptions.password = password; }
     client.connect(mqttConnectionOptions);
 };
 
@@ -33,20 +39,6 @@ function onConnectionLost(responseObject) {
     console.log("MQTT connection lost: " + responseObject.errorMessage);
     setTimeout(startSensorSubscription, 1000);
 };
-
-document.addEventListener("DOMContentLoaded", function () {
-    if (window.dat) {
-        const gui = new dat.GUI();
-        gui.remember(mqttConnectionSettings);
-        gui.add(mqttConnectionSettings, 'hostname');
-        gui.add(mqttConnectionSettings, 'userName');
-        gui.add(mqttConnectionSettings, 'password');
-        gui.useLocalStorage = true;
-        gui.hide();
-    }
-
-    startSensorSubscription();
-});
 
 const _onSensorDataCallbacks = [];
 const _deviceStates = {};
@@ -91,3 +83,5 @@ function throttled(callback) {
         buffer[0] = data;
     }
 }
+
+startSensorSubscription();

@@ -17,6 +17,7 @@ from umqtt.simple import MQTTClient
 DEVICE_ID = "".join(map("{:02x}".format, machine.unique_id()))
 print("Device id =", DEVICE_ID)
 
+global LAST_ERROR
 
 #
 # IMU Connection
@@ -36,14 +37,18 @@ def get_imu():
             raise Exception(missing_imu_msg)
         print(missing_imu_msg + ". Using dummy data.")
         return bno055_fake.BNO055()
-    try:
-        bno = bno055.BNO055(i2c, verbose=config.TRACE_SPI)
-    except OSError as err:
-        print(err)
-        bno = bno055.BNO055(i2c, verbose=config.TRACE_SPI)
-    print("Using BNO055 @ I2C(scl={}, sda={})".format(scl, sda))
-    bno.operation_mode(bno055.NDOF_MODE)
-    return bno
+    for i in range(10, 0, -1):
+        try:
+            bno = bno055.BNO055(i2c, verbose=config.TRACE_SPI)
+            print("Using BNO055 @ I2C(scl={}, sda={})".format(scl, sda))
+            bno.operation_mode(bno055.NDOF_MODE)
+            return bno
+        except OSError as err:
+            global LAST_ERROR
+            LAST_ERROR = err
+            if i == 1 or err.args[0] != 19:
+                raise err
+            print(err, file=sys.stderr)
 
 
 imu = get_imu()
@@ -138,10 +143,10 @@ def mqtt_connect():
         .replace("//@", "")
         .replace(":1883/", "/")
     )
-    print("Connecting to " + broker_url, end="...")
+    print("Connecting to " + broker_url, end=" ...")
     try:
         mqtt_client.connect()
-        print("done.")
+        print(" done.")
         publish_machine_identifier(mqtt_client)
         mqtt_client.set_callback(on_mqtt_message)
         mqtt_client.subscribe("imu/control/" + DEVICE_ID)
@@ -185,8 +190,10 @@ def publish_sensor_data():
             "quaternion": imu.quaternion(),
         }
     except OSError as err:
-        if err.errno == 19:
-            print(err)
+        global LAST_ERROR
+        LAST_ERROR = err
+        if err.args[0] == 19:
+            print(err, file=sys.stderr)
             return
         raise err
     if hasattr(imu, "bmp280"):
@@ -227,8 +234,8 @@ def sample_rate_gen():
             sample_count = 0
 
 
-def blinker_gen():
-    led = Pin(2, Pin.OUT)
+def blinker_gen(pin_number=2):
+    led = Pin(pin_number, Pin.OUT)
     next_blink_ms = 0
     while True:
         yield

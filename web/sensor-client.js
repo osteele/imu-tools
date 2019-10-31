@@ -1,20 +1,26 @@
-const mqttConnectionSettings = { hostname: 'localhost', port: 15675, user: '', password: '', device_id: '' }
+const mqttConnectionSettings = { hostname: 'localhost', port: 15675, username: '', password: '', device_id: '' }
 
 if (window.dat) {
     const gui = new dat.GUI();
     gui.remember(mqttConnectionSettings);
     gui.add(mqttConnectionSettings, 'hostname');
-    gui.add(mqttConnectionSettings, 'user');
+    gui.add(mqttConnectionSettings, 'username');
     gui.add(mqttConnectionSettings, 'password');
     gui.add(mqttConnectionSettings, 'device_id');
     gui.useLocalStorage = true;
-    gui.hide();
 }
 
-const client = new Paho.Client(mqttConnectionSettings.hostname, Number(mqttConnectionSettings.port || 15675), "/ws",
+mqttConnectionSettings.hostname = mqttConnectionSettings.hostname || 'localhost';
+mqttConnectionSettings.port = mqttConnectionSettings.port || '15675';
+
+const client = new Paho.Client(mqttConnectionSettings.hostname, Number(mqttConnectionSettings.port), "/ws",
     "myclientid_" + parseInt(Math.random() * 100, 10));
 client.onMessageArrived = onMessageArrived;
 client.onConnectionLost = onConnectionLost;
+
+const mqttStatusElement = document.createElement('div');
+mqttStatusElement.className = 'mqtt-error';
+document.body.appendChild(mqttStatusElement);
 
 const mqttConnectionOptions = {
     timeout: 3,
@@ -22,17 +28,19 @@ const mqttConnectionOptions = {
         const device_id = mqttConnectionSettings.device_id.trim();
         let topicString = 'imu/' + (device_id || '#');
         console.log("Connected to mqtt://" + mqttConnectionSettings.hostname + ":" + mqttConnectionSettings.port);
+        mqttStatusElement.innerText = '';
         client.subscribe(topicString, { qos: 1 });
     },
     onFailure: function (message) {
         console.log("MQTT connection failed: " + message.errorMessage);
+        mqttStatusElement.innerText = "MQTT connection failed: " + message.errorMessage;
     }
 };
 
 function startSensorSubscription() {
-    const user = mqttConnectionSettings.user.trim();
+    const username = mqttConnectionSettings.username.trim();
     const password = mqttConnectionSettings.password.trim();
-    if (user) { mqttConnectionOptions.userName = user; }
+    if (username) { mqttConnectionOptions.userName = username; }
     if (password) { mqttConnectionOptions.password = password; }
     client.connect(mqttConnectionOptions);
 };

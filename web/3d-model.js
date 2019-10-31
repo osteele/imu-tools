@@ -1,10 +1,13 @@
 let obj;
 let deviceStates = {};
+let modelPositions = {};
 
 function setup() {
     createCanvas(800, 800, WEBGL);
     obj = loadModel(getModelUrl('bunny'), true);
 }
+
+let times = 0;
 
 function draw() {
     background(200, 200, 212);
@@ -17,13 +20,40 @@ function draw() {
         if (!quat) {
             return;
         }
+
+        push();
+
+        const ascale = 0.95; // scale the acclerometer data by this much
+        const retu = 0.95; // pull the displaced position back to the origin
+
+        // if (new Date - times > 1000) {
+        //     times = new Date
+        //     console.info(x, y, z)
+        // }
+
+        const [ax, ay, az] = data.accelerometer;
+        let [x, y, z] = modelPositions[data.device_id] || [0, 0, 0];
+        // Read the rotation. This is a quaternion; convert it to Euler angles.
+        const [q0, q1, q2, q3] = quat;
+        applyMatrix.apply(null, quatToMatrix(q3, q1, q0, q2));
+        rotateZ(Math.PI);
+
+        x += ax * ascale;
+        y += ay * ascale;
+        z += az * ascale;
+        x *= retu;
+        y *= retu;
+        z *= retu;
+        modelPositions[data.device_id] = [x, y, z];
+        translate(x, y, z);
+
+        // Fade the model out if the sensor data is stale.
         const age = Math.max(0, +new Date() - 200 - data.local_timestamp);
         const alpha = Math.max(5, 255 - age / 10);
-        const [x, y, z, w] = quat;
-        applyMatrix.apply(null, quatToMatrix(w, y, x, z));
-        rotateZ(Math.PI);
         fill(255, 255, 255, alpha);
+
         model(obj);
+        pop();
     });
 }
 

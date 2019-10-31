@@ -1,5 +1,4 @@
-const mqttConnectionSettings = { hostname: 'localhost', port: 15675, user: '', password: '' }
-const topicString = '#';
+const mqttConnectionSettings = { hostname: 'localhost', port: 15675, user: '', password: '', device_id: '' }
 
 if (window.dat) {
     const gui = new dat.GUI();
@@ -7,6 +6,7 @@ if (window.dat) {
     gui.add(mqttConnectionSettings, 'hostname');
     gui.add(mqttConnectionSettings, 'user');
     gui.add(mqttConnectionSettings, 'password');
+    gui.add(mqttConnectionSettings, 'device_id');
     gui.useLocalStorage = true;
     gui.hide();
 }
@@ -19,6 +19,8 @@ client.onConnectionLost = onConnectionLost;
 const mqttConnectionOptions = {
     timeout: 3,
     onSuccess: function () {
+        const device_id = mqttConnectionSettings.device_id.trim();
+        let topicString = 'imu/' + (device_id || '#');
         console.log("Connected to mqtt://" + mqttConnectionSettings.hostname + ":" + mqttConnectionSettings.port);
         client.subscribe(topicString, { qos: 1 });
     },

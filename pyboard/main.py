@@ -216,7 +216,7 @@ def send_serial_data():
 
 WIFI_STATION = network.WLAN(network.STA_IF)
 if WIFI_STATION.isconnected():
-    if config.RUN_RUN_HTTP_SERVER:
+    if config.RUN_HTTP_SERVER:
         start_http_server()
     if config.SEND_MQTT_SENSOR_DATA:
         mqtt_connect()
@@ -253,7 +253,7 @@ def loop_forever():
     sample_rate_iter = sample_rate_gen()
     while True:
         # Publish the sensor data each time through the loop.
-        # If RUN_RUN_HTTP_SERVER is set, this publishes the data once per web request.
+        # If RUN_HTTP_SERVER is set, this publishes the data once per web request.
         # Else, it publishes it in a tight loop.
         # next(BLINK_ITER)
         # if config.SEND_SERIAL_SENSOR_DATA and select.select([sys.stdin], [], [], 0)[0]:
@@ -274,7 +274,7 @@ def loop_forever():
             send_serial_data()
         else:
             next(sample_rate_iter)
-        if config.RUN_RUN_HTTP_SERVER:
+        if config.RUN_HTTP_SERVER:
             service_http_request()
 
 

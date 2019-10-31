@@ -3,6 +3,7 @@ import select
 import os
 import socket
 import sys
+import time
 
 import bno055
 import bno055_fake
@@ -48,7 +49,8 @@ def get_imu():
             LAST_ERROR = err
             if i == 1 or err.args[0] != 19:
                 raise err
-            print(err, file=sys.stderr)
+            print("Error finding BNO055:", err, file=sys.stderr)
+            time.sleep_ms(1000)
 
 
 imu = get_imu()
@@ -193,7 +195,7 @@ def publish_sensor_data():
         global LAST_ERROR
         LAST_ERROR = err
         if err.args[0] == 19:
-            print(err, file=sys.stderr)
+            print("Error", err, file=sys.stderr)
             return
         raise err
     if hasattr(imu, "bmp280"):
@@ -254,16 +256,16 @@ def loop_forever():
         # If RUN_RUN_HTTP_SERVER is set, this publishes the data once per web request.
         # Else, it publishes it in a tight loop.
         # next(BLINK_ITER)
-        if config.SEND_SERIAL_SENSOR_DATA and select.select([sys.stdin], [], [], 0)[0]:
-            cmd = sys.stdin.readline().strip()
-            print("# cmd =", repr(cmd))
-            if cmd.startswith(":ping "):
-                sequence_id = cmd.split(" ")[1]
-                print("!pong " + sequence_id)
-            elif cmd == ":ping":
-                print("!pong")
-            elif cmd == ":device_id?":
-                print("!device_id=" + DEVICE_ID)
+        # if config.SEND_SERIAL_SENSOR_DATA and select.select([sys.stdin], [], [], 0)[0]:
+        #     cmd = sys.stdin.readline().strip()
+        #     print("# cmd =", repr(cmd))
+        #     if cmd.startswith(":ping "):
+        #         sequence_id = cmd.split(" ")[1]
+        #         print("!pong " + sequence_id)
+        #     elif cmd == ":ping":
+        #         print("!pong")
+        #     elif cmd == ":device_id?":
+        #         print("!device_id=" + DEVICE_ID)
         if MQTT_CLIENT:
             MQTT_CLIENT.check_msg()
         if config.SEND_MQTT_SENSOR_DATA:

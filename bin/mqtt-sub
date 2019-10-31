@@ -18,10 +18,13 @@ logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO"
 PIPE_PATH = "/tmp/imu-relay.pipe"
 
 # Called on a CONNACK response from the server.
-def on_connect(client, userdata, _flags, rc):
-    hostname = userdata["hostname"]
-    logger.info("Connected(host={}, rc={})", hostname, rc)
-    client.subscribe("#")
+def make_on_connect(topic="#"):
+    def on_connect(client, userdata, _flags, rc):
+        hostname = userdata["hostname"]
+        logger.info("Connected(host={}, rc={})", hostname, rc)
+        client.subscribe(topic)
+
+    return on_connect
 
 
 def on_subscribe(_client, _userdata, mid, granted_qos):
@@ -71,11 +74,7 @@ def print_message(msg, *, only=None, output=None):
         pass  # use the undecoded payload
     if output:
         qs = data["quaternion"]
-        print(
-            "quaternion: " + ", ".join(map(str, qs)),
-            file=output,
-            flush=True,
-        )
+        print("quaternion: " + ", ".join(map(str, qs)), file=output, flush=True)
     if only:
         data = data[only]
     logger.info("Message(topic={}): {}", msg.topic, data)
@@ -93,6 +92,7 @@ def iter_drop(iterable, n):
         next(iterable)
     return iterable
 
+
 def create_output_pipe():
     pipe_path = Path(PIPE_PATH)
     if not pipe_path.exists():
@@ -104,11 +104,12 @@ def create_output_pipe():
 @click.command()
 @click.option("--only", help="Print only the specified field")
 @click.option("--pipe", is_flag=True, help=f"Pipe quaternions to {PIPE_PATH}")
+@click.option("--device-id", help=f"Only subscribe to this device")
 @click.option(
     "--sample-rate", is_flag=True, help="Print the sample rate instead of the samples"
 )
 @click.option("--sample-period", default=1.0, metavar="SECONDS")
-def main(*, only, sample_rate, sample_period, pipe):
+def main(*, device_id, only, sample_rate, sample_period, pipe):
     """Relay MQTT messages to standard output, and optionally to a named pipe."""
     output_pipe = create_output_pipe() if pipe else None
     userdata = dict(
@@ -121,7 +122,7 @@ def main(*, only, sample_rate, sample_period, pipe):
         ),
     )
     client = mqtt.Client(userdata=userdata)
-    client.on_connect = on_connect
+    client.on_connect = make_on_connect(f"imu/{device_id}" if device_id else "#")
     client.on_message = on_message
     client.on_subscribe = on_subscribe
     client.on_log = True

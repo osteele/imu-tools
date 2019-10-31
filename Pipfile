@@ -8,9 +8,9 @@ mqtt-pub = "python bin/mqtt-pub"
 mqtt-sub = "python bin/mqtt-sub"
 mqtt-sample-rate = "python bin/mqtt-sub --sample-rate"
 mqtt2pipe = "python bin/mqtt-sub --pipe"
-mcu-sync = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200 rsync pyboard /pyboard"
-mcu-repl = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200 repl"
-mcu-screen = "screen /dev/tty.SLAB_USBtoUART 115200"
+download = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200 rsync pyboard /pyboard"
+repl = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200 repl"
+screen = "screen /dev/tty.SLAB_USBtoUART 115200"
 webserver = "python -m http.server -b 127.0.0.1 -d web"
 
 [packages]

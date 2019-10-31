@@ -8,9 +8,14 @@ The serial port format is compatible with
 
 ## Installation
 
-1. Install the [SLAB_USBtoUART drivers](https://rehmann.co/blog/drivers-for-slab_usbtouart/)
+1. Download and install the [SLAB_USBtoUART
+   drivers](https://rehmann.co/blog/drivers-for-slab_usbtouart/). These allow
+   your computer to connect to an ESP chip that is attached on the serial port
+   (via USB).
 
-2. Copy `pyboard/config.py.tmpl` to `pyboard/config.py`. Edit the latter file to fill in the values.
+2. Copy `pyboard/config.py.tmpl` to `pyboard/config.py`. Edit the latter file to
+   fill in the values. If you are running an MQTT broker on your development
+   computer, you may leave these unchanged.
 
 3. Follow the instructions
    [here](https://docs.micropython.org/en/latest/esp32/tutorial/intro.html) to
@@ -22,21 +27,29 @@ The serial port format is compatible with
    2. Run the following shell commands. Replace `esp32-20190529-v1.11.bin` by
       the file that you downloaded in the previous step.
 
-   ```sh
-   pip3 install esptool
-   esptool.py --chip esp32 --port /dev/tty.SLAB_USBtoUART erase_flash
-   esptool.py --chip esp32 --port /dev/tty.SLAB_USBtoUART --baud 460800 write_flash -z 0x1000 esp32-20190529-v1.11.bin
-   ```
+      ```sh
+      pip3 install esptool
+      esptool.py --chip esp32 --port /dev/tty.SLAB_USBtoUART erase_flash
+      esptool.py --chip esp32 --port /dev/tty.SLAB_USBtoUART --baud 460800 write_flash -z 0x1000 esp32-20190529-v1.11.bin
+      ```
 
-4. Download the sources to the MCU:
+4. Download the source code from the `pyboard` directory in this folder, to the MCU:
 
     ```sh
-    pipenv run mcu-sync
+    pipenv run download
     ```
 
-5. Now reboot the MCU. Either: (1) Run `pipenv run mcu-repl` and press `⌃D`; or (2) press the
-   button. (The latter may be necessary to get the board to re-scan for WiFi
-   networks.)
+5. Now reboot the MCU, so that it runs the new code:
+
+   Run `pipenv run repl`
+   Press `⌃D`
+
+   You can also reboot the board by pressing the button that is closest to the red LED, on the MCU board.
+
+`pipenv run download` and `pipenv run repl` use the [rshell](https://github.com/dhylands/rshell#rshell) project to communicate with the MCU.
+You can read how `pipenv run` invokes the `repl` command by inspecting the source of `Pipfile`.
+
+`pipenv run screen` is an alternative to `pipenv run repl`, that uses the `screen` command instead of `rshell`. `screen` connects to the board more quickly than `repl`, but is more difficult to use.
 
 [MicroPython Development
 Notes](https://paper.dropbox.com/doc/MicroPython-Development--Ai1pmnXzhBdkxZ6SuEPMTDiDAg-sAf2oqgmH5yIbmx27kZqs)

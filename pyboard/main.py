@@ -148,8 +148,7 @@ def publish_sensor_data(data):
 
 
 def send_serial_data(data):
-    data = SENSORS.accelerometer()
-    print(";".join(k + "=" + str(v) for k, v in zip(["ax", "ay", "az"], data)))
+    print(";".join(k + "=" + str(v) for k, v in zip(["rx", "ry", "rz"], data["euler"])))
 
 
 #

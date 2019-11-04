@@ -72,6 +72,7 @@ class BNO055:
     _page_id = partial(_register, register=0x07)
     operation_mode = partial(_register, register=0x3D)
     temperature = partial(_register, register=0x34, value=None)
+    calibration = partial(_register, register=0x35, struct="<B", value=None)
     accelerometer = partial(
         _registers, register=0x08, struct="<hhh", value=None, scale=1 / 100
     )

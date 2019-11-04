@@ -47,12 +47,13 @@ def get_sensor_data(imu):
     try:
         data = {
             "timestamp": time.ticks_ms(),
-            "temperature": imu.temperature(),
             "accelerometer": imu.accelerometer(),
+            "calibration": imu.calibration(),
             "euler": imu.euler(),
             "gyroscope": imu.gyroscope(),
             "magnetometer": imu.magnetometer(),
             "quaternion": imu.quaternion(),
+            "temperature": imu.temperature(),
         }
         if data['temperature'] == 0.0:
             imu.operation_mode(bno055.NDOF_MODE)

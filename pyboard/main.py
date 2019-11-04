@@ -3,14 +3,13 @@ import select
 import os
 import socket
 import sys
-import time
+import utime as time
 
 import bno055
 import bno055_fake
 import config
 import machine
 import network
-import utime as time
 from config import MQTT_CONFIG
 from machine import I2C, Pin
 from umqtt.simple import MQTTClient
@@ -18,7 +17,7 @@ from umqtt.simple import MQTTClient
 DEVICE_ID = "".join(map("{:02x}".format, machine.unique_id()))
 print("Device id =", DEVICE_ID)
 
-global LAST_ERROR
+LAST_ERROR = None
 
 #
 # IMU Connection
@@ -198,8 +197,8 @@ def publish_sensor_data():
             print("Error", err, file=sys.stderr)
             return
         raise err
-    if hasattr(imu, "bmp280"):
-        data["pressure"] = imu.bmp280.pressure
+    # if hasattr(imu, "bmp280"):
+    #     data["pressure"] = imu.bmp280.pressure
     payload = json.dumps(data)
     if MQTT_CLIENT:
         MQTT_CLIENT.publish("imu/" + DEVICE_ID, payload)
@@ -243,7 +242,7 @@ def blinker_gen(pin_number=2):
         yield
         if time.ticks_ms() > next_blink_ms:
             next_blink_ms = time.ticks_ms() + 1000
-            led.toggle()
+            led.value(led.value())
 
 
 # BLINK_ITER = blinker_gen()

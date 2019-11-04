@@ -1,58 +1,22 @@
 import json
-import select
 import os
+import select
 import socket
 import sys
-import utime as time
 
-import bno055
-import bno055_fake
 import config
 import machine
 import network
+import utime as time
 from config import MQTT_CONFIG
-from machine import I2C, Pin
+from sensors import get_imu
 from umqtt.simple import MQTTClient
 
 DEVICE_ID = "".join(map("{:02x}".format, machine.unique_id()))
-print("Device id =", DEVICE_ID)
-
 LAST_ERROR = None
+SENSORS = get_imu(use_dummy=config.USE_DUMMY_IMU)
 
-#
-# IMU Connection
-#
-
-
-def get_imu():
-    scl, sda = (22, 23) if sys.platform == "esp32" else (5, 4)
-    i2c = I2C(scl=Pin(scl), sda=Pin(sda), freq=100000, timeout=1000)
-    devices = i2c.scan()
-    print("I2C scan ->", devices)
-    if 40 not in devices:
-        if devices:
-            print("I2C(scl={}, sda={}) devices:".format(scl, sda), devices)
-        missing_imu_msg = "No IMU @ I2C(scl={}, sda={})".format(scl, sda)
-        if not config.USE_DUMMY_IMU:
-            raise Exception(missing_imu_msg)
-        print(missing_imu_msg + ". Using dummy data.")
-        return bno055_fake.BNO055()
-    for i in range(10, 0, -1):
-        try:
-            bno = bno055.BNO055(i2c, verbose=config.TRACE_SPI)
-            print("Using BNO055 @ I2C(scl={}, sda={})".format(scl, sda))
-            bno.operation_mode(bno055.NDOF_MODE)
-            return bno
-        except OSError as err:
-            global LAST_ERROR
-            LAST_ERROR = err
-            if i == 1 or err.args[0] != 19:
-                raise err
-            print("Error finding BNO055:", err, file=sys.stderr)
-            time.sleep_ms(1000)
-
-
-imu = get_imu()
+print("Device id =", DEVICE_ID)
 
 #
 # Web Server
@@ -69,22 +33,22 @@ def create_web_page_content():
   .button2{background-color: #4286f4;}</style></head><body> <h1>ESP BO055 IMU</h1>"""
     if MQTT_CLIENT:
         html += "<p>Connected to mqtt://" + MQTT_CLIENT.server + "</p>"
-    if imu:
+    if SENSORS:
         html += (
             "<p>Temperature: <strong>"
-            + str(imu.temperature())
+            + str(SENSORS.temperature())
             + "</strong></p>"
             + "<p>Accelerometer: <strong>"
-            + str(imu.accelerometer())
+            + str(SENSORS.accelerometer())
             + "</strong></p>"
             + "<p>Magnetometer: <strong>"
-            + str(imu.magnetometer())
+            + str(SENSORS.magnetometer())
             + "</strong></p>"
             + "<p>Gyroscope: <strong>"
-            + str(imu.gyroscope())
+            + str(SENSORS.gyroscope())
             + "</strong></p>"
             + "<p>Euler: <strong>"
-            + str(imu.euler())
+            + str(SENSORS.euler())
             + "</strong></p>"
         )
     html += """<p><a href="/?led=on"><button class="button">ON</button></a></p>
@@ -129,18 +93,17 @@ def service_http_request():
 MQTT_CLIENT = None
 
 
-def mqtt_connect():
-    global MQTT_CLIENT
-    mqtt_host = MQTT_CONFIG["host"]
+def mqtt_connect(config):
+    mqtt_host = config["host"]
     mqtt_client = MQTTClient(
         DEVICE_ID,
         mqtt_host,
-        port=MQTT_CONFIG["port"],
-        user=MQTT_CONFIG["user"],
-        password=MQTT_CONFIG["password"],
+        port=config["port"],
+        user=config["user"],
+        password=config["password"],
     )
     broker_url = (
-        "mqtt://{user}@{host}:{port}/".format(**MQTT_CONFIG)
+        "mqtt://{user}@{host}:{port}/".format(**config)
         .replace("//@", "")
         .replace(":1883/", "/")
     )
@@ -154,7 +117,7 @@ def mqtt_connect():
         mqtt_client.subscribe("imu/control/*")
     except OSError as err:
         print(err)
-    MQTT_CLIENT = mqtt_client
+    return mqtt_client
 
 
 def publish_machine_identifier(mqtt_client):
@@ -183,12 +146,12 @@ def publish_sensor_data():
     try:
         data = {
             "timestamp": time.ticks_ms(),
-            "temperature": imu.temperature(),
-            "accelerometer": imu.accelerometer(),
-            "euler": imu.euler(),
-            "gyroscope": imu.gyroscope(),
-            "magnetometer": imu.magnetometer(),
-            "quaternion": imu.quaternion(),
+            "temperature": SENSORS.temperature(),
+            "accelerometer": SENSORS.accelerometer(),
+            "euler": SENSORS.euler(),
+            "gyroscope": SENSORS.gyroscope(),
+            "magnetometer": SENSORS.magnetometer(),
+            "quaternion": SENSORS.quaternion(),
         }
     except OSError as err:
         global LAST_ERROR
@@ -197,15 +160,15 @@ def publish_sensor_data():
             print("Error", err, file=sys.stderr)
             return
         raise err
-    # if hasattr(imu, "bmp280"):
-    #     data["pressure"] = imu.bmp280.pressure
+    # if hasattr(SENSORS, "bmp280"):
+    #     data["pressure"] = SENSORS.bmp280.pressure
     payload = json.dumps(data)
     if MQTT_CLIENT:
         MQTT_CLIENT.publish("imu/" + DEVICE_ID, payload)
 
 
 def send_serial_data():
-    data = imu.accelerometer()
+    data = SENSORS.accelerometer()
     print(";".join(k + "=" + str(v) for k, v in zip(["ax", "ay", "az"], data)))
 
 
@@ -218,7 +181,7 @@ if WIFI_STATION.isconnected():
     if config.RUN_HTTP_SERVER:
         start_http_server()
     if config.SEND_MQTT_SENSOR_DATA:
-        mqtt_connect()
+        MQTT_CLIENT = mqtt_connect(config.MQTT_CONFIG)
 
 
 def sample_rate_gen():

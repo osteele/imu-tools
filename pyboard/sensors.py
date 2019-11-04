@@ -1,0 +1,37 @@
+import sys
+
+import bno055
+import bno055_fake
+import config
+import utime as time
+from machine import I2C, Pin
+
+LAST_ERROR = None
+
+
+def get_imu(use_dummy):
+    scl, sda = (22, 23) if sys.platform == "esp32" else (5, 4)
+    i2c = I2C(scl=Pin(scl), sda=Pin(sda), freq=100000, timeout=1000)
+    devices = i2c.scan()
+    print("I2C scan ->", devices)
+    if 40 not in devices:
+        if devices:
+            print("I2C(scl={}, sda={}) devices:".format(scl, sda), devices)
+        missing_imu_msg = "No IMU @ I2C(scl={}, sda={})".format(scl, sda)
+        if not use_dummy:
+            raise Exception(missing_imu_msg)
+        print(missing_imu_msg + ". Using dummy data.")
+        return bno055_fake.BNO055()
+    for i in range(10, 0, -1):
+        try:
+            bno = bno055.BNO055(i2c, verbose=config.TRACE_SPI)
+            print("Using BNO055 @ I2C(scl={}, sda={})".format(scl, sda))
+            bno.operation_mode(bno055.NDOF_MODE)
+            return bno
+        except OSError as err:
+            global LAST_ERROR
+            LAST_ERROR = err
+            if i == 1 or err.args[0] != 19:
+                raise err
+            print("Error finding BNO055:", err, file=sys.stderr)
+            time.sleep_ms(1000)

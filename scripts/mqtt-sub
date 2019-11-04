@@ -4,6 +4,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from time import sleep
 
 import click
 import paho.mqtt.client as mqtt
@@ -43,7 +44,7 @@ def sample_rate_reporter_gen(sample_period=10):
         if elapsed >= sample_period:
             if show_frame_rate:
                 # logger.info("{:0.1f} samples/sec", samples / elapsed)
-                print(f"{sample_count / elapsed:0.1f} samples/sec")
+                logger.info("{:0.1f} samples/sec", sample_count / elapsed)
             sample_start_time = now
             sample_count = 0
 
@@ -111,14 +112,15 @@ def create_output_pipe():
 def main(*, device_id, only, sample_rate, sample_period, pipe):
     """Relay MQTT messages to standard output, and optionally to a named pipe."""
     output_pipe = create_output_pipe() if pipe else None
-    userdata = dict(
-        hostname=MQTT_CONFIG["host"],
-        sample_rate_reporter=iter_drop(
+    reporter=iter_drop(
             sample_rate_reporter_gen(sample_period)
             if sample_rate
             else make_consuming_generator(print_message, only=only, output=output_pipe),
             1,
-        ),
+        )
+    userdata = dict(
+        hostname=MQTT_CONFIG["host"],
+        sample_rate_reporter=reporter,
     )
     client = mqtt.Client(userdata=userdata)
     client.on_connect = make_on_connect(f"imu/{device_id}" if device_id else "#")
@@ -132,13 +134,13 @@ def main(*, device_id, only, sample_rate, sample_period, pipe):
     client.connect(MQTT_CONFIG["host"], MQTT_CONFIG["port"])
 
     try:
-        client.loop_forever()
+        # client.loop_forever()
         # TODO: add race prevention
-        # client.loop_start()
-        # while True:
-        #     from time import sleep
-        #     sleep(0.1)
-        #     userdata['sample_rate_reporter'].send(None)
+        client.loop_start()
+        while True:
+            # ensure that no-sample sample rate is reported
+            sleep(sample_period)
+            reporter.send(None)
     except KeyboardInterrupt:
         pass
 

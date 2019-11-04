@@ -9,11 +9,10 @@ import machine
 import network
 import utime as time
 from config import MQTT_CONFIG
-from sensors import get_imu
+from sensors import get_imu, get_sensor_data
 from umqtt.simple import MQTTClient
 
 DEVICE_ID = "".join(map("{:02x}".format, machine.unique_id()))
-LAST_ERROR = None
 SENSORS = get_imu(use_dummy=config.USE_DUMMY_IMU)
 
 print("Device id =", DEVICE_ID)
@@ -137,37 +136,18 @@ def on_mqtt_message(_topic, msg):
     print("Received:", command)
 
 
-def publish_sensor_data():
+def publish_sensor_data(data):
     """Publish the sensor data to MQTT, and also to the serial port. If no IMU is
     present, publish the system identification instead.
 
     If config.SEND_SERIAL_SENSOR_DATA is set, send the data on the serial port.
     """
-    try:
-        data = {
-            "timestamp": time.ticks_ms(),
-            "temperature": SENSORS.temperature(),
-            "accelerometer": SENSORS.accelerometer(),
-            "euler": SENSORS.euler(),
-            "gyroscope": SENSORS.gyroscope(),
-            "magnetometer": SENSORS.magnetometer(),
-            "quaternion": SENSORS.quaternion(),
-        }
-    except OSError as err:
-        global LAST_ERROR
-        LAST_ERROR = err
-        if err.args[0] == 19:
-            print("Error", err, file=sys.stderr)
-            return
-        raise err
-    # if hasattr(SENSORS, "bmp280"):
-    #     data["pressure"] = SENSORS.bmp280.pressure
     payload = json.dumps(data)
     if MQTT_CLIENT:
         MQTT_CLIENT.publish("imu/" + DEVICE_ID, payload)
 
 
-def send_serial_data():
+def send_serial_data(data):
     data = SENSORS.accelerometer()
     print(";".join(k + "=" + str(v) for k, v in zip(["ax", "ay", "az"], data)))
 
@@ -230,10 +210,13 @@ def loop_forever():
         #         print("!device_id=" + DEVICE_ID)
         if MQTT_CLIENT:
             MQTT_CLIENT.check_msg()
+        sample = get_sensor_data(SENSORS)
+        if not sample:
+            continue
         if config.SEND_MQTT_SENSOR_DATA:
-            publish_sensor_data()
+            publish_sensor_data(sample)
         if config.SEND_SERIAL_SENSOR_DATA:
-            send_serial_data()
+            send_serial_data(sample)
         else:
             next(sample_rate_iter)
         if config.RUN_HTTP_SERVER:

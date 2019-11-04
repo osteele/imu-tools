@@ -9,7 +9,7 @@ from machine import I2C, Pin
 LAST_ERROR = None
 
 
-def get_imu(use_dummy):
+def get_imu(use_dummy=False):
     scl, sda = (22, 23) if sys.platform == "esp32" else (5, 4)
     i2c = I2C(scl=Pin(scl), sda=Pin(sda), freq=100000, timeout=1000)
     devices = i2c.scan()
@@ -29,9 +29,38 @@ def get_imu(use_dummy):
             bno.operation_mode(bno055.NDOF_MODE)
             return bno
         except OSError as err:
-            global LAST_ERROR
-            LAST_ERROR = err
-            if i == 1 or err.args[0] != 19:
+            if i == 1 or not is_retriable_error(err):
                 raise err
             print("Error finding BNO055:", err, file=sys.stderr)
             time.sleep_ms(1000)
+
+
+def is_retriable_error(err):
+    global LAST_ERROR
+    LAST_ERROR = err
+    ENODEV = 19
+    ETIMEDOUT = 110
+    return err.args[0] in (ENODEV, ETIMEDOUT)
+
+
+def get_sensor_data(imu):
+    try:
+        data = {
+            "timestamp": time.ticks_ms(),
+            "temperature": imu.temperature(),
+            "accelerometer": imu.accelerometer(),
+            "euler": imu.euler(),
+            "gyroscope": imu.gyroscope(),
+            "magnetometer": imu.magnetometer(),
+            "quaternion": imu.quaternion(),
+        }
+        if data['temperature'] == 0.0:
+            imu.operation_mode(bno055.NDOF_MODE)
+    except OSError as err:
+        if is_retriable_error(err):
+            print("Error", err, file=sys.stderr)
+            return None
+        raise err
+    # if hasattr(imu, "bmp280"):
+    #     data["pressure"] = imu.bmp280.pressure
+    return data

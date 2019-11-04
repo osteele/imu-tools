@@ -2,6 +2,9 @@ let obj;
 let deviceStates = {};
 let modelPositions = {};
 
+const ascale = 1; // scale the acclerometer data by this much
+const originSpringForce = 0.95; // pull the displaced position back to the origin
+
 function setup() {
     createCanvas(800, 800, WEBGL);
     obj = loadModel(getModelUrl('bunny'), true);
@@ -23,14 +26,6 @@ function draw() {
 
         push();
 
-        const ascale = 0.95; // scale the acclerometer data by this much
-        const retu = 0.95; // pull the displaced position back to the origin
-
-        // if (new Date - times > 1000) {
-        //     times = new Date
-        //     console.info(x, y, z)
-        // }
-
         const [ax, ay, az] = data.accelerometer;
         let [x, y, z] = modelPositions[data.device_id] || [0, 0, 0];
         // Read the rotation. This is a quaternion; convert it to Euler angles.
@@ -41,16 +36,21 @@ function draw() {
         x += ax * ascale;
         y += ay * ascale;
         z += az * ascale;
-        x *= retu;
-        y *= retu;
-        z *= retu;
+        x *= originSpringForce;
+        y *= originSpringForce;
+        z *= originSpringForce;
         modelPositions[data.device_id] = [x, y, z];
         translate(x, y, z);
 
-        // Fade the model out if the sensor data is stale.
-        const age = Math.max(0, +new Date() - 200 - data.local_timestamp);
+        // Fade the model out if the sensor data is stale
+        const age = Math.max(0, +new Date() - 250 - data.local_timestamp);
         const alpha = Math.max(5, 255 - age / 10);
         fill(255, 255, 255, alpha);
+
+        // show uncalibrated models in red
+        if (data.calibration === 0) {
+            fill(255, 0, 0, alpha);
+        }
 
         model(obj);
         pop();

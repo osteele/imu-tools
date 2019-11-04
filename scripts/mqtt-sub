@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import json
+import queue
 import subprocess
 import sys
 import time
 from pathlib import Path
+from queue import Queue
 from time import sleep
 
 import click
@@ -51,9 +53,9 @@ def sample_rate_reporter_gen(sample_period=10):
 
 # Called when a PUBLISH message is received from the server.
 def on_message(_client, userdata, msg):
+    queue = userdata["queue"]
     try:
-        sample_rate_reporter = userdata["sample_rate_reporter"]
-        sample_rate_reporter.send(msg)
+        queue.put(msg)
     except StopIteration:
         sys.exit(1)
     except Exception as err:  # pylint: disable=broad-except
@@ -80,19 +82,6 @@ def print_message(msg, *, only=None, output=None):
     logger.info("Message(topic={}): {}", msg.topic, data)
 
 
-def make_consuming_generator(fn, **kwargs):
-    while True:
-        data = yield
-        fn(data, **kwargs)
-
-
-# like iter.islice, but works with consuming generators
-def iter_drop(iterable, n):
-    for _ in range(n):
-        next(iterable)
-    return iterable
-
-
 def create_output_pipe():
     pipe_path = Path(PIPE_PATH)
     if not pipe_path.exists():
@@ -112,16 +101,10 @@ def create_output_pipe():
 def main(*, device_id, only, sample_rate, sample_period, pipe):
     """Relay MQTT messages to standard output, and optionally to a named pipe."""
     output_pipe = create_output_pipe() if pipe else None
-    reporter=iter_drop(
-            sample_rate_reporter_gen(sample_period)
-            if sample_rate
-            else make_consuming_generator(print_message, only=only, output=output_pipe),
-            1,
-        )
-    userdata = dict(
-        hostname=MQTT_CONFIG["host"],
-        sample_rate_reporter=reporter,
-    )
+    reporter = sample_rate_reporter_gen(sample_period)
+    next(reporter)
+    message_queue = Queue()
+    userdata = dict(hostname=MQTT_CONFIG["host"], queue=message_queue)
     client = mqtt.Client(userdata=userdata)
     client.on_connect = make_on_connect(f"imu/{device_id}" if device_id else "#")
     client.on_message = on_message
@@ -134,13 +117,19 @@ def main(*, device_id, only, sample_rate, sample_period, pipe):
     client.connect(MQTT_CONFIG["host"], MQTT_CONFIG["port"])
 
     try:
-        # client.loop_forever()
-        # TODO: add race prevention
         client.loop_start()
         while True:
+            try:
+                message = message_queue.get(timeout=1)
+            except queue.Empty:
+                message = None
+            if sample_rate:
+                reporter.send(message)
+            elif message:
+                print_message(message, only=only, output=output_pipe)
             # ensure that no-sample sample rate is reported
-            sleep(sample_period)
-            reporter.send(None)
+            # sleep(sample_period)
+            # reporter.send(None)
     except KeyboardInterrupt:
         pass
 

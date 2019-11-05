@@ -1,9 +1,14 @@
 let obj;
 let deviceStates = {};
 let modelPositions = {};
+let modelVelocities = {};
 
-const ascale = 1; // scale the acclerometer data by this much
-const originSpringForce = 0.95; // pull the displaced position back to the origin
+const DRAW_AXES = false;
+const DRAW_FORCE_VECTORS = false;
+const FORCE_VECTOR_LENGTH = 100;
+const MASS = 1;
+const VISCOSITY = 0;
+const ORIGIN_SPRING_FORCE = 0.95; // pull the displaced position back to the origin
 
 function setup() {
     createCanvas(800, 800, WEBGL);
@@ -26,25 +31,63 @@ function draw() {
 
         push();
 
-        const [ax, ay, az] = data.accelerometer;
-        let [x, y, z] = modelPositions[data.device_id] || [0, 0, 0];
         // Read the rotation. This is a quaternion; convert it to Euler angles.
         const [q0, q1, q2, q3] = quat;
-        applyMatrix.apply(null, quatToMatrix(q3, q1, q0, q2));
+        // const orientationMatrix = quatToMatrix(q0, q1, q2, q3);
+        const orientationMatrix = quatToMatrix(q3, q1, q0, q2);
+
+        let [x, y, z] = modelPositions[data.device_id] || [0, 0, 0];
+        let [dx, dy, dz] = modelVelocities[data.device_id] || [0, 0, 0];
+        const [aax, aay, aaz] = data.accelerometer;
+        const M = orientationMatrix;
+        const ax = M[0] * aax + M[1] * aay + M[2] * aaz;
+        const ay = M[4] * aax + M[5] * aay + M[6] * aaz;
+        const az = M[8] * aax + M[9] * aay + M[10] * aaz;
+        dx += ax * MASS;
+        dy += ay * MASS;
+        dz += az * MASS;
+        x += dx;
+        y += dy;
+        z += dz;
+        dx *= VISCOSITY;
+        dy *= VISCOSITY;
+        dz *= VISCOSITY;
+        x *= ORIGIN_SPRING_FORCE;
+        y *= ORIGIN_SPRING_FORCE;
+        z *= ORIGIN_SPRING_FORCE;
+        modelVelocities[data.device_id] = [dx, dy, dz];
+        modelPositions[data.device_id] = [x, y, z];
+
+        // draw transformed force vector in black
+        if (DRAW_FORCE_VECTORS) {
+            strokeWeight(8);
+            stroke(0, 0, 0);
+            line(0, 0, 0, ax * FORCE_VECTOR_LENGTH, ay * FORCE_VECTOR_LENGTH, az * FORCE_VECTOR_LENGTH);
+        }
+
+        applyMatrix.apply(null, orientationMatrix);
+        translate(x, y, z);
         rotateZ(Math.PI);
 
-        x += ax * ascale;
-        y += ay * ascale;
-        z += az * ascale;
-        x *= originSpringForce;
-        y *= originSpringForce;
-        z *= originSpringForce;
-        modelPositions[data.device_id] = [x, y, z];
-        translate(x, y, z);
+        if (DRAW_AXES) {
+            let axisLen = 200;
+            strokeWeight(3);
+            stroke(255, 0, 0); line(0, 0, 0, axisLen, 0, 0);
+            stroke(0, 255, 0); line(0, 0, 0, 0, axisLen, 0);
+            stroke(0, 0, 255); line(0, 0, 0, 0, 0, axisLen);
+        }
+
+        // draw untransformed force vector in white
+        if (DRAW_FORCE_VECTORS) {
+            strokeWeight(8);
+            stroke(255, 255, 255);
+            line(0, 0, 0, aax * FORCE_VECTOR_LENGTH, aay * FORCE_VECTOR_LENGTH, aaz * FORCE_VECTOR_LENGTH);
+        }
 
         // Fade the model out if the sensor data is stale
         const age = Math.max(0, +new Date() - 250 - data.local_timestamp);
         const alpha = Math.max(5, 255 - age / 10);
+        noStroke();
         fill(255, 255, 255, alpha);
 
         // show uncalibrated models in red

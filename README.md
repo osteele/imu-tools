@@ -55,7 +55,7 @@ You can read how `pipenv run` invokes the `repl` command by inspecting the sourc
 Notes](https://paper.dropbox.com/doc/MicroPython-Development--Ai1pmnXzhBdkxZ6SuEPMTDiDAg-sAf2oqgmH5yIbmx27kZqs)
 contains notes on developing MicroPython on the ESP.
 
-## Web GUI
+## Examples
 
 Run `pipenv run webserver` to start a web server.
 
@@ -68,9 +68,10 @@ directory.
 graph, that automatically scales the y axis as data arrives.
 
 <http://localhost:8000/model.html> displays the bunny, with its orientation
-yolked to the IMU orientation. Press H to display the MQTT connection settings,
-and reload the page once they're saved. (Press H twice the first time.) An
-optional `?model=` query parameter specifies the URL to an OBJ model.
+yolked to the IMU orientation. An optional `?model=` query parameter specifies
+the URL to an OBJ file, that is used as the model. The model is red before the
+sensor is minimally calibrated, and it fades out when sensor data is not being
+recieved.
 
 To switch the MQTT broker for any of these web pages, press the "h" key, edit in
 the new value, and then reload the page. Note: Each page has its own copy of

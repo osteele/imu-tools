@@ -53,6 +53,7 @@ def get_sensor_data(imu):
             "calibration": imu.calibration(),
             "euler": imu.euler(),
             "gyroscope": imu.gyroscope(),
+            "linear_acceleration": imu.linear_acceleration(),
             "magnetometer": imu.magnetometer(),
             "quaternion": imu.quaternion(),
             "temperature": imu.temperature(),

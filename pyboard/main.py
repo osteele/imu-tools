@@ -1,89 +1,20 @@
 import json
 import os
 import select
-import socket
 import sys
 
 import config
 import machine
 import network
+import sensors
 import utime as time
-from config import MQTT_CONFIG
-from sensors import get_imu, get_sensor_data
+import webserver
 from umqtt.simple import MQTTClient
 
 DEVICE_ID = "".join(map("{:02x}".format, machine.unique_id()))
-SENSORS = get_imu(use_dummy=config.USE_DUMMY_IMU)
+SENSORS = sensors.get_imu(use_dummy=config.USE_DUMMY_IMU)
 
 print("Device id =", DEVICE_ID)
-
-#
-# Web Server
-#
-
-
-def create_web_page_content():
-    # pylint: disable=line-too-long
-    html = """<html><head> <title>ESP BO055 IMU</title> <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="1">
-  <link rel="icon" href="data:,"> <style>html{font-family: Helvetica; display:inline-block; margin: 0px auto; text-align: center;}
-  h1{color: #0F3376; padding: 2vh;}p{font-size: 1.5rem;}.button{display: inline-block; background-color: #e7bd3b; border: none;
-  border-radius: 4px; color: white; padding: 16px 40px; text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}
-  .button2{background-color: #4286f4;}</style></head><body> <h1>ESP BO055 IMU</h1>"""
-    if MQTT_CLIENT:
-        html += "<p>Connected to mqtt://" + MQTT_CLIENT.server + "</p>"
-    if SENSORS:
-        html += (
-            "<p>Temperature: <strong>"
-            + str(SENSORS.temperature())
-            + "</strong></p>"
-            + "<p>Accelerometer: <strong>"
-            + str(SENSORS.accelerometer())
-            + "</strong></p>"
-            + "<p>Magnetometer: <strong>"
-            + str(SENSORS.magnetometer())
-            + "</strong></p>"
-            + "<p>Gyroscope: <strong>"
-            + str(SENSORS.gyroscope())
-            + "</strong></p>"
-            + "<p>Euler: <strong>"
-            + str(SENSORS.euler())
-            + "</strong></p>"
-        )
-    html += """<p><a href="/?led=on"><button class="button">ON</button></a></p>
-  <p><a href="/?led=off"><button class="button button2">OFF</button></a></p></body></html>"""
-    return html
-
-
-http_socket = None
-
-
-def start_http_server():
-    global http_socket
-    http_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    http_socket.bind(("", 80))
-    http_socket.listen(5)
-    ip_address, _subnet_mask, _gateway, _dns_server = WIFI_STATION.ifconfig()
-    print("Listening on http://" + ip_address)
-
-
-def service_http_request():
-    global http_socket
-    try:
-        conn, addr = http_socket.accept()
-        connected = True
-    except OSError:  # EAGAIN
-        connected = False
-    if connected:
-        print("Received HTTP request from", addr)
-        # request = conn.recv(1024)
-        # print("Content =", request)
-        response = create_web_page_content()
-        conn.send(b"HTTP/1.1 200 OK\n")
-        conn.send(b"Content-Type: text/html\n")
-        conn.send(b"Connection: close\n\n")
-        conn.sendall(response)
-        conn.close()
 
 
 #
@@ -155,12 +86,15 @@ def send_serial_data(data):
 # WiFi Connection
 #
 
-WIFI_STATION = network.WLAN(network.STA_IF)
-if WIFI_STATION.isconnected():
-    if config.RUN_HTTP_SERVER:
-        start_http_server()
-    if config.SEND_MQTT_SENSOR_DATA:
-        MQTT_CLIENT = mqtt_connect(config.MQTT_CONFIG)
+
+def connect_to_wifi(config):
+    global MQTT_CLIENT
+    station = network.WLAN(network.STA_IF)
+    if station.isconnected():
+        if config.RUN_HTTP_SERVER:
+            webserver.start_http_server(station)
+        if config.SEND_MQTT_SENSOR_DATA:
+            MQTT_CLIENT = mqtt_connect(config.MQTT_CONFIG)
 
 
 def sample_rate_gen():
@@ -187,16 +121,12 @@ def blinker_gen(pin_number=2):
             led.value(led.value())
 
 
-# BLINK_ITER = blinker_gen()
-
-
-def loop_forever():
+def loop_forever(config, mqtt_client):
     sample_rate_iter = sample_rate_gen()
+    # blink_iter = blinker_gen()
     while True:
         # Publish the sensor data each time through the loop.
-        # If RUN_HTTP_SERVER is set, this publishes the data once per web request.
-        # Else, it publishes it in a tight loop.
-        # next(BLINK_ITER)
+        # next(blink_iter)
         # if config.SEND_SERIAL_SENSOR_DATA and select.select([sys.stdin], [], [], 0)[0]:
         #     cmd = sys.stdin.readline().strip()
         #     print("# cmd =", repr(cmd))
@@ -207,19 +137,22 @@ def loop_forever():
         #         print("!pong")
         #     elif cmd == ":device_id?":
         #         print("!device_id=" + DEVICE_ID)
-        if MQTT_CLIENT:
-            MQTT_CLIENT.check_msg()
-        sample = get_sensor_data(SENSORS)
-        if not sample:
+        if mqtt_client:
+            mqtt_client.check_msg()
+        sensor_data = sensors.get_sensor_data(SENSORS)
+        if not sensor_data:
             continue
         if config.SEND_MQTT_SENSOR_DATA:
-            publish_sensor_data(sample)
+            publish_sensor_data(sensor_data)
         if config.SEND_SERIAL_SENSOR_DATA:
-            send_serial_data(sample)
+            send_serial_data(sensor_data)
         else:
             next(sample_rate_iter)
         if config.RUN_HTTP_SERVER:
-            service_http_request()
+            webserver.service_http_request(
+                mqtt_client=mqtt_client, sensor_data=sensor_data
+            )
 
 
-loop_forever()
+connect_to_wifi(config)
+loop_forever(config, mqtt_client=MQTT_CLIENT)

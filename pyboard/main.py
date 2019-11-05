@@ -37,10 +37,10 @@ def mqtt_connect(config):
         .replace("//@", "")
         .replace(":1883/", "/")
     )
-    print("Connecting to " + broker_url, end=" ...")
+    print("Connecting to " + broker_url, end="...")
     try:
         mqtt_client.connect()
-        print(" done.")
+        print("done.")
         publish_machine_identifier(mqtt_client)
         mqtt_client.set_callback(on_mqtt_message)
         mqtt_client.subscribe("imu/control/" + DEVICE_ID)
@@ -106,6 +106,7 @@ def sample_rate_gen():
         current_time = time.time()
         if current_time - sample_start_time >= sample_period:
             sample_rate = sample_count / (current_time - sample_start_time)
+            print("{:02d}:{:02d}:{:02d}".format(*time.localtime()[3:6]), end=": ")
             print("{:0.1f} samples/sec".format(sample_rate))
             sample_start_time = current_time
             sample_count = 0

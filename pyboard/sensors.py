@@ -31,7 +31,9 @@ def get_imu(use_dummy=False):
         except OSError as err:
             if i == 1 or not is_retriable_error(err):
                 raise err
-            print("Error finding BNO055:", err, file=sys.stderr)
+            print(
+                "Error finding BNO055: {:s}; retrying".format(str(err)), file=sys.stderr
+            )
             time.sleep_ms(1000)
 
 
@@ -55,7 +57,7 @@ def get_sensor_data(imu):
             "quaternion": imu.quaternion(),
             "temperature": imu.temperature(),
         }
-        if data['temperature'] == 0.0:
+        if data["temperature"] == 0.0:
             imu.operation_mode(bno055.NDOF_MODE)
     except OSError as err:
         if is_retriable_error(err):

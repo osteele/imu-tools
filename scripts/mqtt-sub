@@ -53,9 +53,9 @@ def sample_rate_reporter_gen(sample_period=10):
 
 # Called when a PUBLISH message is received from the server.
 def on_message(_client, userdata, msg):
-    queue = userdata["queue"]
+    message_queue = userdata["queue"]
     try:
-        queue.put(msg)
+        message_queue.put(msg)
     except StopIteration:
         sys.exit(1)
     except Exception as err:  # pylint: disable=broad-except
@@ -78,6 +78,8 @@ def print_message(msg, *, only=None, output=None):
         qs = data["quaternion"]
         print("quaternion: " + ", ".join(map(str, qs)), file=output, flush=True)
     if only:
+        if only not in data:
+            return
         data = data[only]
     logger.info("Message(topic={}): {}", msg.topic, data)
 

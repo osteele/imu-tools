@@ -10,34 +10,37 @@ if (window.dat) {
     gui.useLocalStorage = true;
 }
 
-mqttConnectionSettings.hostname = mqttConnectionSettings.hostname || 'localhost';
-mqttConnectionSettings.port = mqttConnectionSettings.port || '15675';
-
-const client = new Paho.Client(mqttConnectionSettings.hostname, Number(mqttConnectionSettings.port), "/ws",
-    "myclientid_" + parseInt(Math.random() * 100, 10));
-client.onMessageArrived = onMessageArrived;
-client.onConnectionLost = onConnectionLost;
-
 const mqttStatusElement = document.createElement('div');
 mqttStatusElement.className = 'mqtt-error';
 document.body.appendChild(mqttStatusElement);
 
-const mqttConnectionOptions = {
-    timeout: 3,
-    onSuccess: function () {
-        const device_id = mqttConnectionSettings.device_id.trim();
-        let topicString = 'imu/' + (device_id || '#');
-        console.log("Connected to mqtt://" + mqttConnectionSettings.hostname + ":" + mqttConnectionSettings.port);
-        mqttStatusElement.innerText = '';
-        client.subscribe(topicString, { qos: 1 });
-    },
-    onFailure: function (message) {
-        console.log("MQTT connection failed: " + message.errorMessage);
-        mqttStatusElement.innerText = "MQTT connection failed: " + message.errorMessage;
-    }
-};
-
 function startSensorSubscription() {
+    let hostname = mqttConnectionSettings.hostname || 'localhost';
+    let port = mqttConnectionSettings.port || 15675;
+    if (hostname.match(/:/)) {
+        port = hostname.split(/:/)[1];
+        hostname = hostname.split(/:/)[0];
+    }
+    const clientId = "myclientid_" + parseInt(Math.random() * 100, 10)
+    const client = new Paho.Client(hostname, Number(port), "/ws", clientId);
+    client.onMessageArrived = onMessageArrived;
+    client.onConnectionLost = onConnectionLost;
+
+    const mqttConnectionOptions = {
+        timeout: 3,
+        onSuccess: function () {
+            const device_id = mqttConnectionSettings.device_id.trim();
+            let topicString = 'imu/' + (device_id || '#');
+            console.log("Connected to mqtt://" + mqttConnectionSettings.hostname + ":" + mqttConnectionSettings.port);
+            mqttStatusElement.innerText = '';
+            client.subscribe(topicString, { qos: 1 });
+        },
+        onFailure: function (message) {
+            console.log("MQTT connection failed: " + message.errorMessage);
+            mqttStatusElement.innerText = "MQTT connection failed: " + message.errorMessage;
+        }
+    };
+
     const username = mqttConnectionSettings.username.trim();
     const password = mqttConnectionSettings.password.trim();
     if (username) { mqttConnectionOptions.userName = username; }

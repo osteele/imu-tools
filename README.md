@@ -8,30 +8,14 @@ The serial port format is compatible with
 
 ## Installation
 
-1. Download and install the [SLAB_USBtoUART
-   drivers](https://rehmann.co/blog/drivers-for-slab_usbtouart/). These allow
-   your computer to connect to an ESP chip that is attached on the serial port
-   (via USB).
+1. Clone this repo.
 
-2. Copy `pyboard/config.py.tmpl` to `pyboard/config.py`. Edit the latter file to
-   fill in the values. If you are running an MQTT broker on your development
-   computer, you may leave these unchanged.
+2. Follow the instructions
+   [here](https://www.notion.so/MicroPython-4e7c9edd5b954c74bb4c08e5eac74c7f) to
+   install MicroPython on an ESP32.
 
-3. Follow the instructions
-   [here](https://docs.micropython.org/en/latest/esp32/tutorial/intro.html) to
-   install MicroPython on the ESP32.
-
-   1. Download the highest-numbered firmware whose name has the form
-      `esp32-20190529-v1.11.bin` from [the MicroPython download
-      page](https://micropython.org/download#esp32).
-   2. Run the following shell commands. Replace `esp32-20190529-v1.11.bin` by
-      the file that you downloaded in the previous step.
-
-      ```sh
-      pip3 install esptool
-      esptool.py --chip esp32 --port /dev/tty.SLAB_USBtoUART erase_flash
-      esptool.py --chip esp32 --port /dev/tty.SLAB_USBtoUART --baud 460800 write_flash -z 0x1000 esp32-20190529-v1.11.bin
-      ```
+3. Copy `pyboard/config.py.tmpl` to `pyboard/config.py`. Edit the latter file to
+   fill in the values.
 
 4. Download the source code from the `pyboard` directory in this folder, to the MCU:
 
@@ -80,6 +64,8 @@ these settings. Changing one will not change the others.
 ## Command-Line Testing
 
 Copy `config/network.ini.tmpl` to `config/network.ini` and fill in the values.
+If you are running an MQTT broker on your development computer, you may leave
+the new file unchanged.
 
 Run `pipenv run mqtt-sub` to run an MQTT client that prints messages to the
 terminal.

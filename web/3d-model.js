@@ -29,13 +29,22 @@ function setup() {
 }
 
 function draw() {
+    const currentTime = +new Date();
+
     background(200, 200, 212);
     noStroke();
     lights();
     orbitControl();
 
-    Object.values(deviceData).forEach(function (data) {
+    const models = Object.values(deviceData);
+    // apply the physics simulation just to the models that have recent sensor data
+    updatePhysics(
+        models.filter(({ local_timestamp }) => currentTime - local_timestamp < 500)
+    );
+
+    models.forEach(data => {
         push();
+        if (data.position) { translate.apply(null, data.position); }
 
         // Read the rotation. This is a quaternion; convert it to Euler angles.
         const [q0, q1, q2, q3] = data.quaternion;
@@ -43,21 +52,11 @@ function draw() {
         applyMatrix.apply(null, orientationMatrix);
 
         if (modelSettings.draw_axes) {
-            strokeWeight(3);
-            [0, 1, 2].forEach(i => {
-                const color = [0, 0, 0];
-                const vector = [0, 0, 0, 0, 0, 0];
-                color[i] = 128;
-                vector[i + 3] = AXIS_LENGTH;
-                stroke.apply(null, color);
-                line.apply(null, vector);
-            });
+            drawAxes();
         }
 
-        noStroke();
-
         // Fade the model out if the sensor data is stale
-        const age = Math.max(0, +new Date() - 250 - data.local_timestamp);
+        const age = Math.max(0, currentTime - data.local_timestamp - 250);
         const alpha = Math.max(5, 255 - age / 10);
         fill(255, 255, 255, alpha);
 
@@ -67,9 +66,58 @@ function draw() {
         }
 
         rotateZ(Math.PI);
+        noStroke();
         model(modelObj);
 
         pop();
+    });
+}
+
+function drawAxes() {
+    strokeWeight(3);
+    [0, 1, 2].forEach(i => {
+        const color = [0, 0, 0];
+        const vector = [0, 0, 0, 0, 0, 0];
+        color[i] = 128;
+        vector[i + 3] = AXIS_LENGTH;
+        stroke.apply(null, color);
+        line.apply(null, vector);
+    });
+}
+
+function updatePhysics(models) {
+    // initialize positions and velocities of new models
+    models.forEach(data => {
+        if (!data.position) {
+            const e = 0.0001;
+            // const e = 1000;
+            function rand() {
+                return (Math.random() - 0.5) * e;
+            }
+            data.position = [rand(), rand(), rand()];
+            data.velocity = [0, 0, 0];
+        }
+    });
+
+    // Apply spring forces between every object pair
+    models.forEach(d1 => {
+        models.forEach(d2 => {
+            if (d1 === d2) { return; }
+            const v = d1.position.map((p0, i) => d2.position[i] - p0);
+            const len = Math.sqrt(v[0] ** 2 + v[1] ** 2 + v[2] ** 2);
+            const v_norm = v.map(x => x / len);
+            const f = (len - 500) * .001;
+            const vf = v_norm.map(x => x * f);
+            d1.velocity = d1.velocity.map((x, i) => x + vf[i]);
+            d2.velocity = d2.velocity.map((x, i) => x - vf[i]);
+        });
+    });
+
+    // Add velocities to positions. Spring positions to origin. Damp velocities.
+    models.forEach(data => {
+        const { position, velocity } = data;
+        data.position = position.map((x, i) => (x + velocity[i]) * 0.99)
+        data.velocity = velocity.map(v => v * 0.99)
     });
 }
 
@@ -86,5 +134,6 @@ function quatToMatrix(w, x, y, z) {
 }
 
 onSensorData((data) => {
-    deviceData[data.device_id] = data;
+    const device_id = data.device_id;
+    deviceData[device_id] = { ...(deviceData[device_id] || {}), ...data };
 });

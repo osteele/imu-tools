@@ -1,13 +1,31 @@
 let modelObj;  // setup initializes this to a p5.js 3D model
 const deviceData = {};  // sensor data for each device, indexed by device id
 
-const DRAW_AXES = true;
 const AXIS_LENGTH = 400;
+
+const modelSettings = {
+    draw_axes: false,
+    model_name: 'bunny',
+}
+
+function loadModelFromSettings() {
+    let modelName = modelSettings.model_name || 'bunny';
+    if (!modelName.match(/\.(obj|stl)$/)) {
+        modelName += '.obj';
+    }
+    modelObj = loadModel('models/' + modelName, true);
+}
+
+if (window.dat) {
+    const gui = new dat.GUI();
+    // gui.remember(modelSettings);
+    gui.add(modelSettings, 'draw_axes').name('Draw axes');
+    gui.add(modelSettings, 'model_name').name('Model name').onFinishChange(loadModelFromSettings);
+}
 
 function setup() {
     createCanvas(800, 800, WEBGL);
-    const modelUrl = getModelUrl('bunny')
-    modelObj = loadModel(modelUrl, true);
+    loadModelFromSettings();
 }
 
 function draw() {
@@ -24,7 +42,7 @@ function draw() {
         const orientationMatrix = quatToMatrix(q3, q1, q0, q2);
         applyMatrix.apply(null, orientationMatrix);
 
-        if (DRAW_AXES) {
+        if (modelSettings.draw_axes) {
             strokeWeight(3);
             [0, 1, 2].forEach(i => {
                 const color = [0, 0, 0];
@@ -70,20 +88,3 @@ function quatToMatrix(w, x, y, z) {
 onSensorData((data) => {
     deviceData[data.device_id] = data;
 });
-
-// Read the string from the ?model document query parameter. Defaults to
-// defaultModelName
-function getModelUrl(defaultModelName) {
-    let modelName = defaultModelName;
-    const m = document.location.search.match(/\?model=(.+)/);
-    if (m) {
-        modelName = decodeURIComponent(m[1]);
-    }
-    if (!modelName.match(/\.obj$/)) {
-        modelName += '.obj';
-    }
-    if (!modelName.match(/^https?:/)) {
-        modelName = 'assets/' + modelName;
-    }
-    return modelName;
-}

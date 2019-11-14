@@ -10,9 +10,24 @@ if (window.dat) {
     gui.useLocalStorage = true;
 }
 
-const mqttStatusElement = document.createElement('div');
-mqttStatusElement.className = 'mqtt-error';
-document.body.appendChild(mqttStatusElement);
+function _setMqttConnectionStatus(message) {
+    const id = "mqtt-connection-status";
+    const mqttStatusElement = document.getElementById(id) || document.createElement('div');
+    if (!mqttStatusElement.id) {
+        mqttStatusElement.id = id;
+        document.body.appendChild(mqttStatusElement);
+    }
+    if (message.error) {
+        message = message.error;
+        console.error(message);
+        mqttStatusElement.className = 'mqtt-status mqtt-error';
+    } else {
+        mqttStatusElement.className = 'mqtt-status';
+        console.log(message);
+    }
+    mqttStatusElement.innerText = message.error || message || '';
+}
+
 
 function startSensorSubscription() {
     let hostname = mqttConnectionSettings.hostname || 'localhost';
@@ -31,13 +46,11 @@ function startSensorSubscription() {
         onSuccess: function () {
             const device_id = mqttConnectionSettings.device_id.trim();
             let topicString = 'imu/' + (device_id || '#');
-            console.log("Connected to mqtt://" + mqttConnectionSettings.hostname + ":" + mqttConnectionSettings.port);
-            mqttStatusElement.innerText = '';
+            _setMqttConnectionStatus("Connected to mqtt://" + hostname + ":" + port);
             client.subscribe(topicString, { qos: 1 });
         },
         onFailure: function (message) {
-            console.log("MQTT connection failed: " + message.errorMessage);
-            mqttStatusElement.innerText = "MQTT connection failed: " + message.errorMessage;
+            _setMqttConnectionStatus({ error: "MQTT connection failed: " + message.errorMessage });
         }
     };
 
@@ -49,7 +62,7 @@ function startSensorSubscription() {
 };
 
 function onConnectionLost(responseObject) {
-    console.log("MQTT connection lost: " + responseObject.errorMessage);
+    _setMqttConnectionStatus({ error: "MQTT connection lost: " + responseObject.errorMessage });
     setTimeout(startSensorSubscription, 1000);
 };
 

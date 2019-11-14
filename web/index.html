@@ -20,28 +20,29 @@
 </head>
 
 <body>
-    <section class="section">
-        <div class="container">
-            <div class="section">
-                <h1 class="title">Web Interfaces</h1>
-                <dl>
-                    <dt><a href="3d-model.html">3D Model</a></dt>
-                    <dd>A 3D model that tracks the orientation of the IMU.</dd>
-                    <dt><a href="barchart.html">Bar Chart</a></dt>
-                    <dd>Bar charts of all the sensor values.</dd>
-                    <dt><a href="d3-graph.html">D3 Graph</a></dt>
-                    <dd>Uses D3 to graph sensor values over time.</dd>
-                    <dt><a href="highcharts-chart.html">Highcharts Chart</a></dt>
-                    <dd>Uses Highcharts to chart sensor values over time.</dd>
-                </dl>
-            </div>
+    <div class="container">
+        <section class="section">
+            <h1 class="title">Web Interfaces</h1>
+            <dl>
+                <dt><a href="3d-model.html">3D Model</a></dt>
+                <dd>A 3D model that tracks the orientation of the IMU.</dd>
+                <dt><a href="barchart.html">Bar Chart</a></dt>
+                <dd>Bar charts of all the sensor values.</dd>
+                <dt><a href="d3-graph.html">D3 Graph</a></dt>
+                <dd>Uses D3 to graph sensor values over time.</dd>
+                <dt><a href="highcharts-chart.html">Highcharts Chart</a></dt>
+                <dd>Uses Highcharts to chart sensor values over time.</dd>
+            </dl>
+        </section>
 
-            <div class="section">
-                <h2 class="title">Online Devices</h2>
-                <table id="device-list" class="table"></table>
-            </div>
-        </div>
-    </section>
+        <section class="section">
+            <h2 class="title">Online Devices</h2>
+            <table id="device-list" class="table"></table>
+        </section>
+        <footer>
+            <div id="mqtt-connection-status"></div>
+        </footer>
+    </div>
 </body>
 
 <script type="text/javascript" src="./sensor-client.js"></script>

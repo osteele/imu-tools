@@ -43,7 +43,7 @@ const paths = svg.append('g')
 function findGroup(name) {
     let group = groups[name]
     if (!group) {
-        const colors = ['orange', 'green', 'gray']
+        const colors = ['orange', 'green', 'gray', 'black', 'red', 'purple', 'blue']
         group = {
             value: 0,
             color: colors[Object.keys(groups).length % colors.length],
@@ -91,6 +91,15 @@ function addSample(sample) {
 
 onSensorData(throttled(function (data) {
     const device_id = data
+    const [ax, ay, az] = data.accelerometer
+    const [gx, gy, gz] = data.gyroscope
+    const [mx, my, mz] = data.magnetometer
     const [e0, e1, e2] = data.euler
-    addSample({ device_id, e0, e1, e2 })
+    // const [q0, q1, q2, q3] = data.quaternion
+    // addSample({ device_id, e0, e1, e2 })
+    addSample({ device_id, ax, ay, az })
+    addSample({ device_id, mx, my, mz })
+    addSample({ device_id, gx, gy, gz })
+    // addSample({ device_id, q0, q1, q2, q3 })
+    console.info(data);
 }))

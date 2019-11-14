@@ -3,13 +3,19 @@ const deviceData = {};  // sensor data for each device, indexed by device id
 
 const AXIS_LENGTH = 400;
 
-const modelSettings = {
+const settings = {
     draw_axes: false,
+    dx: 0,
+    dy: 0,
+    dz: 0,
+    rx: 0,
+    ry: 0,
+    rz: 180,
     model_name: 'bunny',
 }
 
 function loadModelFromSettings() {
-    let modelName = modelSettings.model_name || 'bunny';
+    let modelName = settings.model_name || 'bunny';
     if (!modelName.match(/\.(obj|stl)$/)) {
         modelName += '.obj';
     }
@@ -18,9 +24,15 @@ function loadModelFromSettings() {
 
 if (window.dat) {
     const gui = new dat.GUI();
-    // gui.remember(modelSettings);
-    gui.add(modelSettings, 'draw_axes').name('Draw axes');
-    gui.add(modelSettings, 'model_name').name('Model name').onFinishChange(loadModelFromSettings);
+    // gui.remember(settings);
+    gui.add(settings, 'draw_axes').name('Draw axes');
+    gui.add(settings, 'dx', -300, 300).name('x displacement');
+    gui.add(settings, 'dy', -300, 300).name('y displacement');
+    gui.add(settings, 'dz', -300, 300).name('z displacement');
+    gui.add(settings, 'rx', -180, 180).name('x rotation');
+    gui.add(settings, 'ry', -180, 180).name('y rotation');
+    gui.add(settings, 'rz', -180, 180).name('z rotation');
+    gui.add(settings, 'model_name').name('Model name').onFinishChange(loadModelFromSettings);
 }
 
 function setup() {
@@ -44,6 +56,7 @@ function draw() {
 
     models.forEach(data => {
         push();
+        // translate position within world space
         if (data.position) { translate.apply(null, data.position); }
 
         // Read the rotation. This is a quaternion; convert it to Euler angles.
@@ -51,7 +64,7 @@ function draw() {
         const orientationMatrix = quatToMatrix(q3, q1, q0, q2);
         applyMatrix.apply(null, orientationMatrix);
 
-        if (modelSettings.draw_axes) {
+        if (settings.draw_axes) {
             drawAxes();
         }
 
@@ -65,7 +78,15 @@ function draw() {
             fill(255, 0, 0, alpha);
         }
 
-        rotateZ(Math.PI);
+        // correct for the model orientation
+        rotateX(settings.rx * Math.PI / 180);
+        rotateY(settings.ry * Math.PI / 180);
+        rotateZ(settings.rz * Math.PI / 180);
+
+        // translate position in model space
+        translate(settings.dx, settings.dy, settings.dz)
+
+        // render the model
         noStroke();
         model(modelObj);
 
@@ -134,6 +155,6 @@ function quatToMatrix(w, x, y, z) {
 }
 
 onSensorData((data) => {
-    const device_id = data.device_id;
+    const { device_id } = data;
     deviceData[device_id] = { ...(deviceData[device_id] || {}), ...data };
 });

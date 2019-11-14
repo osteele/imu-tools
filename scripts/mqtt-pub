@@ -15,8 +15,8 @@ logger.remove()
 logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO")
 
 
-def on_publish(_client, userdata, mid):
-    logger.info("Published(id={}) to {}", mid, userdata)
+def on_publish(_client, userdata, message_id):
+    logger.info("Published(id={}) to {}", message_id, userdata)
 
 
 def gen_samples():
@@ -58,8 +58,12 @@ def iter_throttle(iterable, freq=20):
         yield item
 
 
+import uuid
+
+
 @click.command()
 @mqtt_options
+@click.option("--device-id", metavar="DEVICE_ID", default=hex(uuid.getnode()))
 @click.option(
     "--message",
     type=str,
@@ -73,14 +77,16 @@ def iter_throttle(iterable, freq=20):
     help="Messages per second for use with --repeat",
 )
 @click.option("--repeat", is_flag=True, help="Keep sending messages at RATE/second")
-def main(*, user, host, port, password, message, repeat, rate):
+def main(*, user, host, port, password, device_id, message, repeat, rate):
     """Send MQTT messages.
 
     In a MESSAGE string, {i} is replaced by the message count, and {time} by the
     Epoch seconds. This is useful in combination with --repeat."""
     # FIXME: w/out this info.wait_for_publish returns too early
     global client  # pylint: disable=global-variable-undefined
-    client = mqtt.Client(userdata=host)
+
+    topic = f"imu/{device_id}"
+    client = mqtt.Client(userdata=f"tcp://{host}:{port}/{topic}")
     client.on_publish = on_publish
     client.on_log = True
 
@@ -96,9 +102,8 @@ def main(*, user, host, port, password, message, repeat, rate):
     if not repeat:
         samples = itertools.islice(samples, 1)
 
-    client_id = "mqtt-pub"
     for payload in iter_throttle(samples, rate):
-        info = client.publish(f"imu/{client_id}", payload=payload)
+        info = client.publish(topic, payload=payload)
     info.wait_for_publish()
 
 

@@ -9,7 +9,7 @@ import click
 import paho.mqtt.client as mqtt
 from loguru import logger
 
-from config import MQTT_CONFIG
+from config import mqtt_options
 
 logger.remove()
 logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO")
@@ -59,6 +59,7 @@ def iter_throttle(iterable, freq=20):
 
 
 @click.command()
+@mqtt_options
 @click.option(
     "--message",
     type=str,
@@ -72,21 +73,20 @@ def iter_throttle(iterable, freq=20):
     help="Messages per second for use with --repeat",
 )
 @click.option("--repeat", is_flag=True, help="Keep sending messages at RATE/second")
-def main(*, message, repeat, rate):
+def main(*, user, host, port, password, message, repeat, rate):
     """Send MQTT messages.
 
     In a MESSAGE string, {i} is replaced by the message count, and {time} by the
     Epoch seconds. This is useful in combination with --repeat."""
     # FIXME: w/out this info.wait_for_publish returns too early
     global client  # pylint: disable=global-variable-undefined
-    client = mqtt.Client(userdata=MQTT_CONFIG["host"])
+    client = mqtt.Client(userdata=host)
     client.on_publish = on_publish
     client.on_log = True
 
-    user, password = MQTT_CONFIG["user"], MQTT_CONFIG["password"]
     if user:
         client.username_pw_set(user, password=password)
-    client.connect(MQTT_CONFIG["host"], MQTT_CONFIG["port"])
+    client.connect(host, port)
 
     samples = (
         (message.format(i=i, time=time.time()) for i in itertools.count())

@@ -12,7 +12,7 @@ import click
 import paho.mqtt.client as mqtt
 from loguru import logger
 
-from config import MQTT_CONFIG
+from config import mqtt_options
 
 logger.remove()
 logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO")
@@ -93,30 +93,35 @@ def create_output_pipe():
 
 
 @click.command()
-@click.option("--only", help="Print only the specified field")
+@mqtt_options
+@click.option("--only", metavar="FIELD", help="Print only the specified field")
 @click.option("--pipe", is_flag=True, help=f"Pipe quaternions to {PIPE_PATH}")
-@click.option("--device-id", help=f"Only subscribe to this device")
+@click.option(
+    "--device-id", metavar="DEVICE_ID", help=f"Only subscribe to device DEVICE_ID"
+)
 @click.option(
     "--sample-rate", is_flag=True, help="Print the sample rate instead of the samples"
 )
 @click.option("--sample-period", default=1.0, metavar="SECONDS")
-def main(*, device_id, only, sample_rate, sample_period, pipe):
+def main(
+    *, user, host, port, password, device_id, only, sample_rate, sample_period, pipe
+):
     """Relay MQTT messages to standard output, and optionally to a named pipe."""
     output_pipe = create_output_pipe() if pipe else None
     reporter = sample_rate_reporter_gen(sample_period)
     next(reporter)
     message_queue = Queue()
-    userdata = dict(hostname=MQTT_CONFIG["host"], queue=message_queue)
+    userdata = dict(hostname=host, queue=message_queue)
+
     client = mqtt.Client(userdata=userdata)
     client.on_connect = make_on_connect(f"imu/{device_id}" if device_id else "#")
     client.on_message = on_message
     client.on_subscribe = on_subscribe
     client.on_log = True
 
-    user, password = MQTT_CONFIG["user"], MQTT_CONFIG["password"]
     if user:
         client.username_pw_set(user, password=password)
-    client.connect(MQTT_CONFIG["host"], MQTT_CONFIG["port"])
+    client.connect(host, port)
 
     try:
         client.loop_start()

@@ -57,9 +57,12 @@ let _errored = false;
 function onMessageArrived(message) {
     const device_id = message.topic.split('/').pop();
     const data = JSON.parse(message.payloadString);
-    // discard invalid quaternions from the Gravity
     const q = data.quaternion;
-    if (q && Math.abs(q[0] ** 2 + q[1] ** 2 + q[2] ** 2 + q[3] ** 2 - 1.0) > 1e-1) {
+    if (!q) {
+        return;
+    }
+    // discard invalid quaternions from the Gravity
+    if (Math.abs(q[0] ** 2 + q[1] ** 2 + q[2] ** 2 + q[3] ** 2 - 1.0) > 1e-1) {
         return;
     }
     _deviceStates[device_id] = data;

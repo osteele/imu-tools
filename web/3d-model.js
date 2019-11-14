@@ -68,9 +68,7 @@ function quatToMatrix(w, x, y, z) {
 }
 
 onSensorData((data) => {
-    if (data.quaternion) {
-        deviceData[data.device_id] = data;
-    }
+    deviceData[data.device_id] = data;
 });
 
 // Read the string from the ?model document query parameter. Defaults to

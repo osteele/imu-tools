@@ -62,9 +62,9 @@ export function draw() {
     );
 
     if (windowOrientation) {
-        // rotateX(windowOrientation.alpha * Math.PI / 180);
-        // rotateY(windowOrientation.beta * Math.PI / 180);
-        // rotateZ(windowOrientation.gamma * Math.PI / 180);
+        rotateY(-windowOrientation.gamma * Math.PI / 180);
+        rotateX(-windowOrientation.beta * Math.PI / 180);
+        rotateZ(windowOrientation.alpha * Math.PI / 180);
     }
 
     models.forEach(data => {

@@ -1,5 +1,6 @@
 let modelObj;  // setup initializes this to a p5.js 3D model
 const devices = {};  // sensor data for each device, indexed by device id
+let windowOrientation = null;
 
 const AXIS_LENGTH = 400;
 
@@ -58,6 +59,12 @@ function draw() {
         models.filter(({ local_timestamp }) => currentTime - local_timestamp < 500)
     );
 
+    if (windowOrientation) {
+        // rotateX(windowOrientation.alpha * Math.PI / 180);
+        // rotateY(windowOrientation.beta * Math.PI / 180);
+        // rotateZ(windowOrientation.gamma * Math.PI / 180);
+    }
+
     models.forEach(data => {
         push();
         // translate position within world space
@@ -109,10 +116,23 @@ function calibrateModels() {
         const inv = math.inv([mat.slice(0, 3), mat.slice(4, 7), mat.slice(8, 11)]);
         model.calibrationMatrix = [...inv[0], 0, ...inv[1], 0, ...inv[2], 0, ...[0, 0, 0, 1]];
     });
+
     settings.rx = 0;
     settings.ry = 0;
     settings.rz = 0;
     Object.values(controllers).forEach(c => c.updateDisplay());
+
+    if (window.DeviceOrientationEvent && DeviceOrientationEvent.requestPermission) {
+        DeviceOrientationEvent.requestPermission().then(response => {
+            if (response !== 'granted') { alert('Device orientation permission: ' + response); }
+            if (!windowOrientation) {
+                windowOrientation = {};
+                window.addEventListener("deviceorientation", event => {
+                    windowOrientation = { alpha: event.alpha, beta: event.beta, gamma: event.gamma };
+                }, true);
+            }
+        });
+    }
 }
 
 function drawAxes() {

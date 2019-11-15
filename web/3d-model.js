@@ -1,5 +1,5 @@
 let modelObj;  // setup initializes this to a p5.js 3D model
-const deviceData = {};  // sensor data for each device, indexed by device id
+const devices = {};  // sensor data for each device, indexed by device id
 
 const AXIS_LENGTH = 400;
 
@@ -22,22 +22,29 @@ function loadModelFromSettings() {
     modelObj = loadModel('models/' + modelName, true);
 }
 
+var controllers;
 if (window.dat) {
     const gui = new dat.GUI();
+    gugu = gui;
     // gui.remember(settings);
     gui.add(settings, 'draw_axes').name('Draw axes');
     gui.add(settings, 'dx', -300, 300).name('x displacement');
     gui.add(settings, 'dy', -300, 300).name('y displacement');
     gui.add(settings, 'dz', -300, 300).name('z displacement');
-    gui.add(settings, 'rx', -180, 180).name('x rotation');
-    gui.add(settings, 'ry', -180, 180).name('y rotation');
-    gui.add(settings, 'rz', -180, 180).name('z rotation');
+    controllers = {
+        rx: gui.add(settings, 'rx', -180, 180).name('x rotation'),
+        ry: gui.add(settings, 'ry', -180, 180).name('y rotation'),
+        rz: gui.add(settings, 'rz', -180, 180).name('z rotation'),
+    };
     gui.add(settings, 'model_name').name('Model name').onFinishChange(loadModelFromSettings);
 }
 
 function setup() {
     createCanvas(800, 800, WEBGL);
     loadModelFromSettings();
+    button = createButton('Calibrate');
+    button.position(800, 0);
+    button.mousePressed(calibrateModels);
 }
 
 function draw() {
@@ -48,7 +55,7 @@ function draw() {
     lights();
     orbitControl();
 
-    const models = Object.values(deviceData);
+    const models = Object.values(devices);
     // apply the physics simulation just to the models that have recent sensor data
     updatePhysics(
         models.filter(({ local_timestamp }) => currentTime - local_timestamp < 500)
@@ -62,6 +69,9 @@ function draw() {
         // Read the rotation. This is a quaternion; convert it to Euler angles.
         const [q0, q1, q2, q3] = data.quaternion;
         const orientationMatrix = quatToMatrix(q3, q1, q0, q2);
+        if (data.calibrationMatrix) {
+            applyMatrix.apply(null, data.calibrationMatrix);
+        }
         applyMatrix.apply(null, orientationMatrix);
 
         if (settings.draw_axes) {
@@ -94,27 +104,44 @@ function draw() {
     });
 }
 
+function calibrateModels() {
+    const models = Object.values(devices);
+    models.forEach(model => {
+        const [q0, q1, q2, q3] = model.quaternion;
+        const mat = quatToMatrix(q3, q1, q0, q2);
+        const inv = math.inv([mat.slice(0, 3), mat.slice(4, 7), mat.slice(8, 11)]);
+        model.calibrationMatrix = [...inv[0], 0, ...inv[1], 0, ...inv[2], 0, ...[0, 0, 0, 1]];
+    });
+    settings.rx = 0;
+    settings.ry = 0;
+    settings.rz = 0;
+    Object.values(controllers).forEach(c => c.updateDisplay());
+}
+
 function drawAxes() {
     strokeWeight(3);
-    [0, 1, 2].forEach(i => {
+    [0, 1, 2].forEach(axis => {
         const color = [0, 0, 0];
         const vector = [0, 0, 0, 0, 0, 0];
-        color[i] = 128;
-        vector[i + 3] = AXIS_LENGTH;
+        color[axis] = 128;
+        vector[axis + 3] = AXIS_LENGTH;
         stroke.apply(null, color);
         line.apply(null, vector);
     });
 }
 
 function updatePhysics(models) {
+    const springLength = 500;
+    const springK = .001;  // strength of spring between bodies
+    const originSpringK = 0.99;  // strength of spring towards origin
+    const viscosity = 0.99;
+
     // initialize positions and velocities of new models
     models.forEach(data => {
         if (!data.position) {
+            // Offset models from the origin so they disperse
             const e = 0.0001;
-            // const e = 1000;
-            function rand() {
-                return (Math.random() - 0.5) * e;
-            }
+            const rand = () => (Math.random() - 0.5) * 2 * e;
             data.position = [rand(), rand(), rand()];
             data.velocity = [0, 0, 0];
         }
@@ -127,18 +154,18 @@ function updatePhysics(models) {
             const v = d1.position.map((p0, i) => d2.position[i] - p0);
             const len = Math.sqrt(v[0] ** 2 + v[1] ** 2 + v[2] ** 2);
             const v_norm = v.map(x => x / len);
-            const f = (len - 500) * .001;
-            const vf = v_norm.map(x => x * f);
-            d1.velocity = d1.velocity.map((x, i) => x + vf[i]);
-            d2.velocity = d2.velocity.map((x, i) => x - vf[i]);
+            const f = springK * (len - springLength);
+            const fv = v_norm.map(x => x * f);
+            d1.velocity = d1.velocity.map((x, i) => x + fv[i]);
+            d2.velocity = d2.velocity.map((x, i) => x - fv[i]);
         });
     });
 
     // Add velocities to positions. Spring positions to origin. Damp velocities.
     models.forEach(data => {
         const { position, velocity } = data;
-        data.position = position.map((x, i) => (x + velocity[i]) * 0.99)
-        data.velocity = velocity.map(v => v * 0.99)
+        data.position = position.map((x, i) => (x + velocity[i]) * originSpringK)
+        data.velocity = velocity.map(v => v * viscosity)
     });
 }
 
@@ -156,5 +183,5 @@ function quatToMatrix(w, x, y, z) {
 
 onSensorData((data) => {
     const { device_id } = data;
-    deviceData[device_id] = { ...(deviceData[device_id] || {}), ...data };
+    devices[device_id] = { ...(devices[device_id] || {}), ...data };
 });

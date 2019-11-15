@@ -1,6 +1,7 @@
-const mqttConnectionSettings = { hostname: 'localhost', port: 15675, username: '', password: '', device_id: '' }
+let mqttConnectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
+let isMobile = Boolean(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
 
-if (window.dat) {
+if (window.dat && !isMobile) {
     const gui = new dat.GUI();
     gui.remember(mqttConnectionSettings);
     gui.add(mqttConnectionSettings, 'hostname');

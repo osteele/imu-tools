@@ -16,16 +16,13 @@ const settings = {
 
 function loadModelFromSettings() {
     let modelName = settings.model_name || 'bunny';
-    if (!modelName.match(/\.(obj|stl)$/)) {
-        modelName += '.obj';
-    }
+    if (!modelName.match(/\.(obj|stl)$/)) { modelName += '.obj'; }
     modelObj = loadModel('models/' + modelName, true);
 }
 
-var controllers;
-if (window.dat) {
+var controllers = {};
+if (window.dat && !isMobile) {
     const gui = new dat.GUI();
-    gugu = gui;
     // gui.remember(settings);
     gui.add(settings, 'draw_axes').name('Draw axes');
     gui.add(settings, 'dx', -300, 300).name('x displacement');
@@ -40,11 +37,11 @@ if (window.dat) {
 }
 
 function setup() {
-    createCanvas(800, 800, WEBGL);
+    createCanvas(windowWidth, windowHeight, WEBGL);
     loadModelFromSettings();
-    button = createButton('Calibrate');
-    button.position(800, 0);
-    button.mousePressed(calibrateModels);
+    createButton('Calibrate')
+        .position(windowWidth, 0)
+        .mousePressed(calibrateModels);
 }
 
 function draw() {

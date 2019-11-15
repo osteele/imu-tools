@@ -22,7 +22,7 @@ function updateDeviceList() {
 
 onSensorData((data) => {
     const { device_id } = data;
-    const record = deviceData[device_id] || {};
-    deviceData[device_id] = { timestamp: data.local_timestamp };
+    const timestamp = data.local_timestamp;
+    deviceData[device_id] = { timestamp };
     requestAnimationFrame(updateDeviceList);
 });

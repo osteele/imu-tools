@@ -10,20 +10,24 @@ The serial port format is compatible with
 
 1. Clone this repo.
 
-2. Follow the instructions
+2. Either: (1) Follow the instructions
+   [here](https://www.notion.so/RabbitMQ-7fd3ba693d924e1e893377f719bb5f14) to
+   install RabbitMQ on your computer; or (2) get an MQTT hostname, username, and
+   password from your instructor, and use it in the instructions below.
+
+## Setting up an MCU
+
+1. Follow the instructions
    [here](https://www.notion.so/MicroPython-4e7c9edd5b954c74bb4c08e5eac74c7f) to
    install MicroPython on an ESP32.
 
-3. Copy `pyboard/config.py.tmpl` to `pyboard/config.py`. Edit the latter file to
-   fill in the values.
-
-4. Download the source code from the `pyboard` directory in this folder, to the MCU:
+2. Download the source code from the `pyboard` directory in this folder, to the MCU:
 
     ```sh
     pipenv run download
     ```
 
-5. Now reboot the MCU, so that it runs the new code:
+3. Now reboot the MCU, so that it runs the new code:
 
    Run `pipenv run repl`
    Press `⌃D`
@@ -39,36 +43,30 @@ You can read how `pipenv run` invokes the `repl` command by inspecting the sourc
 Notes](https://paper.dropbox.com/doc/MicroPython-Development--Ai1pmnXzhBdkxZ6SuEPMTDiDAg-sAf2oqgmH5yIbmx27kZqs)
 contains notes on developing MicroPython on the ESP.
 
-## Examples
+## Running the Demos
 
 Run `pipenv run webserver` to start a web server.
 
 <http://127.0.0.1:8000> displays a directory of the other web pages in this
 directory.
 
-<http://127.0.0.1:8000> displays a live D3 graph of the orientation coordinates.
+<http://127.0.0.1:8000/barchart.html> displays a live bar chart of sensor data.
 
 <http://127.0.0.1:8000/chart.html> uses HighCharts to display another live
 graph, that automatically scales the y axis as data arrives.
 
 <http://localhost:8000/model.html> displays the bunny, with its orientation
-yolked to the IMU orientation. An optional `?model=` query parameter specifies
-the URL to an OBJ file, that is used as the model. The model is red before the
-sensor is minimally calibrated, and it fades out when sensor data is not being
-recieved.
+yolked to the IMU orientation.  The model is red before the sensor is minimally
+calibrated, and it fades out when sensor data is not being recieved.
 
-To switch the MQTT broker for any of these web pages, press the "h" key, edit in
-the new value, and then reload the page. Note: Each page has its own copy of
-these settings. Changing one will not change the others.
+To switch the MQTT broker for any of these web pages: edit in the new value, and
+then reload the page. Note: Each page has its own copy of these settings.
+Changing one will not change the others.
 
 ## Command-Line Testing
 
-Copy `config/network.ini.tmpl` to `config/network.ini` and fill in the values.
-If you are running an MQTT broker on your development computer, you may leave
-the new file unchanged.
-
-Run `pipenv run mqtt-sub` to run an MQTT client that prints messages to the
-terminal.
+Run `pipenv run mqtt-sub` to run an MQTT client that subscribes to IMU messages
+that are sent to the MQTT broker, and relays them to the terminal.
 
 Run `pipenv run mqtt-pub` to publish a single message to the server.
 

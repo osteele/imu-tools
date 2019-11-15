@@ -16,29 +16,29 @@ function draw() {
     clear();
     noStroke();
 
-    Object.keys(sensorData).forEach((sensor_name, i) => {
+    const names = Object.keys(sensorData).filter(name => Array.isArray(sensorData[name]));
+    names.forEach((name, i) => {
         const subgraph_x = i * (SUBGRAPH_WIDTH + 10) + 10;
         const subgraph_y = SUBGRAPH_HEIGHT + 10;
 
-        let value = sensorData[sensor_name];
-        let values = Array.isArray(value) ? value : [value];
+        let values = sensorData[name];
 
         // update the range
-        let [min, max] = ranges[sensor_name] || [0, 0];
+        let [min, max] = ranges[name] || [0, 0];
         // update the running max and min from the new values
         min = Math.min.apply(null, values.concat([min]));
         max = Math.max.apply(null, values.concat([max]));
-        ranges[sensor_name] = [min, max];
+        ranges[name] = [min, max];
 
         fill('gray');
         textSize(9);
         text(formatPrecision(max), subgraph_x, 25);
         text(formatPrecision(min), subgraph_x, SUBGRAPH_HEIGHT + 35);
 
-        const sensor_label = sensor_name[0].toUpperCase() + sensor_name.slice(1);
         fill(PALETTE[i % PALETTE.length]);
         textSize(14);
-        text(sensor_label, subgraph_x, subgraph_y + 40);
+        const label = name[0].toUpperCase() + name.slice(1);
+        text(label, subgraph_x, subgraph_y + 40);
 
         values.forEach((v, j) => {
             const x = subgraph_x + j * (BAR_WIDTH + 2);
@@ -54,7 +54,4 @@ function formatPrecision(n) {
 
 onSensorData((data) => {
     sensorData = { ...data };
-    delete sensorData.timestamp;
-    delete sensorData.local_timestamp;
-    delete sensorData.device_id;
 });

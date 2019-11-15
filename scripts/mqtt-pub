@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 import itertools
 import json as json_enc
+import random
 import sys
 import time
+import uuid
+from config import mqtt_options
 from math import cos, pi, sin
 
 import click
 import paho.mqtt.client as mqtt
 from loguru import logger
-
-from config import mqtt_options
 
 logger.remove()
 logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO")
@@ -20,19 +21,21 @@ def on_publish(_client, userdata, message_id):
 
 
 def gen_samples():
-    for i in itertools.count(0):
-        s = i / 100
-        frac = (i % 1000) / 1000
+    def make_sample(t):
+        s = t / 100
+        frac = (t % 1000) / 1000
         euler = (pi / 10 * cos(1.2 * s), pi / 10 * cos(1.4 * s), s % (2 * pi))
-        yield {
+        return {
             "timestamp": int(time.time() * 1000),
-            "temperature": 27 + frac,
             "accelerometer": (2048 * cos(s), 2048 * cos(1.2 * s), 2048 * cos(1.6 * s)),
+            "calibration": 100,
             "euler": euler,
-            "quaternion": euler2quat(*euler),
             "gyroscope": (40 + frac, 41 + frac, 42 + frac),
             "magnetometer": (30 + frac, 31 + frac, 32 + frac),
+            "quaternion": euler2quat(*euler),
+            "temperature": 27 + frac,
         }
+    yield from map(make_sample, itertools.count(random.random()))
 
 
 def euler2quat(yaw, pitch, roll):
@@ -58,7 +61,6 @@ def iter_throttle(iterable, freq=20):
         yield item
 
 
-import uuid
 
 
 @click.command()
@@ -81,10 +83,8 @@ def main(*, user, host, port, password, device_id, message, repeat, rate):
     """Send MQTT messages.
 
     In a MESSAGE string, {i} is replaced by the message count, and {time} by the
-    Epoch seconds. This is useful in combination with --repeat."""
-    # FIXME: w/out this info.wait_for_publish returns too early
-    global client  # pylint: disable=global-variable-undefined
-
+    Epoch seconds. This is useful in combination with --repeat.
+    """
     topic = f"imu/{device_id}"
     client = mqtt.Client(userdata=f"tcp://{host}:{port}/{topic}")
     client.on_publish = on_publish

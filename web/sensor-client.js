@@ -43,13 +43,13 @@ function startSensorSubscription() {
 
     const mqttConnectionOptions = {
         timeout: 3,
-        onSuccess: function () {
+        onSuccess: () => {
             const device_id = mqttConnectionSettings.device_id.trim();
             let topicString = 'imu/' + (device_id || '#');
             _setMqttConnectionStatus("Connected to mqtt://" + hostname + ":" + port);
             client.subscribe(topicString, { qos: 1 });
         },
-        onFailure: function (message) {
+        onFailure: (message) => {
             _setMqttConnectionStatus({ error: "MQTT connection failed: " + message.errorMessage });
         }
     };
@@ -84,7 +84,7 @@ function onMessageArrived(message) {
     _deviceStates[device_id] = data;
     data.device_id = device_id;
     data.local_timestamp = +new Date();
-    _onSensorDataCallbacks.forEach(function (callback) {
+    _onSensorDataCallbacks.forEach(callback => {
         try {
             callback(data, _deviceStates);
         } catch (e) {
@@ -103,7 +103,7 @@ function onSensorData(callback) {
 // Apply callback no more than once per animation frame
 function throttled(callback) {
     const buffer = [];
-    return function (data) {
+    return data => {
         if (buffer.length == 0) {
             requestAnimationFrame(function () {
                 callback(buffer.pop());

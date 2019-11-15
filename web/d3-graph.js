@@ -21,12 +21,8 @@ const y = d3.scale.linear()
 
 const line = d3.svg.line()
     .interpolate('basis')
-    .x(function (d, i) {
-        return x(now - (limit - 1 - i) * duration)
-    })
-    .y(function (d) {
-        return y(d)
-    })
+    .x((_d, i) => x(now - (limit - 1 - i) * duration))
+    .y(y)
 
 const svg = d3.select('.graph').append('svg')
     .attr('class', 'chart')

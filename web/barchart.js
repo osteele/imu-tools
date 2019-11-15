@@ -16,7 +16,7 @@ function draw() {
     clear();
     noStroke();
 
-    Object.keys(sensorData).forEach(function (sensor_name, i) {
+    Object.keys(sensorData).forEach((sensor_name, i) => {
         const subgraph_x = i * (SUBGRAPH_WIDTH + 10) + 10;
         const subgraph_y = SUBGRAPH_HEIGHT + 10;
 
@@ -25,6 +25,7 @@ function draw() {
 
         // update the range
         let [min, max] = ranges[sensor_name] || [0, 0];
+        // update the running max and min from the new values
         min = Math.min.apply(null, values.concat([min]));
         max = Math.max.apply(null, values.concat([max]));
         ranges[sensor_name] = [min, max];
@@ -39,10 +40,10 @@ function draw() {
         textSize(14);
         text(sensor_label, subgraph_x, subgraph_y + 40);
 
-        values.forEach(function (v, j) {
+        values.forEach((v, j) => {
             const x = subgraph_x + j * (BAR_WIDTH + 2);
             const y_mid = SUBGRAPH_HEIGHT / 2 + 25;
-            rect(x, y_mid, BAR_WIDTH, v * SUBGRAPH_HEIGHT / 2 / Math.max(min, max));
+            rect(x, y_mid, BAR_WIDTH, v * SUBGRAPH_HEIGHT / 2 / Math.max(-min, max));
         })
     });
 }

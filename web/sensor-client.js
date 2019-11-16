@@ -38,6 +38,8 @@ let client = null;
 function startSubscription() {
     let hostname = mqttConnectionSettings.hostname || 'localhost';
     let port = 15675;
+    const useSSL = Boolean(hostname.match(/^wss:/));
+    hostname = hostname.replace(/^wss?:/, '');
     if (hostname.match(/:/)) {
         port = hostname.split(/:/)[1];
         hostname = hostname.split(/:/)[0];
@@ -52,6 +54,7 @@ function startSubscription() {
 
     const connectionOptions = {
         timeout: 3,
+        useSSL,
         onSuccess: () => {
             const device_id = mqttConnectionSettings.device_id.trim();
             let topicString = 'imu/' + (device_id || '#');

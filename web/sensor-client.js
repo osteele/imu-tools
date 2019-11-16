@@ -2,7 +2,7 @@ export const isMobile = Boolean(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMob
 const mqttConnectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
 
 let guiControllers = [];
-if (window.dat && !isMobile) {
+if (window.dat) {
     const gui = new dat.GUI();
     gui.remember(mqttConnectionSettings);
     guiControllers = [
@@ -12,6 +12,7 @@ if (window.dat && !isMobile) {
         gui.add(mqttConnectionSettings, 'device_id'),
     ]
     gui.useLocalStorage = true;
+    if (isMobile) { gui.close(); }
 }
 
 function setMqttConnectionStatus(message) {

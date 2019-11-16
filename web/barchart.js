@@ -1,3 +1,5 @@
+import { onSensorData } from '/sensor-client.js';
+
 let sensorData = {};
 let ranges = {}; // sensor name => [min, max] observed range
 
@@ -7,11 +9,11 @@ const SUBGRAPH_HEIGHT = 300;
 
 const PALETTE = ['red', 'green', 'blue', 'gray', 'orange', 'pink'];
 
-function setup() {
+export function setup() {
     createCanvas(800, 800);
 }
 
-function draw() {
+export function draw() {
     background(200, 200, 212);
     clear();
     noStroke();

@@ -20,7 +20,12 @@
 <body>
 </body>
 
-<script type="text/javascript" src="./sensor-client.js"></script>
-<script src="3d-model.js"></script>
+<script type="module" src="./sensor-client.js"></script>
+<script type="module" src="./3d-model.js"></script>
+
+<script type="module">
+    import * as sketch from './3d-model.js'
+    Object.keys(sketch).forEach(name => window[name] = sketch[name])
+</script>
 
 </html>

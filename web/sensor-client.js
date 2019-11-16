@@ -1,11 +1,11 @@
-const isMobile = Boolean(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+export const isMobile = Boolean(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
 const mqttConnectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
 
-let _mqttSettingControllers = [];
+let guiControllers = [];
 if (window.dat && !isMobile) {
     const gui = new dat.GUI();
     gui.remember(mqttConnectionSettings);
-    _mqttSettingControllers = [
+    guiControllers = [
         gui.add(mqttConnectionSettings, 'hostname'),
         gui.add(mqttConnectionSettings, 'username'),
         gui.add(mqttConnectionSettings, 'password'),
@@ -14,7 +14,7 @@ if (window.dat && !isMobile) {
     gui.useLocalStorage = true;
 }
 
-function _setMqttConnectionStatus(message) {
+function setMqttConnectionStatus(message) {
     const id = "mqtt-connection-status";
     const mqttStatusElement = document.getElementById(id) || document.createElement('div');
     if (!mqttStatusElement.id) {
@@ -32,9 +32,9 @@ function _setMqttConnectionStatus(message) {
     mqttStatusElement.innerText = message.error || message || '';
 }
 
-let _mqttClient = null;
+let client = null;
 
-function _startSensorSubscription() {
+function startSubscription() {
     let hostname = mqttConnectionSettings.hostname || 'localhost';
     let port = 15675;
     if (hostname.match(/:/)) {
@@ -42,11 +42,11 @@ function _startSensorSubscription() {
         hostname = hostname.split(/:/)[0];
     }
     const clientId = "myclientid_" + parseInt(Math.random() * 100, 10)
-    const client = new Paho.Client(hostname, Number(port), "/ws", clientId);
+    client = new Paho.Client(hostname, Number(port), "/ws", clientId);
     client.onMessageArrived = onMessageArrived;
     client.onConnectionLost = (res) => {
-        _setMqttConnectionStatus({ error: "MQTT connection lost: " + res.errorMessage });
-        setTimeout(_startSensorSubscription, 1000);
+        setMqttConnectionStatus({ error: "MQTT connection lost: " + res.errorMessage });
+        setTimeout(startSubscription, 1000);
     };
 
     const connectionOptions = {
@@ -54,12 +54,12 @@ function _startSensorSubscription() {
         onSuccess: () => {
             const device_id = mqttConnectionSettings.device_id.trim();
             let topicString = 'imu/' + (device_id || '#');
-            _setMqttConnectionStatus("Connected to mqtt://" + hostname + ":" + port);
+            setMqttConnectionStatus("Connected to mqtt://" + hostname + ":" + port);
             client.subscribe(topicString, { qos: 1 });
         },
         onFailure: (message) => {
-            _setMqttConnectionStatus({ error: "MQTT connection failed: " + message.errorMessage });
-            _mqttClient = null;
+            setMqttConnectionStatus({ error: "MQTT connection failed: " + message.errorMessage });
+            client = null;
         }
     };
     const username = mqttConnectionSettings.username.trim();
@@ -67,23 +67,23 @@ function _startSensorSubscription() {
     if (username) { connectionOptions.userName = username; }
     if (password) { connectionOptions.password = password; }
     client.connect(connectionOptions);
-    _mqttClient = client;
 };
 
-function _mqttReconnect() {
-    if (_mqttClient) {
-        _mqttClient.disconnect();
-        _mqttClient = null;
+function reconnect() {
+    if (client) {
+        try {
+            client.disconnect();
+        } catch { }
+        client = null;
     }
-    _startSensorSubscription();
+    startSubscription();
 }
 
-_mqttSettingControllers.forEach(c => c.onFinishChange(_mqttReconnect));
+guiControllers.forEach(c => c.onFinishChange(reconnect));
 
-
-const _onSensorDataCallbacks = [];
-const _mqttDeviceStates = {};
-let _reportedMqttCallbackError = false;
+const onSensorDataCallbacks = [];
+const deviceStates = {};
+let reportedMqttCallbackError = false;
 
 const isValidQuaternion = ([q0, q1, q2, q3]) =>
     Math.abs(q0 ** 2 + q1 ** 2 + q2 ** 2 + q3 ** 2 - 1.0) < 1e-1;
@@ -97,25 +97,25 @@ function onMessageArrived(message) {
     if (!isValidQuaternion(quat)) { return; }
     const local_timestamp = +new Date();
     const data_ = { device_id, local_timestamp, ...data };
-    _mqttDeviceStates[device_id] = data_;
-    _onSensorDataCallbacks.forEach(callback => {
+    deviceStates[device_id] = data_;
+    onSensorDataCallbacks.forEach(callback => {
         try {
-            callback(data_, _mqttDeviceStates);
+            callback(data_, deviceStates);
         } catch (e) {
-            if (!_reportedMqttCallbackError) {
+            if (!reportedMqttCallbackError) {
                 console.error('err', e);
-                _reportedMqttCallbackError = true;
+                reportedMqttCallbackError = true;
             }
         }
     });
 }
 
-function onSensorData(callback) {
-    _onSensorDataCallbacks.push(callback);
+export function onSensorData(callback) {
+    onSensorDataCallbacks.push(callback);
 }
 
 // Apply callback no more than once per animation frame
-function throttled(callback) {
+export function throttled(callback) {
     const buffer = [];
     return data => {
         if (buffer.length == 0) {
@@ -127,4 +127,4 @@ function throttled(callback) {
     }
 }
 
-_startSensorSubscription();
+startSubscription();

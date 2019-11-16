@@ -1,3 +1,5 @@
+import { isMobile, onSensorData } from '/sensor-client.js';
+
 let modelObj;  // setup initializes this to a p5.js 3D model
 const devices = {};  // sensor data for each device, indexed by device id
 
@@ -36,7 +38,7 @@ if (window.dat && !isMobile) {
     gui.add(settings, 'model_name').name('Model name').onFinishChange(loadModelFromSettings);
 }
 
-function setup() {
+export function setup() {
     createCanvas(windowWidth, windowHeight, WEBGL);
     loadModelFromSettings();
     createButton('Calibrate')
@@ -44,7 +46,7 @@ function setup() {
         .mousePressed(calibrateModels);
 }
 
-function draw() {
+export function draw() {
     const currentTime = +new Date();
 
     background(200, 200, 212);

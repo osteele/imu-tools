@@ -1,3 +1,5 @@
+import { onSensorData, throttled } from '/sensor-client.js';
+
 // D3
 //
 // Adapted from http://bl.ocks.org/simenbrekken/6634070

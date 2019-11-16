@@ -17,7 +17,12 @@
 <body>
 </body>
 
-<script type="text/javascript" src="./sensor-client.js"></script>
-<script src="barchart.js"></script>
+<script type="module" src="./sensor-client.js"></script>
+<script type="module" src="./barchart.js"></script>
+
+<script type="module">
+    import * as sketch from './barchart.js'
+    Object.keys(sketch).forEach(name => window[name] = sketch[name])
+</script>
 
 </html>

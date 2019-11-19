@@ -50,8 +50,8 @@ let client = null;
 function startSubscription() {
     let hostname = mqttConnectionSettings.hostname || 'localhost';
     let port = 15675;
-    const useSSL = Boolean(hostname.match(/^wss:/));
-    hostname = hostname.replace(/^wss?:/, '');
+    const useSSL = Boolean(hostname.match(/^wss:\/\//));
+    hostname = hostname.replace(/^wss?:\/\//, '');
     if (hostname.match(/:/)) {
         port = hostname.split(/:/)[1];
         hostname = hostname.split(/:/)[0];

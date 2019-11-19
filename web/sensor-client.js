@@ -1,18 +1,30 @@
 export const isMobile = Boolean(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+const MOBILE_STORAGE_KEY = 'mqtt_connection_settings';
 const mqttConnectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
 
-let guiControllers = [];
+const datGuiListeners = [];
 if (window.dat) {
     const gui = new dat.GUI();
-    gui.remember(mqttConnectionSettings);
-    guiControllers = [
+    const savedSettings = JSON.parse(localStorage[MOBILE_STORAGE_KEY] || '{}')['remembered'] || {};
+    Object.keys(savedSettings).forEach(k => {
+        const v = savedSettings[k];
+        if (typeof mqttConnectionSettings[k] === typeof v) {
+            mqttConnectionSettings[k] = v;
+        }
+    });
+    const guiControllers = [
         gui.add(mqttConnectionSettings, 'hostname'),
         gui.add(mqttConnectionSettings, 'username'),
         gui.add(mqttConnectionSettings, 'password'),
         gui.add(mqttConnectionSettings, 'device_id'),
-    ]
-    gui.useLocalStorage = true;
-    if (isMobile) { gui.close(); }
+    ];
+    guiControllers.forEach(c =>
+        c.onFinishChange(() =>
+            datGuiListeners.forEach(c => c())));
+    datGuiListeners.push(() => {
+        localStorage[MOBILE_STORAGE_KEY] = JSON.stringify({ remembered: mqttConnectionSettings })
+    });
+    gui.close();
 }
 
 function setMqttConnectionStatus(message) {
@@ -83,7 +95,7 @@ function reconnect() {
     startSubscription();
 }
 
-guiControllers.forEach(c => c.onFinishChange(reconnect));
+datGuiListeners.push(reconnect);
 
 const onSensorDataCallbacks = [];
 const deviceStates = {};

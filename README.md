@@ -59,10 +59,6 @@ graph, that automatically scales the y axis as data arrives.
 yolked to the IMU orientation.  The model is red before the sensor is minimally
 calibrated, and it fades out when sensor data is not being recieved.
 
-To switch the MQTT broker for any of these web pages: edit in the new value, and
-then reload the page. Note: Each page has its own copy of these settings.
-Changing one will not change the others.
-
 ## Command-Line Testing
 
 Run `pipenv run mqtt-sub` to run an MQTT client that subscribes to IMU messages

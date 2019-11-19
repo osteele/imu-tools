@@ -12,7 +12,7 @@ MQTT_DEFAULTS = {
     "host": os.environ.get("MQTT_HOST", "localhost"),
     "port": to_int(os.environ.get("MQTT_PORT", 1883)),
     "user": os.environ.get("MQTT_USER", None),
-    "password": os.environ.get("MQTT_PASSWORD", None)
+    "password": os.environ.get("MQTT_PASSWORD", None),
 }
 MQTT_DEFAULTS["port"] = to_int(MQTT_DEFAULTS["port"])
 

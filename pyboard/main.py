@@ -3,13 +3,14 @@ import os
 import select
 import sys
 
-import config
 import machine
 import network
 import sensors
 import utime as time
-import webserver
 from umqtt.simple import MQTTClient
+
+import config
+import webserver
 
 DEVICE_ID = "".join(map("{:02x}".format, machine.unique_id()))
 SENSORS = sensors.get_imu(use_dummy=config.USE_DUMMY_IMU)

@@ -1,6 +1,7 @@
 import ustruct
 import utime
 from micropython import const
+
 from ufunctools import partial
 
 _CHIP_ID = const(0xA0)

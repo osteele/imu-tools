@@ -1,10 +1,11 @@
 import sys
 
+import utime as time
+from machine import I2C, Pin
+
 import bno055
 import bno055_fake
 import config
-import utime as time
-from machine import I2C, Pin
 
 LAST_ERROR = None
 

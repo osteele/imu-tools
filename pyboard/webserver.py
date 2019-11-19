@@ -34,7 +34,7 @@ def start_http_server(wifi_station):
     try:
         HTTP_SOCKET.bind(("", 80))
     except OSError as err:
-        if err.args[0] ==112:
+        if err.args[0] == 112:
             print(err)
             return
         raise err

@@ -1,6 +1,3 @@
-# try:
-#     import usocket as socket
-# except ImportError:
 import gc
 import os
 
@@ -8,6 +5,7 @@ import esp
 import machine
 import network
 import utime
+
 from config import WIFI_NETWORKS as ssid_passwords
 
 esp.osdebug(None)

@@ -5,12 +5,13 @@ import random
 import sys
 import time
 import uuid
-from config import mqtt_options
 from math import cos, pi, sin
 
 import click
 import paho.mqtt.client as mqtt
 from loguru import logger
+
+from config import mqtt_options
 
 logger.remove()
 logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO")
@@ -35,6 +36,7 @@ def gen_samples():
             "quaternion": euler2quat(*euler),
             "temperature": 27 + frac,
         }
+
     yield from map(make_sample, itertools.count(random.random()))
 
 
@@ -59,8 +61,6 @@ def iter_throttle(iterable, freq=20):
             now = time.time()
         next_time = now + 1 / freq
         yield item
-
-
 
 
 @click.command()

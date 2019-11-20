@@ -72,14 +72,14 @@ def iter_throttle(iterable, freq=20):
     "--rate",
     metavar="RATE",
     default=200,
-    help="Messages per second for use with --repeat",
+    help="Messages per second for use with --continuous",
 )
-@click.option("--repeat", is_flag=True, help="Keep sending messages at RATE/second")
-def main(*, user, host, port, password, device_id, message, repeat, rate):
+@click.option("--continuous", is_flag=True, help="Keep sending messages at RATE/second")
+def main(*, user, host, port, password, device_id, message, continuous, rate):
     """Send MQTT messages.
 
     In a MESSAGE string, {i} is replaced by the message count, and {time} by the
-    Epoch seconds. This is useful in combination with --repeat.
+    Epoch seconds. This is useful in combination with --continuous.
     """
 
     def on_publish(_client, _userdata, message_id):
@@ -100,7 +100,7 @@ def main(*, user, host, port, password, device_id, message, repeat, rate):
         if message is not None
         else map(json_enc.dumps, gen_samples())
     )
-    if not repeat:
+    if not continuous:
         samples = itertools.islice(samples, 1)
 
     for payload in iter_throttle(samples, rate):

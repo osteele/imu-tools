@@ -5,6 +5,7 @@ verify_ssl = true
 
 [scripts]
 mqtt-pub = "python scripts/mqtt-pub"
+simulate = "python scripts/mqtt-pub --continuous"
 mqtt-sub = "python scripts/mqtt-sub"
 mqtt-sample-rate = "python scripts/mqtt-sub --sample-rate"
 mqtt2pipe = "python scripts/mqtt-sub --pipe"

@@ -64,18 +64,33 @@ calibrated, and it fades out when sensor data is not being recieved.
 Run `pipenv run mqtt-sub` to run an MQTT client that subscribes to IMU messages
 that are sent to the MQTT broker, and relays them to the terminal.
 
-Run `pipenv run mqtt-pub` to publish a single message to the server.
+Run `pipenv run mqtt-pub` to publish a single MQTT message. The message is a
+simulated sensor sample.
 
-Run `pipenv run mqtt-pub --repeat` to repeatedly publish messages.
+Run `pipenv run simulate` to continuously publish messages from a simulated IMU
+until the user kills (^C) the script. (This is the same as the `--continuous`
+option to `pipenv run mqtt-pub`.) The simulated sensor readings change over
+time.
+
+`pipenv run simulate --help` gives a list of command-line options. Use
+`--device-id` to simulate a particular ID; you can use this to run multiple
+simulations, in different terminals, with different ids.
 
 ## Blender
 
-In two separate terminals:
+As a proof of concept, IMU data can be used to control the orientation of a
+rigged joint in Blender.
 
-1. `pipenv run mqtt2pipe`
-2. `/Applications/Blender.app/Contents/MacOS/Blender model.blend --python blender/motion.py`
+In a terminal, run: `pipenv run mqtt2pipe`
 
-If the pipe buffer fills, the `mqtt-sub` process will hang.
+In another terminal, launch Blender with the ` --python blender/motion.py`
+
+`/Applications/Blender.app/Contents/MacOS/Blender model.blend --python
+blender/motion.py`
+
+Note: If the pipe buffer fills (for example, because Blender is closed), the
+`mqtt-sub` process will hang. You will need to force quit it (^C) and launch it
+again.
 
 ## MQTT Broker
 

@@ -7,11 +7,14 @@ import bno055
 import bno055_fake
 import config
 
-LAST_ERROR = None
+I2C_PINS = (22, 23) if sys.platform == "esp32" else (5, 4)
+
+# The latest caught error, exposed for CLI debugging
+LastError = None
 
 
 def get_imu(use_dummy=False):
-    scl, sda = (22, 23) if sys.platform == "esp32" else (5, 4)
+    scl, sda = I2C_PINS
     i2c = I2C(scl=Pin(scl), sda=Pin(sda), freq=100000, timeout=1000)
     devices = i2c.scan()
     print("I2C scan ->", devices)
@@ -39,8 +42,8 @@ def get_imu(use_dummy=False):
 
 
 def is_retriable_error(err):
-    global LAST_ERROR
-    LAST_ERROR = err
+    global LastError
+    LastError = err
     ENODEV = 19
     ETIMEDOUT = 110
     return err.args[0] in (ENODEV, ETIMEDOUT)

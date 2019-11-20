@@ -17,10 +17,6 @@ logger.remove()
 logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO")
 
 
-def on_publish(_client, userdata, message_id):
-    logger.info("Published(id={}) to {}", message_id, userdata)
-
-
 def gen_samples():
     def make_sample(t):
         s = t / 100
@@ -85,11 +81,16 @@ def main(*, user, host, port, password, device_id, message, repeat, rate):
     In a MESSAGE string, {i} is replaced by the message count, and {time} by the
     Epoch seconds. This is useful in combination with --repeat.
     """
+
+    def on_publish(_client, _userdata, message_id):
+        global published
+        mqtt_url = f"tcp://{host}:{port}/{topic}"
+        logger.info("Published(id={}) to {}", message_id, mqtt_url)
+
     topic = f"imu/{device_id}"
-    client = mqtt.Client(userdata=f"tcp://{host}:{port}/{topic}")
+    client = mqtt.Client()
     client.on_publish = on_publish
     client.on_log = True
-
     if user:
         client.username_pw_set(user, password=password)
     client.connect(host, port)
@@ -104,6 +105,7 @@ def main(*, user, host, port, password, device_id, message, repeat, rate):
 
     for payload in iter_throttle(samples, rate):
         info = client.publish(topic, payload=payload)
+    client.disconnect()
     info.wait_for_publish()
 
 

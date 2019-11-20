@@ -17,11 +17,8 @@
 <body>
 </body>
 
-<script type="module" src="./sensor-client.js"></script>
-<script type="module" src="./barchart.js"></script>
-
 <script type="module">
-    import * as sketch from './barchart.js'
+    import * as sketch from './js/barchart.js'
     Object.keys(sketch).forEach(name => window[name] = sketch[name])
 </script>
 

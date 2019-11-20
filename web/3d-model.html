@@ -20,11 +20,8 @@
 <body>
 </body>
 
-<script type="module" src="./sensor-client.js"></script>
-<script type="module" src="./3d-model.js"></script>
-
 <script type="module">
-    import * as sketch from './3d-model.js'
+    import * as sketch from './js/3d-model.js'
     Object.keys(sketch).forEach(name => window[name] = sketch[name])
 </script>
 

@@ -1,10 +1,17 @@
 # MicroPython IMU Relay
 
-MicroPython code that runs on an ESP connected to a BNO055 IMU, that relays the
-sensor readings to a web page, an MQTT connection, or the serial port.
+This project contains:
 
-The serial port format is compatible with
-[osteele/microbit-sensor-relay](https://github.com/osteele/microbit-sensor-relay).
+- Firmware (in the `pyboard` directory) that runs on an ESP8266 or ESP32 that is
+  connected to a BNO055 IMU. This firmware is implemented in MicroPython, relays
+  the IMU sensor readings to a web page, an MQTT connection, or the serial port.
+
+- Command-line tools (in the `scripts` directory, and invoked via `pipenv run`)
+  to report, simulate, and measure the sample rate of IMU data, and relay it to
+  a named port.
+
+- Web pages (in the `web` directory) that display IMU data as graphs, charts,
+  and 3D models.
 
 ## Installation
 
@@ -15,13 +22,14 @@ The serial port format is compatible with
    install RabbitMQ on your computer; or (2) get an MQTT hostname, username, and
    password from your instructor, and use it in the instructions below.
 
-## Setting up an MCU
+## Flashing the ESP
 
 1. Follow the instructions
    [here](https://www.notion.so/MicroPython-4e7c9edd5b954c74bb4c08e5eac74c7f) to
    install MicroPython on an ESP32.
 
-2. Download the source code from the `pyboard` directory in this folder, to the MCU:
+2. Download the source code from the `pyboard` directory in this folder, to the ESP,
+   In a terminal window in this directory, run:
 
     ```sh
     pipenv run download
@@ -29,8 +37,10 @@ The serial port format is compatible with
 
 3. Now reboot the MCU, so that it runs the new code:
 
-   Run `pipenv run repl`
-   Press `⌃D`
+     1. In a terminal in this directory, run `pipenv run repl`
+     2. Press `⌃D` to reboot the board. (`⌃` is the control character. Hold it
+        down while the `D` is pressed, and then release them both.)
+     3. Press `⌃X` to exit the `pipenv run repl` command.
 
    You can also reboot the board by pressing the button that is closest to the red LED, on the MCU board.
 
@@ -43,11 +53,11 @@ You can read how `pipenv run` invokes the `repl` command by inspecting the sourc
 Notes](https://paper.dropbox.com/doc/MicroPython-Development--Ai1pmnXzhBdkxZ6SuEPMTDiDAg-sAf2oqgmH5yIbmx27kZqs)
 contains notes on developing MicroPython on the ESP.
 
-## Running the Demos
+## Viewing the Web Examples
 
 Run `pipenv run webserver` to start a web server.
 
-<http://127.0.0.1:8000> displays a directory of the other web pages in this
+<http://127.0.0.1:8000> displays a directory of web pages in the `web` directory
 directory.
 
 <http://127.0.0.1:8000/barchart.html> displays a live bar chart of sensor data.
@@ -92,14 +102,24 @@ Note: If the pipe buffer fills (for example, because Blender is closed), the
 `mqtt-sub` process will hang. You will need to force quit it (^C) and launch it
 again.
 
-## MQTT Broker
+## Firmware Operation
 
-To install a local broker:
+An ESP that is running the firmware in this directory connects to a WiFi network
+and an MQTT broker, and continuously publishes MQTT messages to the
+`imu/${device_id}` topic, where `${device_id}` is a unique device id for the
+ESP. (It is currently the lowercase hexadecimal representation of the device's
+MAC address.) The message payload is a JSON string with properties whose names
+are the values of the IMU sensors, fused data, and other data: accelerometer,
+gyroscope, magnetometer, euler, quaternion, calibration, temperature. The
+message also includes a "timestamp" value, which is the millisecond counter.
+This can be used to compute the relative time between samples.
 
-1. Install RabbitMQ. On macOS with HomeBrew: `brew install rabbitmq`, and `brew
-   services start rabbitmq`.
-2. Install the MQTT plugin: `rabbitmq-plugins enable rabbitmq_mqtt`
-3. Install the Web MQTT plugin: `rabbitmq-plugins enable rabbitmq_web_mqtt`
+It periodically prints the sample rate to the serial port.
+
+It can optionally be configured to instead send the sensor data.
+
+The serial port format is compatible with
+[osteele/microbit-sensor-relay](https://github.com/osteele/microbit-sensor-relay).
 
 ## References
 

@@ -1,4 +1,4 @@
-import { onSensorData } from '/sensor-client.js';
+import { onSensorData } from './sensor-client.js';
 
 const deviceData = {};
 let updateDeviceListTimer = null;

@@ -1,4 +1,5 @@
-import { onSensorData, throttled } from '/sensor-client.js';
+import { onSensorData } from './sensor-client.js';
+import { throttled } from './utils.js';
 
 Highcharts.setOptions({ global: { useUTC: false } });
 

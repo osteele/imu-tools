@@ -1,4 +1,4 @@
-import { onSensorData } from '/sensor-client.js';
+import { onSensorData } from './sensor-client.js';
 
 let sensorData = {};
 let ranges = {}; // sensor name => [min, max] observed range

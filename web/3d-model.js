@@ -1,4 +1,5 @@
-import { isMobile, onSensorData } from '/sensor-client.js';
+import { onSensorData } from './sensor-client.js';
+import { isMobile } from './utils.js';
 
 let modelObj;  // setup initializes this to a p5.js 3D model
 const devices = {};  // sensor data for each device, indexed by device id

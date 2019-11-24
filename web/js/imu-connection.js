@@ -1,7 +1,15 @@
 const MOBILE_STORAGE_KEY = 'mqtt_connection_settings';
-const connectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
+let connectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
 
+let client = null;
 export let gui = null;
+
+export function openConnection(settings) {
+    if (settings) {
+        connectionSettings = settings;
+    }
+    startSubscription();
+}
 
 const datGuiListeners = [];
 if (window.dat) {
@@ -43,8 +51,6 @@ function setMqttConnectionStatus(message) {
     }
     mqttStatusElement.innerText = message.error || message || '';
 }
-
-let client = null;
 
 function startSubscription() {
     let hostname = connectionSettings.hostname || 'localhost';
@@ -107,8 +113,11 @@ function onMessageArrived(message) {
     const device_id = message.topic.split('/').pop();
     const data = JSON.parse(message.payloadString);
     const quat = data.quaternion;
+    // Devices on the current protocol send an initial presence message, that
+    // doesn't include sensor data. Don't pass these on.
     if (!quat) { return; }
-    // discard invalid quaternions from the Gravity
+    // Discard invalid quaternions. These come from the Gravity. (Maybe it has a
+    // flaky I2C connection?)
     if (!isValidQuaternion(quat)) { return; }
     const local_timestamp = +new Date();
     const data_ = { device_id, local_timestamp, ...data };
@@ -117,6 +126,7 @@ function onMessageArrived(message) {
         try {
             callback(data_, deviceStates);
         } catch (e) {
+            // Only log the first error. After that it gets annoying.
             if (!reportedMqttCallbackError) {
                 console.error('err', e);
                 reportedMqttCallbackError = true;
@@ -125,8 +135,12 @@ function onMessageArrived(message) {
     });
 }
 
+/**
+ * Register a callback that is applied to each sensor messages.
+ *
+ * @param {*} callback
+ */
 export function onSensorData(callback) {
+    if (!client) { startSubscription(); }
     onSensorDataCallbacks.push(callback);
 }
-
-startSubscription();

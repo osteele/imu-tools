@@ -4,9 +4,10 @@
     "version": "0.0.5",
     "description": "Web browser subscription to MQTT IMU sensor data",
     "license": "MIT",
-    "main": "dist/mqtt-subscription.js",
-    "unpkg": "dist/my-awesome-lib.min.js",
+    "main": "index.js",
+    "unpkg": "index.js",
     "scripts": {
+        "import": "cp ../web/js/imu-connection.js . && mv imu-connection.js index.js",
         "test": "echo \"Warning: no test specified\""
     },
     "repository": "github:osteele/imu-tools",

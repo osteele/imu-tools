@@ -1,4 +1,4 @@
-const MOBILE_STORAGE_KEY = 'mqtt_connection_settings';
+const STORAGE_KEY = 'imu-tools:mqtt-connection';
 let connectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
 
 let client = null;
@@ -14,9 +14,9 @@ export function openConnection(settings) {
 const datGuiListeners = [];
 if (window.dat) {
     const container = document.getElementById('connection-gui');
-    gui = new dat.GUI({ autoPlace: container !== null });
+    gui = new dat.GUI({ autoPlace: container === null });
     if (container) { container.appendChild(gui.domElement); }
-    const savedSettings = JSON.parse(localStorage[MOBILE_STORAGE_KEY] || '{}')['remembered'] || {};
+    const savedSettings = JSON.parse(localStorage[STORAGE_KEY] || '{}')['remembered'] || {};
     Object.keys(savedSettings).forEach(k => {
         const v = savedSettings[k];
         if (typeof connectionSettings[k] === typeof v) {
@@ -29,7 +29,7 @@ if (window.dat) {
         c.onFinishChange(() =>
             datGuiListeners.forEach(c => c())));
     datGuiListeners.push(() => {
-        localStorage[MOBILE_STORAGE_KEY] = JSON.stringify({ remembered: connectionSettings })
+        localStorage[STORAGE_KEY] = JSON.stringify({ remembered: connectionSettings })
     });
     gui.close();
 }

@@ -1,5 +1,5 @@
 import { onSensorData } from './imu-connection.js';
-import { isMobile } from './utils.js';
+import { isMobile, quatToMatrix } from './utils.js';
 
 let modelObj;  // setup initializes this to a p5.js 3D model
 const devices = {};  // sensor data for each device, indexed by device id
@@ -43,7 +43,7 @@ export function setup() {
     createCanvas(windowWidth, windowHeight, WEBGL);
     loadModelFromSettings();
     createButton('Calibrate')
-        .position(windowWidth, 0)
+        .position(0, 0)
         .mousePressed(calibrateModels);
 }
 
@@ -63,40 +63,41 @@ export function draw() {
 
     models.forEach(data => {
         push();
-        // translate position within world space
+        // Place the object in world coordinates
         if (data.position) { translate.apply(null, data.position); }
 
-        // Read the rotation. This is a quaternion; convert it to Euler angles.
-        const [q0, q1, q2, q3] = data.quaternion;
-        const orientationMatrix = quatToMatrix(q3, q1, q0, q2);
         if (data.calibrationMatrix) {
             applyMatrix.apply(null, data.calibrationMatrix);
         }
+
+        // Read the orientation. This is a quaternion; convert it to an orientation matrix
+        const [q0, q1, q2, q3] = data.quaternion;
+        const orientationMatrix = quatToMatrix(q3, q1, q0, q2);
         applyMatrix.apply(null, orientationMatrix);
 
-        if (settings.draw_axes) {
-            drawAxes();
-        }
+        // Draw the axes in model coordinates
+        if (settings.draw_axes) { drawAxes(); }
 
-        // Fade the model out if the sensor data is stale
+        // Fade the model out, if the sensor data is stale
         const age = Math.max(0, currentTime - data.local_timestamp - 250);
         const alpha = Math.max(5, 255 - age / 10);
         fill(255, 255, 255, alpha);
 
-        // show uncalibrated models in red
+        // Fully uncalibrated models are shown in red
         if (data.calibration === 0) {
             fill(255, 0, 0, alpha);
         }
 
-        // correct for the model orientation
+        // Apply the GUI rotation settings
         rotateX(settings.rx * Math.PI / 180);
         rotateY(settings.ry * Math.PI / 180);
         rotateZ(settings.rz * Math.PI / 180);
 
-        // translate position in model space
+        // Translate the position in model coordinates. This swings it around
+        // the end of a stick.
         translate(settings.dx, settings.dy, settings.dz)
 
-        // render the model
+        // Render the model
         noStroke();
         model(modelObj);
 
@@ -104,6 +105,8 @@ export function draw() {
     });
 }
 
+// Set its model's calibration matrix to the inverse of the model's current orientation.
+// This will cause it to be drawn in its native orientation whenever
 function calibrateModels() {
     const models = Object.values(devices);
     models.forEach(model => {
@@ -112,6 +115,7 @@ function calibrateModels() {
         const inv = math.inv([mat.slice(0, 3), mat.slice(4, 7), mat.slice(8, 11)]);
         model.calibrationMatrix = [...inv[0], 0, ...inv[1], 0, ...inv[2], 0, ...[0, 0, 0, 1]];
     });
+    // reset the GUI rotation, and update the GUI slider display
     settings.rx = 0;
     settings.ry = 0;
     settings.rz = 0;
@@ -167,18 +171,6 @@ function updatePhysics(models) {
         data.position = position.map((x, i) => (x + velocity[i]) * originSpringK)
         data.velocity = velocity.map(v => v * viscosity)
     });
-}
-
-function quatToMatrix(w, x, y, z) {
-    const x2 = x ** 2, y2 = y ** 2, z2 = z ** 2,
-        wx = w * x, wy = w * y, wz = w * z,
-        xy = x * y, xz = x * z, yz = y * z;
-    return [
-        1 - 2 * (y2 + z2), 2 * (xy - wz), 2 * (xz + wy), 0,
-        2 * (xy + wz), 1 - 2 * (x2 + z2), 2 * (yz - wx), 0,
-        2 * (xz - wy), 2 * (yz + wx), 1 - 2 * (x2 + y2), 0,
-        0, 0, 0, 1
-    ];
 }
 
 onSensorData((data) => {

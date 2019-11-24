@@ -1,16 +1,19 @@
 # IMU MQTT Subscription
 
-This package provides a JavaScript module that can be included in a web page
-order to subscribe to MQTT IMU sensor data that is published via the tools in
-the [osteele/imu-tools](https://github.com/osteele/imu-tools) repository.
+This package allows code in a web page to subscribe to IMU sensor data.
+
+It is designed to work with data published by the tools in the
+[osteele/imu-tools](https://github.com/osteele/imu-tools) repository.
 
 See that repository for additional information and setup instructions for the
 IMU.
 
-To use this, include the MQTT library in your HTML header:
+## Usage
+
+To use this, include the MQTT library in the HTML header:
 
 ```html
-    <script src="https://cdn.jsdelivr.net/npm/paho-mqtt@1.1.0/paho-mqtt.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/paho-mqtt@1.1.0/paho-mqtt.js"></script>
 ```
 
 and import the module from a [JavaScript
@@ -22,15 +25,32 @@ import { onSensorData } from 'https://cdn.jsdelivr.net/npm/imu-tools@0/index.js'
 onSensorData(data => console.info('sensor data:', data))
 ```
 
-If the HTML page includes the `data.gui` library:
+## Connection Settings Control Panel
+
+By default, the web page connects to an MQTT broker running on the local machine,
+
+This can be changed, by enabling a control panel that allows the user to specify
+the MQTT connection settings.
+
+Add the following to the HTML header:
 
 ```html
     <script src="https://cdn.jsdelivr.net/npm/dat.gui@0.7.6/build/dat.gui.min.js"></script>
 ```
 
-the page will display a GUI controller that allows the user to specify the
-MQTT connection settings. This controller saves the settings to local storage,
-so that they are re-used across all pages that include the library.
+The page will now display a control panel in the upper right corner.
+
+The location of the control panel can be customized by adding an HTMl element
+with id `connection-gui`.
+
+The controller saves the connection settings to local storage. They are used by
+all pages that include this library.
+
+## Acknowledgements
+
+This code uses the [Eclipse Paho JavaScript
+Client](https://www.eclipse.org/paho/clients/js/) for MQTT connectivity. It uses
+[dat.gui](https://github.com/dataarts/dat.gui) to display the control panel.
 
 ## License
 

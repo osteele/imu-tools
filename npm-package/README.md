@@ -10,14 +10,15 @@ IMU.
 
 ## Usage
 
-To use this, include the MQTT library in the HTML header:
+To use this, include the MQTT library in the header (between the `<html>` and
+the `</html>`) of the HTML file:
 
 ```html
     <script src="https://cdn.jsdelivr.net/npm/paho-mqtt@1.1.0/paho-mqtt.js"></script>
 ```
 
-and import the module from a [JavaScript
-module](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules):
+Add the following to `sketch.js` to import the `onSensorData` function, and use
+it to subscribe to sensor data:
 
 ```js
 import { onSensorData } from 'https://cdn.jsdelivr.net/npm/imu-tools@0/index.js'

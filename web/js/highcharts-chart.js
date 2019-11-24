@@ -1,4 +1,4 @@
-import { onSensorData } from './sensor-client.js';
+import { onSensorData } from './imu-connection.js';
 import { throttled } from './utils.js';
 
 Highcharts.setOptions({ global: { useUTC: false } });

@@ -1,4 +1,4 @@
-import { onSensorData } from './sensor-client.js';
+import { onSensorData } from './imu-connection.js';
 import { isMobile } from './utils.js';
 
 let modelObj;  // setup initializes this to a p5.js 3D model

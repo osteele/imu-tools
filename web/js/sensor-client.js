@@ -1,27 +1,27 @@
 const MOBILE_STORAGE_KEY = 'mqtt_connection_settings';
-const mqttConnectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
+const connectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
+
+export let gui = null;
 
 const datGuiListeners = [];
 if (window.dat) {
-    const gui = new dat.GUI();
+    const container = document.getElementById('connection-gui');
+    gui = new dat.GUI({ autoPlace: container !== null });
+    if (container) { container.appendChild(gui.domElement); }
     const savedSettings = JSON.parse(localStorage[MOBILE_STORAGE_KEY] || '{}')['remembered'] || {};
     Object.keys(savedSettings).forEach(k => {
         const v = savedSettings[k];
-        if (typeof mqttConnectionSettings[k] === typeof v) {
-            mqttConnectionSettings[k] = v;
+        if (typeof connectionSettings[k] === typeof v) {
+            connectionSettings[k] = v;
         }
     });
-    const guiControllers = [
-        gui.add(mqttConnectionSettings, 'hostname'),
-        gui.add(mqttConnectionSettings, 'username'),
-        gui.add(mqttConnectionSettings, 'password'),
-        gui.add(mqttConnectionSettings, 'device_id'),
-    ];
+    const guiControllers = ['hostname', 'username', 'password', 'device_id']
+        .map(name => gui.add(connectionSettings, name));
     guiControllers.forEach(c =>
         c.onFinishChange(() =>
             datGuiListeners.forEach(c => c())));
     datGuiListeners.push(() => {
-        localStorage[MOBILE_STORAGE_KEY] = JSON.stringify({ remembered: mqttConnectionSettings })
+        localStorage[MOBILE_STORAGE_KEY] = JSON.stringify({ remembered: connectionSettings })
     });
     gui.close();
 }
@@ -47,7 +47,7 @@ function setMqttConnectionStatus(message) {
 let client = null;
 
 function startSubscription() {
-    let hostname = mqttConnectionSettings.hostname || 'localhost';
+    let hostname = connectionSettings.hostname || 'localhost';
     let port = 15675;
     const useSSL = Boolean(hostname.match(/^wss:\/\//));
     hostname = hostname.replace(/^wss?:\/\//, '');
@@ -67,7 +67,7 @@ function startSubscription() {
         timeout: 3,
         useSSL,
         onSuccess: () => {
-            const device_id = mqttConnectionSettings.device_id.trim();
+            const device_id = connectionSettings.device_id.trim();
             let topicString = 'imu/' + (device_id || '#');
             setMqttConnectionStatus("Connected to mqtt://" + hostname + ":" + port);
             client.subscribe(topicString, { qos: 1 });
@@ -77,8 +77,8 @@ function startSubscription() {
             client = null;
         }
     };
-    const username = mqttConnectionSettings.username.trim();
-    const password = mqttConnectionSettings.password.trim();
+    const username = connectionSettings.username.trim();
+    const password = connectionSettings.password.trim();
     if (username) { connectionOptions.userName = username; }
     if (password) { connectionOptions.password = password; }
     client.connect(connectionOptions);

@@ -1,9 +1,15 @@
-/* Adapted from http://bl.ocks.org/simenbrekken/6634070 */
 body {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     margin: 0;
 }
 
+#connection-gui {
+    position: absolute;
+    right: 0;
+    bottom: 20px;
+}
+
+/* Adapted from http://bl.ocks.org/simenbrekken/6634070 */
 .graph .axis {
     stroke-width: 1;
 }

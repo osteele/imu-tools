@@ -1,9 +1,10 @@
 {
   "name": "imu-tools",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Web browser subscription to MQTT IMU sensor data",
-  "main": "mqtt-subscription.js",
+  "main": "dist/mqtt-subscription.js",
   "scripts": {
+    "build": "cat mqtt-subscription.js > dist/mqtt-subscription.js",
     "test": "echo \"Warning: no test specified\""
   },
   "repository": "github:osteele/imu-tools",

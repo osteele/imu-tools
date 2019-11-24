@@ -1,0 +1,17 @@
+{
+  "name": "imu-tools",
+  "version": "0.0.1",
+  "description": "Web browser subscription to MQTT IMU sensor data",
+  "main": "mqtt-subscription.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "github:osteele/imu-tools",
+  "keywords": [
+    "mqtt",
+    "imu",
+    "bno055"
+  ],
+  "author": "Oliver Steele <steele@osteele.com> (https://osteele.com/)",
+  "license": "MIT"
+}

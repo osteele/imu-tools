@@ -17,7 +17,7 @@ and import the module from a [JavaScript
 module](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules):
 
 ```js
-import { onSensorData } from 'https://cdn.jsdelivr.net/npm/imu-tools/imu-subscription.js';
+import { onSensorData } from 'https://cdn.jsdelivr.net/npm/imu-tools';
 
 onSensorData(data => console.info)
 ```

@@ -1,22 +1,19 @@
 {
-  "name": "imu-tools",
-  "author": "Oliver Steele <steele@osteele.com> (https://osteele.com/)",
-  "version": "0.0.4",
-  "description": "Web browser subscription to MQTT IMU sensor data",
-  "license": "MIT",
-  "main": "dist/mqtt-subscription.js",
-  "files": [
-    "mqtt-subscription.js",
-    "dist"
-  ],
-  "scripts": {
-    "build": "cat mqtt-subscription.js > dist/mqtt-subscription.js",
-    "test": "echo \"Warning: no test specified\""
-  },
-  "repository": "github:osteele/imu-tools",
-  "keywords": [
-    "mqtt",
-    "imu",
-    "bno055"
-  ]
+    "name": "imu-tools",
+    "author": "Oliver Steele <steele@osteele.com> (https://osteele.com/)",
+    "version": "0.0.5",
+    "description": "Web browser subscription to MQTT IMU sensor data",
+    "license": "MIT",
+    "main": "dist/mqtt-subscription.js",
+    "unpkg": "dist/my-awesome-lib.min.js",
+    "scripts": {
+        "test": "echo \"Warning: no test specified\""
+    },
+    "repository": "github:osteele/imu-tools",
+    "keywords": [
+        "mqtt",
+        "imu",
+        "bno055"
+    ],
+    "homepage": "https://github.com/osteele/imu-tools"
 }

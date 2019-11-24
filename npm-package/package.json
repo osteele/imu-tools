@@ -1,13 +1,13 @@
 {
     "name": "imu-tools",
     "author": "Oliver Steele <steele@osteele.com> (https://osteele.com/)",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "Web browser subscription to MQTT IMU sensor data",
     "license": "MIT",
     "main": "index.js",
     "unpkg": "index.js",
     "scripts": {
-        "import": "cp ../web/js/imu-connection.js . && mv imu-connection.js index.js",
+        "prepare": "cp ../web/js/{imu-connection,utils}.js . && mv imu-connection.js index.js",
         "test": "echo \"Warning: no test specified\""
     },
     "repository": "github:osteele/imu-tools",

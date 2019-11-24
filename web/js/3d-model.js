@@ -70,10 +70,7 @@ export function draw() {
             applyMatrix.apply(null, data.calibrationMatrix);
         }
 
-        // Read the orientation. This is a quaternion; convert it to an orientation matrix
-        const [q0, q1, q2, q3] = data.quaternion;
-        const orientationMatrix = quatToMatrix(q3, q1, q0, q2);
-        applyMatrix.apply(null, orientationMatrix);
+        applyMatrix.apply(null, data.orientationMatrix);
 
         // Draw the axes in model coordinates
         if (settings.draw_axes) { drawAxes(); }

@@ -1,3 +1,5 @@
+import { quatToMatrix } from './utils.js';
+
 const STORAGE_KEY = 'imu-tools:mqtt-connection';
 let connectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
 
@@ -119,9 +121,13 @@ function onMessageArrived(message) {
     // Discard invalid quaternions. These come from the Gravity. (Maybe it has a
     // flaky I2C connection?)
     if (!isValidQuaternion(quat)) { return; }
+
+    const [q0, q1, q2, q3] = quat;
+    const orientationMatrix = quatToMatrix(q3, q1, q0, q2);
     const local_timestamp = +new Date();
-    const data_ = { device_id, local_timestamp, ...data };
+    const data_ = { device_id, local_timestamp, orientationMatrix, ...data };
     deviceStates[device_id] = data_;
+
     onSensorDataCallbacks.forEach(callback => {
         try {
             callback(data_, deviceStates);

@@ -1,16 +1,17 @@
 import { onSensorData } from './imu-connection.js';
 
-let sensorData = {};
-let ranges = {}; // sensor name => [min, max] observed range
+const IGNORED_PROPERTIES = ['device_id', 'calibration', 'timestamp', 'local_timestamp', 'orientationMatrix'];
 
 const BAR_WIDTH = 25;
-const SUBGRAPH_WIDTH = (4 * BAR_WIDTH) + 20;
 const SUBGRAPH_HEIGHT = 300;
 
 const PALETTE = ['red', 'green', 'blue', 'gray', 'orange', 'pink'];
 
+let sensorData = {};
+let ranges = {}; // sensor name => [min, max] observed range
+
 export function setup() {
-    createCanvas(800, 800);
+    createCanvas(windowWidth, windowHeight);
 }
 
 export function draw() {
@@ -18,12 +19,23 @@ export function draw() {
     clear();
     noStroke();
 
-    const names = Object.keys(sensorData).filter(name => Array.isArray(sensorData[name]));
+    let subgraphX = 10;
+    let subgraphY = 10;
+    // const names = Object.keys(sensorData).filter(name => Array.isArray(sensorData[name]));
+    const names = Object.keys(sensorData).filter(name => !IGNORED_PROPERTIES.includes(name));
     names.forEach((name, i) => {
-        const subgraph_x = i * (SUBGRAPH_WIDTH + 10) + 10;
-        const subgraph_y = SUBGRAPH_HEIGHT + 10;
-
         let values = sensorData[name];
+        if (!Array.isArray(values)) {
+            values = [values];
+        }
+
+        const subgraphWidth = values.length * (BAR_WIDTH + 2);
+        if (subgraphX + subgraphWidth > width) {
+            subgraphX = 10;
+            subgraphY += SUBGRAPH_HEIGHT + 45;
+        }
+        push()
+        translate(subgraphX, subgraphY)
 
         // update the range
         let [min, max] = ranges[name] || [0, 0];
@@ -34,19 +46,22 @@ export function draw() {
 
         fill('gray');
         textSize(9);
-        text(formatPrecision(max), subgraph_x, 25);
-        text(formatPrecision(min), subgraph_x, SUBGRAPH_HEIGHT + 35);
+        text(formatPrecision(max), 0, 25);
+        text(formatPrecision(min), 0, 35);
 
         fill(PALETTE[i % PALETTE.length]);
         textSize(14);
         const label = name[0].toUpperCase() + name.slice(1);
-        text(label, subgraph_x, subgraph_y + 40);
+        text(label, 0, 0 + SUBGRAPH_HEIGHT + 40);
 
         values.forEach((v, j) => {
-            const x = subgraph_x + j * (BAR_WIDTH + 2);
-            const y_mid = SUBGRAPH_HEIGHT / 2 + 25;
-            rect(x, y_mid, BAR_WIDTH, v * SUBGRAPH_HEIGHT / 2 / Math.max(-min, max));
+            const x = j * (BAR_WIDTH + 2);
+            const yMid = SUBGRAPH_HEIGHT / 2 + 25;
+            rect(x, yMid, BAR_WIDTH, v * SUBGRAPH_HEIGHT / 2 / Math.max(-min, max));
         })
+
+        pop()
+        subgraphX += subgraphWidth + 50;
     });
 }
 
@@ -54,6 +69,4 @@ function formatPrecision(n) {
     return String(n).replace(/(\.\d\d)\d+/, '$1');
 }
 
-onSensorData((data) => {
-    sensorData = { ...data };
-});
+onSensorData(data => sensorData = { ...data });

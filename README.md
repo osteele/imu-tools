@@ -13,6 +13,12 @@ This project contains:
 - Web pages (in the `web` directory) that display IMU data as graphs, charts,
   and 3D models.
 
+- The source to the [imu-tools npm
+  package](https://www.npmjs.com/package/imu-tools). This package provides an
+  EcmaScript Mdoule, that can be included in a web page in order to subscribe to
+  an MQTT broker that is relaying data in the format provided by the tools in
+  this directory.
+
 ## Installation
 
 1. Clone this repo.

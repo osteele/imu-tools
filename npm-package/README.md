@@ -10,8 +10,8 @@ IMU.
 
 ## Usage
 
-To use this, include the MQTT library in the header (between the `<html>` and
-the `</html>`) of the HTML file:
+To use this, include the MQTT library in the header (between the `<head>` and
+the `</head>` tags) of the HTML file:
 
 ```html
     <script src="https://cdn.jsdelivr.net/npm/paho-mqtt@1.1.0/paho-mqtt.js"></script>

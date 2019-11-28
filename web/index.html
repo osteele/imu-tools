@@ -14,6 +14,10 @@
         }
     </style>
 
+    <script src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@7.0.0-beta.3/babel.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/dat.gui@0.7.6/build/dat.gui.min.js"
         integrity="sha256-HJ7j+71YYw6Kcs8THwQV9lXmPOcR0eXlg7n8KRTZsyA=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/paho-mqtt@1.1.0/paho-mqtt.js"
@@ -38,14 +42,19 @@
 
         <section class="section">
             <h2 class="title">Online Devices</h2>
-            <table id="device-list" class="table"></table>
+            <div id="device-list"></div>
         </section>
+
         <footer>
             <div id="mqtt-connection-status"></div>
         </footer>
     </div>
 </body>
 
-<script type="module" src="./js/index.js"></script>
+<script data-presets="es2015,stage-2" data-plugins="transform-es2015-modules-umd" type="text/babel"
+    src="./js/utils.js"></script>
+<script data-presets="es2015,stage-2" data-plugins="transform-es2015-modules-umd" type="text/babel"
+    src="./js/imu-connection.js"></script>
+<script data-plugins="transform-es2015-modules-umd" type="text/jsx" src="./js/index.js"></script>
 
 </html>

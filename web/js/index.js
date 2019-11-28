@@ -1,30 +1,38 @@
 import { onSensorData } from './imu-connection.js';
+const { useEffect, useState } = React;
 
-const deviceData = {};
-let updateDeviceListTimer = null;
-
-const TABLE_HEADER = '<tr><th>Device ID</th><th>Last Seen</th></tr>';
-
-function updateDeviceList() {
-    document.getElementById('device-list').innerHTML = TABLE_HEADER + Object.keys(deviceData).map(function (deviceId) {
-        const { timestamp } = deviceData[deviceId];
-        const age = Math.max(0, +new Date() - 250 - timestamp);
-        const lightness = Math.min(0.8, age / 1000);
-        const color = 'hsl(0,0%,' + lightness * 100 + '%)';
-        return '<tr><td class="device-id">' + deviceId + '</td>' +
-            '<td style="color: ' + color + '">' + new Date(timestamp) + '</td></tr>';
-    }).join('');
-    if (!updateDeviceListTimer) {
-        updateDeviceListTimer = setTimeout(function () {
-            updateDeviceListTimer = null;
-            updateDeviceList();
-        }, 100)
-    }
-}
+const devices = {};
 
 onSensorData((data) => {
-    const { device_id } = data;
+    const { device_id: id } = data;
     const timestamp = data.local_timestamp;
-    deviceData[device_id] = { timestamp };
-    requestAnimationFrame(updateDeviceList);
+    devices[id] = { id, timestamp };
 });
+
+function App() {
+    const [deviceIds, setDeviceIds] = useState([]);
+
+    useEffect(() => {
+        const id = setInterval(() => setDeviceIds(Object.keys(devices)));
+        return () => clearInterval(id);
+    }, [])
+
+    return deviceIds.length === 0 ? <div>No Devices</div>
+        : (
+            <table className="table">
+                <tr><th>Device ID</th><th>Last Seen</th></tr>
+                {Object.values(devices).map(Device)}
+            </table>)
+}
+
+function Device({ id, timestamp }) {
+    const age = Math.max(0, +new Date() - 250 - timestamp);
+    const lightness = Math.min(0.8, age / 1000);
+    const color = 'hsl(0,0%,' + lightness * 100 + '%)';
+    return <tr key={id}>
+        <td className="device-id">{id}</td>
+        <td style={{ color }}>{String(new Date(timestamp))}</td>
+    </tr>
+}
+
+ReactDOM.render(<App />, document.getElementById('device-list'));

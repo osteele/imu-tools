@@ -29,15 +29,15 @@ function loadModelFromSettings() {
     modelObj = loadModel('models/' + modelName, true);
 }
 
-var controllers = {};
+var datControllers = {};
 if (window.dat && !isMobile) {
     const gui = new dat.GUI();
-    // gui.remember(settings);
+    // gui.remember(settings);  // uncomment to store settings to localStorage
     gui.add(settings, 'draw_axes').name('Draw axes');
     gui.add(settings, 'dx', -300, 300).name('x displacement');
     gui.add(settings, 'dy', -300, 300).name('y displacement');
     gui.add(settings, 'dz', -300, 300).name('z displacement');
-    controllers = {
+    datControllers = {
         rx: gui.add(settings, 'rx', -180, 180).name('x rotation'),
         ry: gui.add(settings, 'ry', -180, 180).name('y rotation'),
         rz: gui.add(settings, 'rz', -180, 180).name('z rotation'),
@@ -122,7 +122,7 @@ function calibrateModels() {
     settings.rx = 0;
     settings.ry = 0;
     settings.rz = 0;
-    Object.values(controllers).forEach(c => c.updateDisplay());
+    Object.values(datControllers).forEach(c => c.updateDisplay());
 }
 
 function drawAxes() {

@@ -1,7 +1,7 @@
 import { eulerToQuat, quatToEuler, quatToMatrix } from './utils.js';
 
 const STORAGE_KEY = 'imu-tools:mqtt-connection';
-let connectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
+const connectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
 
 let client = null;
 export let gui = null;
@@ -13,27 +13,40 @@ export function openConnection(settings) {
     startSubscription();
 }
 
-const datGuiListeners = [];
+const datListeners = [];
 if (window.dat) {
     const container = document.getElementById('connection-gui');
     gui = new dat.GUI({ autoPlace: container === null });
     if (container) { container.appendChild(gui.domElement); }
+    function updateConnectionSettings(savedSettings) {
+
+        Object.keys(savedSettings).forEach(k => {
+            const v = savedSettings[k];
+            if (typeof connectionSettings[k] === typeof v) {
+                connectionSettings[k] = v;
+            }
+        });
+    }
     const savedSettings = JSON.parse(localStorage[STORAGE_KEY] || '{}')['remembered'] || {};
-    Object.keys(savedSettings).forEach(k => {
-        const v = savedSettings[k];
-        if (typeof connectionSettings[k] === typeof v) {
-            connectionSettings[k] = v;
-        }
-    });
-    const guiControllers = ['hostname', 'username', 'password', 'device_id']
+    updateConnectionSettings(savedSettings);
+
+    const datControllers = ['hostname', 'username', 'password', 'device_id']
         .map(name => gui.add(connectionSettings, name));
-    guiControllers.forEach(c =>
+    datControllers.forEach(c =>
         c.onFinishChange(() =>
-            datGuiListeners.forEach(c => c())));
-    datGuiListeners.push(() => {
+            datListeners.forEach(c => c())));
+    datListeners.push(() => {
         localStorage[STORAGE_KEY] = JSON.stringify({ remembered: connectionSettings })
     });
     gui.close();
+
+    window.addEventListener('storage', (event) => {
+        if (event.key === STORAGE_KEY) {
+            updateConnectionSettings(JSON.parse(event.newValue).remembered);
+            datListeners.forEach(c => c());
+            datControllers.forEach(c => c.updateDisplay());
+        }
+    });
 }
 
 function setMqttConnectionStatus(message) {
@@ -102,7 +115,7 @@ function reconnect() {
     startSubscription();
 }
 
-datGuiListeners.push(reconnect);
+datListeners.push(reconnect);
 
 const onSensorDataCallbacks = [];
 const deviceStates = {};

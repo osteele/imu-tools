@@ -57,7 +57,9 @@ export function draw() {
         values.forEach((v, j) => {
             const x = j * (BAR_WIDTH + 2);
             const yMid = SUBGRAPH_HEIGHT / 2 + 25;
-            rect(x, yMid, BAR_WIDTH, v * SUBGRAPH_HEIGHT / 2 / Math.max(-min, max));
+            const height = v * SUBGRAPH_HEIGHT / 2 / Math.max(-min, max);
+            rect(x, yMid - 0.5, BAR_WIDTH, 1);
+            rect(x, yMid, BAR_WIDTH, height);
         })
 
         pop()

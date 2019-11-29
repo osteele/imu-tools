@@ -67,7 +67,7 @@ def iter_throttle(iterable, freq=20):
     default="0,1,2",
     help="An axis 0…2 or list of them. These Euler angles wil vary.",
 )
-@click.option("--device-id", metavar="DEVICE_ID", default=hex(uuid.getnode()))
+@click.option("--device-id", metavar="DEVICE_ID", default="{:x}".format(uuid.getnode()))
 @click.option(
     "--message",
     type=str,

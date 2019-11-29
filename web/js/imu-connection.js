@@ -106,7 +106,6 @@ datGuiListeners.push(reconnect);
 
 const onSensorDataCallbacks = [];
 const deviceStates = {};
-let reportedMqttCallbackError = false;
 
 const isValidQuaternion = ([q0, q1, q2, q3]) =>
     Math.abs(q0 ** 2 + q1 ** 2 + q2 ** 2 + q3 ** 2 - 1.0) < 1e-1;
@@ -125,20 +124,24 @@ function onMessageArrived(message) {
     const [q0, q1, q2, q3] = quat;
     const orientationMatrix = quatToMatrix(q3, q1, q0, q2);
     const local_timestamp = +new Date();
-    const data_ = { device_id, local_timestamp, orientationMatrix, ...data };
-    deviceStates[device_id] = data_;
 
-    onSensorDataCallbacks.forEach(callback => {
-        try {
-            callback(data_, deviceStates);
-        } catch (e) {
-            // Only log the first error. After that it gets annoying.
-            if (!reportedMqttCallbackError) {
-                console.error('err', e);
-                reportedMqttCallbackError = true;
+    setDeviceData({ device_id, local_timestamp, orientationMatrix, ...data });
+
+    function setDeviceData(data) {
+        deviceStates[data.device_id] = data;
+        let erroneousCallbacks = [];
+
+        onSensorDataCallbacks.forEach(callback => {
+            try {
+                callback(data, deviceStates);
+            } catch (err) {
+                console.error('error', err, 'during execution of', callback);
+                erroneousCallbacks.push(callback)
             }
-        }
-    });
+        });
+        // Remove the callback after the first error. After that it gets annoying.
+        erroneousCallbacks.forEach(removeSensorDataCallback)
+    }
 }
 
 /**
@@ -149,4 +152,11 @@ function onMessageArrived(message) {
 export function onSensorData(callback) {
     if (!client) { startSubscription(); }
     onSensorDataCallbacks.push(callback);
+}
+
+export function removeSensorDataCallback(callback) {
+    const i = onSensorDataCallbacks.indexOf(callback);
+    if (i >= 0) {
+        onSensorDataCallbacks.splice(i, i + 1);
+    }
 }

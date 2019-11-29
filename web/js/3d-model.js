@@ -17,6 +17,12 @@ const settings = {
     model_name: 'bunny',
 }
 
+// Constants for physics simulation
+const SPRING_LENGTH = 500;
+const SPRING_K = .001;  // strength of spring between bodies
+const ORIGIN_SPRING_K = 0.99;  // strength of spring towards origin
+const VISCOSITY = 0.99;
+
 function loadModelFromSettings() {
     let modelName = settings.model_name || 'bunny';
     if (!modelName.match(/\.(obj|stl)$/)) { modelName += '.obj'; }
@@ -132,11 +138,6 @@ function drawAxes() {
 }
 
 function updatePhysics(models) {
-    const springLength = 500;
-    const springK = .001;  // strength of spring between bodies
-    const originSpringK = 0.99;  // strength of spring towards origin
-    const viscosity = 0.99;
-
     // initialize positions and velocities of new models
     models.forEach(data => {
         if (!data.position) {
@@ -155,7 +156,7 @@ function updatePhysics(models) {
             const v = d1.position.map((p0, i) => d2.position[i] - p0);
             const len = Math.sqrt(v[0] ** 2 + v[1] ** 2 + v[2] ** 2);
             const v_norm = v.map(x => x / len);
-            const f = springK * (len - springLength);
+            const f = SPRING_K * (len - SPRING_LENGTH);
             const fv = v_norm.map(x => x * f);
             d1.velocity = d1.velocity.map((x, i) => x + fv[i]);
             d2.velocity = d2.velocity.map((x, i) => x - fv[i]);
@@ -165,8 +166,8 @@ function updatePhysics(models) {
     // Add velocities to positions. Spring positions to origin. Damp velocities.
     models.forEach(data => {
         const { position, velocity } = data;
-        data.position = position.map((x, i) => (x + velocity[i]) * originSpringK)
-        data.velocity = velocity.map(v => v * viscosity)
+        data.position = position.map((x, i) => (x + velocity[i]) * ORIGIN_SPRING_K)
+        data.velocity = velocity.map(v => v * VISCOSITY)
     });
 }
 

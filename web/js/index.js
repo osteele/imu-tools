@@ -1,5 +1,6 @@
 import { onSensorData } from './imu-connection.js';
 const { useEffect, useState } = React;
+const { DateTime, Duration } = luxon;
 
 const deviceMap = {};
 
@@ -26,13 +27,28 @@ function App() {
 }
 
 function Device({ id, timestamp }) {
-    const age = Math.max(0, +new Date() - 250 - timestamp);
-    const brightness = Math.min(0.8, age / 1000);
-    const color = `hsl(0,0%,${brightness * 100}%)`;
+    const brightness = Math.min(0.8, Math.max(0, +new Date() - timestamp - 250) / 5000);
+    const color = `hsl(0,0%,${100 * brightness}%)`;
     return <tr key={id}>
         <td className="device-id">{id}</td>
-        <td style={{ color }}>{moment(new Date(timestamp)).format()}</td>
+        <td style={{ color }}>{ageString(DateTime.fromMillis(timestamp))}</td>
     </tr>
+}
+
+function ageString(when) {
+    const now = DateTime.fromJSDate(new Date);
+    const age = Duration.fromMillis(now - when);
+    if (age < 1000) { return 'now'; }
+    if (age.shiftTo('minutes').minutes < 2) {
+        return age.toFormat(`s 'seconds' ago`);
+    }
+    if (age.shiftTo('minutes').minutes < 10) {
+        return age.toFormat(`m 'minutes' ago`);
+    }
+    if (when.day === now.day && age.shiftTo('days').days < 1) {
+        return when.toLocaleString(DateTime.TIME_24_WITH_SHORT_OFFSET);
+    }
+    return when.toLocaleString(DateTime.DATETIME_SHORT);
 }
 
 ReactDOM.render(<App />, document.getElementById('device-list'));

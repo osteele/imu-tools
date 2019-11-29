@@ -6,32 +6,38 @@ const deviceMap = {};
 
 onSensorData((data) => {
     const { device_id: id } = data;
+    const now = +new Date;
     const timestamp = data.local_timestamp;
-    deviceMap[id] = { id, timestamp };
+    const timestamps = deviceMap[id] ? [timestamp, ...deviceMap[id].timestamps.filter(n => n > now - 1000)] : [timestamp];
+    deviceMap[id] = { id, timestamp, timestamps };
 });
 
 function App() {
     const [devices, setDevices] = useState([]);
 
     useEffect(() => {
-        const id = setInterval(() => setDevices(Object.values(deviceMap)));
+        const id = setInterval(() => setDevices(Object.values(deviceMap)), 100);
         return () => clearInterval(id);
     }, [])
 
-    return devices.length === 0 ? <div>No devices are online</div>
-        : (
-            <table className="table">
-                <tr><th>Device ID</th><th>Last Seen</th></tr>
-                {devices.map(Device)}
-            </table>)
+    return (devices.length === 0
+        ? <div>No devices are online</div>
+        :
+        <table className="table">
+            <tr><th>Device ID</th><th>Sample Rate</th><th>Last Seen</th></tr>
+            {devices.map(Device)}
+        </table>)
 }
 
-function Device({ id, timestamp }) {
+function Device({ id, timestamp, timestamps }) {
+    const now = new Date;
     const brightness = Math.min(0.8, Math.max(0, +new Date() - timestamp - 250) / 5000);
     const color = `hsl(0,0%,${100 * brightness}%)`;
-    return <tr key={id}>
+    const frameRate = timestamps.filter(n => n > now - 1000).length;
+    return <tr key={id} style={{ color }}>
         <td className="device-id">{id}</td>
-        <td style={{ color }}>{ageString(DateTime.fromMillis(timestamp))}</td>
+        <td>{frameRate}</td>
+        <td>{ageString(DateTime.fromMillis(timestamp))}</td>
     </tr>
 }
 

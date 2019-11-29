@@ -1,4 +1,4 @@
-import { quatToMatrix } from './utils.js';
+import { eulerToQuat, quatToEuler, quatToMatrix } from './utils.js';
 
 const STORAGE_KEY = 'imu-tools:mqtt-connection';
 let connectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
@@ -114,9 +114,11 @@ function onMessageArrived(message) {
     const device_id = message.topic.split('/').pop();
     const data = JSON.parse(message.payloadString);
     const quat = data.quaternion;
+
     // Devices on the current protocol send an initial presence message, that
     // doesn't include sensor data. Don't pass these on.
     if (!quat) { return; }
+
     // Discard invalid quaternions. These come from the Gravity. (Maybe it has a
     // flaky I2C connection?)
     if (!isValidQuaternion(quat)) { return; }
@@ -125,7 +127,19 @@ function onMessageArrived(message) {
     const orientationMatrix = quatToMatrix(q3, q1, q0, q2);
     const local_timestamp = +new Date();
 
-    setDeviceData({ device_id, local_timestamp, orientationMatrix, ...data });
+    // The BNO055 Euler angles are buggy. Reconstruct them from the quaternions.
+    const euler = quatToEuler(q3, q1, q0, q2);
+    setDeviceData({ device_id, local_timestamp, orientationMatrix, ...data, euler });
+
+    // Simulate a second device, that constructs a new quaternion and
+    // orientation matrix from the reconstructed euler angles. For debugging the
+    // quat -> euler -> quat pipeline.
+    if (window.IMU_CONNECTION_DEBUG_EULER) {
+        const [e0, e1, e2] = euler;
+        const [q0_, q1_, q2_, q3_] = eulerToQuat(e0, e2, e1); // works for first
+        const om2 = quatToMatrix(q3_, q1_, q0_, q2_);
+        setDeviceData({ ...{ device_id: device_id + '′' }, local_timestamp, ...{ orientationMatrix: om2 }, ...data });
+    }
 
     function setDeviceData(data) {
         deviceStates[data.device_id] = data;

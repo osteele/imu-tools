@@ -15,7 +15,7 @@ This project contains:
 
 - The source to the [imu-tools npm
   package](https://www.npmjs.com/package/imu-tools). This package provides an
-  EcmaScript Mdoule, that can be included in a web page in order to subscribe to
+  EcmaScript Module, that can be included in a web page in order to subscribe to
   an MQTT broker that is relaying data in the format provided by the tools in
   this directory.
 
@@ -73,7 +73,7 @@ graph, that automatically scales the y axis as data arrives.
 
 <http://localhost:8000/model.html> displays the bunny, with its orientation
 yolked to the IMU orientation.  The model is red before the sensor is minimally
-calibrated, and it fades out when sensor data is not being recieved.
+calibrated, and it fades out when sensor data is not being received.
 
 ## Command-Line Testing
 
@@ -99,7 +99,7 @@ rigged joint in Blender.
 
 In a terminal, run: `pipenv run mqtt2pipe`
 
-In another terminal, launch Blender with the ` --python blender/motion.py`
+In another terminal, launch Blender with the ` --python blender/motion.py` option:
 
 `/Applications/Blender.app/Contents/MacOS/Blender model.blend --python
 blender/motion.py`
@@ -129,9 +129,9 @@ The serial port format is compatible with
 
 ## References
 
-* [Paho MQTT](https://pypi.org/project/paho-mqtt/)
-* [MicroPython](http://docs.micropython.org/en/latest/)
-* [MicroPython MQTT](https://github.com/micropython/micropython-lib/tree/master/umqtt.simple)
+- [Paho MQTT](https://pypi.org/project/paho-mqtt/)
+- [MicroPython](http://docs.micropython.org/en/latest/)
+- [MicroPython MQTT](https://github.com/micropython/micropython-lib/tree/master/umqtt.simple)
 
 ## Credits
 

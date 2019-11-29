@@ -17,11 +17,12 @@ logger.remove()
 logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO")
 
 
-def gen_samples():
+def gen_samples(axes=range(3)):
     def make_sample(t):
         s = t / 100
         frac = (t % 1000) / 1000
         euler = (pi / 10 * cos(1.2 * s), pi / 10 * cos(1.4 * s), s % (2 * pi))
+        euler = [x if i in axes else 0 for (i, x) in enumerate(euler)]
         return {
             "timestamp": int(time.time() * 1000),
             "accelerometer": (2048 * cos(s), 2048 * cos(1.2 * s), 2048 * cos(1.6 * s)),
@@ -61,6 +62,11 @@ def iter_throttle(iterable, freq=20):
 
 @click.command()
 @mqtt_options
+@click.option(
+    "--axis",
+    default="0,1,2",
+    help="An axis 0…2 or list of them. These Euler angles wil vary.",
+)
 @click.option("--device-id", metavar="DEVICE_ID", default=hex(uuid.getnode()))
 @click.option(
     "--message",
@@ -75,7 +81,7 @@ def iter_throttle(iterable, freq=20):
     help="Messages per second for use with --continuous",
 )
 @click.option("--continuous", is_flag=True, help="Keep sending messages at RATE/second")
-def main(*, user, host, port, password, device_id, message, continuous, rate):
+def main(*, user, host, port, password, device_id, axis, message, continuous, rate):
     """Send MQTT messages.
 
     In a MESSAGE string, {i} is replaced by the message count, and {time} by the
@@ -83,22 +89,23 @@ def main(*, user, host, port, password, device_id, message, continuous, rate):
     """
 
     def on_publish(_client, _userdata, message_id):
-        global published
         mqtt_url = f"tcp://{host}:{port}/{topic}"
         logger.info("Published(id={}) to {}", message_id, mqtt_url)
 
     topic = f"imu/{device_id}"
     client = mqtt.Client()
     client.on_publish = on_publish
+
     client.on_log = True
     if user:
         client.username_pw_set(user, password=password)
     client.connect(host, port)
 
+    axes = list(map(int, axis.split(",")))
     samples = (
         (message.format(i=i, time=time.time()) for i in itertools.count())
         if message is not None
-        else map(json_enc.dumps, gen_samples())
+        else map(json_enc.dumps, gen_samples(axes))
     )
     if not continuous:
         samples = itertools.islice(samples, 1)

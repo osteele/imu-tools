@@ -132,8 +132,7 @@ function onMessageArrived(message) {
     // doesn't include sensor data. Don't pass these on.
     if (!quat) { return; }
 
-    // Discard invalid quaternions. These come from the Gravity. (Maybe it has a
-    // flaky I2C connection?)
+    // Discard invalid quaternions. These come from the Gravity sensor.
     if (!isValidQuaternion(quat)) { return; }
 
     const [q0, q1, q2, q3] = quat;
@@ -147,11 +146,11 @@ function onMessageArrived(message) {
     // Simulate a second device, that constructs a new quaternion and
     // orientation matrix from the reconstructed euler angles. For debugging the
     // quat -> euler -> quat pipeline.
-    if (window.IMU_CONNECTION_DEBUG_EULER) {
+    if (false) {
         const [e0, e1, e2] = euler;
-        const [q0_, q1_, q2_, q3_] = eulerToQuat(e0, e2, e1); // works for first
+        const [q0_, q1_, q2_, q3_] = eulerToQuat(e0, e2, e1);
         const om2 = quatToMatrix(q3_, q1_, q0_, q2_);
-        setDeviceData({ ...{ device_id: device_id + '′' }, local_timestamp, ...{ orientationMatrix: om2 }, ...data });
+        setDeviceData({ local_timestamp, ...data, ...{ device_id: device_id + '′', orientationMatrix: om2 } });
     }
 
     function setDeviceData(data) {

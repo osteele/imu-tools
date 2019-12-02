@@ -38,9 +38,9 @@ if (window.dat && !isMobile) {
     gui.add(settings, 'dy', -300, 300).name('y displacement');
     gui.add(settings, 'dz', -300, 300).name('z displacement');
     datControllers = {
-        rx: gui.add(settings, 'rx', -180, 180).name('x rotation'),
-        ry: gui.add(settings, 'ry', -180, 180).name('y rotation'),
-        rz: gui.add(settings, 'rz', -180, 180).name('z rotation'),
+        rx: gui.add(settings, 'rx', 0, 180).name('x rotation'),
+        ry: gui.add(settings, 'ry', 0, 180).name('y rotation'),
+        rz: gui.add(settings, 'rz', 0, 360).name('z rotation'),
     };
     gui.add(settings, 'model_name').name('Model name').onFinishChange(loadModelFromSettings);
 }

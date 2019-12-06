@@ -9,12 +9,17 @@
     <script src="https://cdn.jsdelivr.net/npm/paho-mqtt@1.1.0/paho-mqtt.js"></script>
 </head>
 
-<body style="xmargin:0"></body>
+<body>
+    <div id="mqtt-connection-status">Waiting for connection…</div>
+    <pre id="latest-data"
+        style="overflow-wrap: anywhere; white-space: pre-wrap">No sensor values have been received.</pre>
+</body>
 
 <script type="module">
-    import { onSensorData } from 'https://cdn.jsdelivr.net/npm/imu-tools@0/index.js'
+    import { onSensorData } from 'https://cdn.jsdelivr.net/npm/imu-tools/index.js'
 
-    onSensorData(data => console.info('sensor data:', data))
+    onSensorData(data =>
+        document.getElementById('latest-data').innerText = JSON.stringify(data, (_, x) => x, 2))
 </script>
 
 </html>

@@ -1,7 +1,7 @@
 {
     "name": "imu-tools",
     "author": "Oliver Steele <steele@osteele.com> (https://osteele.com/)",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "description": "Web browser subscription to MQTT IMU sensor data",
     "license": "MIT",
     "main": "index.js",
@@ -16,5 +16,5 @@
         "imu",
         "bno055"
     ],
-    "homepage": "https://github.com/osteele/imu-tools"
+    "homepage": "https://github.com/osteele/imu-tools/npm-package"
 }

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>p5.js imu-tools example</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/paho-mqtt@1.1.0/paho-mqtt.js"></script>
+</head>
+
+<body style="xmargin:0"></body>
+
+<script type="module">
+    import { onSensorData } from 'https://cdn.jsdelivr.net/npm/imu-tools@0/index.js'
+
+    onSensorData(data => console.info('sensor data:', data))
+</script>
+
+</html>

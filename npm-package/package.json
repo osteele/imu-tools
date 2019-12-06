@@ -7,14 +7,22 @@
     "main": "index.js",
     "unpkg": "index.js",
     "scripts": {
+        "example": "http-server example",
         "prepare": "cp ../web/js/{imu-connection,utils}.js . && mv imu-connection.js index.js",
         "test": "echo \"Warning: no test specified\""
     },
+    "files": [
+        "/index.js",
+        "/utils.js"
+    ],
     "repository": "github:osteele/imu-tools",
     "keywords": [
         "mqtt",
         "imu",
         "bno055"
     ],
-    "homepage": "https://github.com/osteele/imu-tools/npm-package"
+    "homepage": "https://github.com/osteele/imu-tools/npm-package",
+    "devDependencies": {
+        "http-server": "^0.12.0"
+    }
 }

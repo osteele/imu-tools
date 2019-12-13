@@ -1,7 +1,12 @@
 import { eulerToQuat, quatToEuler, quatToMatrix } from './utils.js';
 
 const STORAGE_KEY = 'imu-tools:mqtt-connection';
-const connectionSettings = { hostname: 'localhost', username: '', password: '', device_id: '' }
+const connectionSettings = {
+    hostname: 'localhost',
+    username: '',
+    password: '',
+    device_id: '',
+};
 
 let client = null;
 export let gui = null;
@@ -17,9 +22,10 @@ const datListeners = [];
 if (window.dat) {
     const container = document.getElementById('connection-gui');
     gui = new dat.GUI({ autoPlace: container === null });
-    if (container) { container.appendChild(gui.domElement); }
+    if (container) {
+        container.appendChild(gui.domElement);
+    }
     function updateConnectionSettings(savedSettings) {
-
         Object.keys(savedSettings).forEach(k => {
             const v = savedSettings[k];
             if (typeof connectionSettings[k] === typeof v) {
@@ -27,20 +33,27 @@ if (window.dat) {
             }
         });
     }
-    const savedSettings = JSON.parse(localStorage[STORAGE_KEY] || '{}')['remembered'] || {};
+    const savedSettings =
+        JSON.parse(localStorage[STORAGE_KEY] || '{}')['remembered'] || {};
     updateConnectionSettings(savedSettings);
 
-    const datControllers = ['hostname', 'username', 'password', 'device_id']
-        .map(name => gui.add(connectionSettings, name));
+    const datControllers = [
+        'hostname',
+        'username',
+        'password',
+        'device_id',
+    ].map(name => gui.add(connectionSettings, name));
     datControllers.forEach(c =>
-        c.onFinishChange(() =>
-            datListeners.forEach(c => c())));
+        c.onFinishChange(() => datListeners.forEach(c => c()))
+    );
     datListeners.push(() => {
-        localStorage[STORAGE_KEY] = JSON.stringify({ remembered: connectionSettings })
+        localStorage[STORAGE_KEY] = JSON.stringify({
+            remembered: connectionSettings,
+        });
     });
     gui.close();
 
-    window.addEventListener('storage', (event) => {
+    window.addEventListener('storage', event => {
         if (event.key === STORAGE_KEY) {
             updateConnectionSettings(JSON.parse(event.newValue).remembered);
             datListeners.forEach(c => c());
@@ -50,8 +63,9 @@ if (window.dat) {
 }
 
 function setMqttConnectionStatus(message) {
-    const id = "mqtt-connection-status";
-    const mqttStatusElement = document.getElementById(id) || document.createElement('div');
+    const id = 'mqtt-connection-status';
+    const mqttStatusElement =
+        document.getElementById(id) || document.createElement('div');
     if (!mqttStatusElement.id) {
         mqttStatusElement.id = id;
         document.body.appendChild(mqttStatusElement);
@@ -76,11 +90,13 @@ function startSubscription() {
         port = hostname.split(/:/)[1];
         hostname = hostname.split(/:/)[0];
     }
-    const clientId = "myclientid_" + parseInt(Math.random() * 100, 10)
-    client = new Paho.Client(hostname, Number(port), "/ws", clientId);
+    const clientId = 'myclientid_' + parseInt(Math.random() * 100, 10);
+    client = new Paho.Client(hostname, Number(port), '/ws', clientId);
     client.onMessageArrived = onMessageArrived;
-    client.onConnectionLost = (res) => {
-        setMqttConnectionStatus({ error: "MQTT connection lost: " + res.errorMessage });
+    client.onConnectionLost = res => {
+        setMqttConnectionStatus({
+            error: 'MQTT connection lost: ' + res.errorMessage,
+        });
         setTimeout(startSubscription, 1000);
     };
 
@@ -90,26 +106,34 @@ function startSubscription() {
         onSuccess: () => {
             const device_id = connectionSettings.device_id.trim();
             let topicString = 'imu/' + (device_id || '#');
-            setMqttConnectionStatus("Connected to mqtt://" + hostname + ":" + port);
+            setMqttConnectionStatus(
+                'Connected to mqtt://' + hostname + ':' + port
+            );
             client.subscribe(topicString, { qos: 1 });
         },
-        onFailure: (message) => {
-            setMqttConnectionStatus({ error: "MQTT connection failed: " + message.errorMessage });
+        onFailure: message => {
+            setMqttConnectionStatus({
+                error: 'MQTT connection failed: ' + message.errorMessage,
+            });
             client = null;
-        }
+        },
     };
     const username = connectionSettings.username.trim();
     const password = connectionSettings.password.trim();
-    if (username) { connectionOptions.userName = username; }
-    if (password) { connectionOptions.password = password; }
+    if (username) {
+        connectionOptions.userName = username;
+    }
+    if (password) {
+        connectionOptions.password = password;
+    }
     client.connect(connectionOptions);
-};
+}
 
 function reconnect() {
     if (client) {
         try {
             client.disconnect();
-        } catch { }
+        } catch {}
         client = null;
     }
     startSubscription();
@@ -130,10 +154,14 @@ function onMessageArrived(message) {
 
     // Devices on the current protocol send an initial presence message, that
     // doesn't include sensor data. Don't pass these on.
-    if (!quat) { return; }
+    if (!quat) {
+        return;
+    }
 
     // Discard invalid quaternions. These come from the Gravity sensor.
-    if (!isValidQuaternion(quat)) { return; }
+    if (!isValidQuaternion(quat)) {
+        return;
+    }
 
     const [q0, q1, q2, q3] = quat;
     const orientationMatrix = quatToMatrix(q3, q1, q0, q2);
@@ -141,7 +169,13 @@ function onMessageArrived(message) {
 
     // The BNO055 Euler angles are buggy. Reconstruct them from the quaternions.
     const euler = quatToEuler(q3, q1, q0, q2);
-    setDeviceData({ device_id, local_timestamp, orientationMatrix, ...data, euler });
+    setDeviceData({
+        device_id,
+        local_timestamp,
+        orientationMatrix,
+        ...data,
+        euler,
+    });
 
     // Simulate a second device, that constructs a new quaternion and
     // orientation matrix from the reconstructed euler angles. For debugging the
@@ -150,7 +184,11 @@ function onMessageArrived(message) {
         const [e0, e1, e2] = euler;
         const [q0_, q1_, q2_, q3_] = eulerToQuat(e0, e2, e1);
         const om2 = quatToMatrix(q3_, q1_, q0_, q2_);
-        setDeviceData({ local_timestamp, ...data, ...{ device_id: device_id + '′', orientationMatrix: om2 } });
+        setDeviceData({
+            local_timestamp,
+            ...data,
+            ...{ device_id: device_id + '′', orientationMatrix: om2 },
+        });
     }
 
     function setDeviceData(data) {
@@ -162,11 +200,11 @@ function onMessageArrived(message) {
                 callback(data, deviceStates);
             } catch (err) {
                 console.error('error', err, 'during execution of', callback);
-                erroneousCallbacks.push(callback)
+                erroneousCallbacks.push(callback);
             }
         });
         // Remove the callback after the first error. After that it gets annoying.
-        erroneousCallbacks.forEach(removeSensorDataCallback)
+        erroneousCallbacks.forEach(removeSensorDataCallback);
     }
 }
 
@@ -176,7 +214,9 @@ function onMessageArrived(message) {
  * @param {*} callback
  */
 export function onSensorData(callback) {
-    if (!client) { startSubscription(); }
+    if (!client) {
+        startSubscription();
+    }
     onSensorDataCallbacks.push(callback);
 }
 

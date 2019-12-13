@@ -1,6 +1,12 @@
 import { onSensorData } from './imu-connection.js';
 
-const IGNORED_PROPERTIES = ['device_id', 'calibration', 'timestamp', 'local_timestamp', 'orientationMatrix'];
+const IGNORED_PROPERTIES = [
+    'device_id',
+    'calibration',
+    'timestamp',
+    'local_timestamp',
+    'orientationMatrix',
+];
 
 const BAR_WIDTH = 25;
 const SUBGRAPH_HEIGHT = 300;
@@ -22,7 +28,9 @@ export function draw() {
     let subgraphX = 10;
     let subgraphY = 10;
     // const names = Object.keys(sensorData).filter(name => Array.isArray(sensorData[name]));
-    const names = Object.keys(sensorData).filter(name => !IGNORED_PROPERTIES.includes(name));
+    const names = Object.keys(sensorData).filter(
+        name => !IGNORED_PROPERTIES.includes(name)
+    );
     names.forEach((name, i) => {
         let values = sensorData[name];
         if (!Array.isArray(values)) {
@@ -34,8 +42,8 @@ export function draw() {
             subgraphX = 10;
             subgraphY += SUBGRAPH_HEIGHT + 45;
         }
-        push()
-        translate(subgraphX, subgraphY)
+        push();
+        translate(subgraphX, subgraphY);
 
         // update the range
         let [min, max] = ranges[name] || [0, 0];
@@ -57,12 +65,12 @@ export function draw() {
         values.forEach((v, j) => {
             const x = j * (BAR_WIDTH + 2);
             const yMid = SUBGRAPH_HEIGHT / 2 + 25;
-            const height = v * SUBGRAPH_HEIGHT / 2 / Math.max(-min, max);
+            const height = (v * SUBGRAPH_HEIGHT) / 2 / Math.max(-min, max);
             rect(x, yMid - 0.5, BAR_WIDTH, 1);
             rect(x, yMid, BAR_WIDTH, height);
-        })
+        });
 
-        pop()
+        pop();
         subgraphX += subgraphWidth + 50;
     });
 }
@@ -71,4 +79,4 @@ function formatPrecision(n) {
     return String(n).replace(/(\.\d\d)\d+/, '$1');
 }
 
-onSensorData(data => sensorData = { ...data });
+onSensorData(data => (sensorData = { ...data }));

@@ -1,12 +1,12 @@
 import json
 import os
-import select
 import sys
 
 import machine
 import network
 import sensors
 import utime as time
+from machine import Pin
 from umqtt.simple import MQTTClient
 
 import config
@@ -24,17 +24,17 @@ print("Device id =", DEVICE_ID)
 MQTT_CLIENT = None
 
 
-def mqtt_connect(config):
-    mqtt_host = config["host"]
+def mqtt_connect(options):
+    mqtt_host = options["host"]
     mqtt_client = MQTTClient(
         DEVICE_ID,
         mqtt_host,
-        port=config["port"],
-        user=config["user"],
-        password=config["password"],
+        port=options["port"],
+        user=options["user"],
+        password=options["password"],
     )
     broker_url = (
-        "mqtt://{user}@{host}:{port}/".format(**config)
+        "mqtt://{user}@{host}:{port}/".format(**options)
         .replace("//@", "")
         .replace(":1883/", "/")
     )
@@ -88,14 +88,14 @@ def send_serial_data(data):
 #
 
 
-def connect_to_wifi(config):
+def connect_to_wifi(options):
     global MQTT_CLIENT
     station = network.WLAN(network.STA_IF)
     if station.isconnected():
-        if config.RUN_HTTP_SERVER:
+        if options.RUN_HTTP_SERVER:
             webserver.start_http_server(station)
-        if config.SEND_MQTT_SENSOR_DATA:
-            MQTT_CLIENT = mqtt_connect(config.MQTT_CONFIG)
+        if options.SEND_MQTT_SENSOR_DATA:
+            MQTT_CLIENT = mqtt_connect(options.MQTT_CONFIG)
 
 
 def sample_rate_gen():
@@ -123,7 +123,7 @@ def blinker_gen(pin_number=2):
             led.value(led.value())
 
 
-def loop_forever(config, mqtt_client):
+def loop_forever(options, mqtt_client):
     sample_rate_iter = sample_rate_gen()
     # blink_iter = blinker_gen()
     while True:
@@ -144,13 +144,13 @@ def loop_forever(config, mqtt_client):
         sensor_data = sensors.get_sensor_data(SENSORS)
         if not sensor_data:
             continue
-        if config.SEND_MQTT_SENSOR_DATA:
+        if options.SEND_MQTT_SENSOR_DATA:
             publish_sensor_data(sensor_data)
-        if config.SEND_SERIAL_SENSOR_DATA:
+        if options.SEND_SERIAL_SENSOR_DATA:
             send_serial_data(sensor_data)
         else:
             next(sample_rate_iter)
-        if config.RUN_HTTP_SERVER:
+        if options.RUN_HTTP_SERVER:
             webserver.service_http_request(
                 mqtt_client=mqtt_client, sensor_data=sensor_data
             )

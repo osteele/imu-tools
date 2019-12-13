@@ -10,7 +10,7 @@ import config
 I2C_PINS = (22, 23) if sys.platform == "esp32" else (5, 4)
 
 # The latest caught error, exposed for CLI debugging
-LastError = None
+LATEST_ERROR = None
 
 
 def get_imu(use_dummy=False):
@@ -42,8 +42,8 @@ def get_imu(use_dummy=False):
 
 
 def is_retriable_error(err):
-    global LastError
-    LastError = err
+    global LATEST_ERROR
+    LATEST_ERROR = err
     ENODEV = 19
     ETIMEDOUT = 110
     return err.args[0] in (ENODEV, ETIMEDOUT)

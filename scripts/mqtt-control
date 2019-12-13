@@ -5,7 +5,7 @@ import click
 import paho.mqtt.client as mqtt
 from loguru import logger
 
-from config import MQTT_CONFIG
+from config import mqtt_options
 
 logger.remove()
 logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO")
@@ -16,15 +16,16 @@ def on_publish(_client, userdata, mid):
 
 
 @click.command()
+@mqtt_options
 @click.argument("message", nargs=1, required=False)
-def main(*, message):
-    client = mqtt.Client(userdata=MQTT_CONFIG["host"])
+def main(*, user, host, port, password, message):
+    client = mqtt.Client(userdata=host)
     client.on_publish = on_publish
     client.on_log = True
 
-    if MQTT_CONFIG["user"]:
-        client.username_pw_set(MQTT_CONFIG["user"], password=MQTT_CONFIG["password"])
-    client.connect(MQTT_CONFIG["host"], MQTT_CONFIG["port"])
+    if user:
+        client.username_pw_set(user, password=password)
+    client.connect(host, port)
 
     device_id = "*"
     topic = f"imu/control/{device_id}"
@@ -33,4 +34,4 @@ def main(*, message):
 
 
 if __name__ == "__main__":
-    main()
+    main()  # pylint: disable=missing-kwoa

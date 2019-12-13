@@ -1,14 +1,9 @@
 import socket
 
-#
-# Web Server
-#
-
 HTTP_SOCKET = None
 
-
+# pylint: disable=line-too-long
 def create_web_page_content(mqtt_client, sensor_data):
-    # pylint: disable=line-too-long
     html = """
 <html><head> <title>ESP BO055 IMU</title> <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="refresh" content="1">
@@ -19,8 +14,8 @@ border-radius: 4px; color: white; padding: 16px 40px; text-decoration: none; fon
     if mqtt_client:
         html += "<p>Connected to mqtt://" + mqtt_client.server + "</p>"
     if sensor_data:
-        for k, v in sensor_data.items():
-            html += "<p>" + k + ": <strong>" + str(v) + "</strong></p>"
+        for k, value in sensor_data.items():
+            html += "<p>" + k + ": <strong>" + str(value) + "</strong></p>"
     html += """
 <p><a href="/?led=on"><button class="button">ON</button></a></p>
 <p><a href="/?led=off"><button class="button button2">OFF</button></a></p></body></html>"""

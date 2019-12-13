@@ -112,8 +112,8 @@ class BNO055:
             utime.sleep_ms(1)
             try:
                 chip_id = self._chip_id()
-            except OSError as e:
-                if e.args[0] != 19:  # errno 19 ENODEV
+            except OSError as err:
+                if err.args[0] != 19:  # errno 19 ENODEV
                     raise
                 chip_id = 0
             if chip_id == _CHIP_ID:

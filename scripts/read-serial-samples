@@ -100,7 +100,7 @@ class IMUConfig:
 
 
 class SerialSensorDevice(SerialDevice):
-    board_type: Optional[str] = None
+    _board_type: Optional[str] = None
     device_id: Optional[str] = None
     sequence_number: int = random.randint(0, 1000) * 1000
 

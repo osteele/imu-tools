@@ -1,6 +1,9 @@
 import { eulerToQuat, quatToEuler, quatToMatrix } from './utils.js';
 
+/** localstorage key for connection settings. Set this with `openConnection()`.
+ */
 const STORAGE_KEY = 'imu-tools:mqtt-connection';
+
 const connectionSettings = {
     hostname: 'localhost',
     username: '',
@@ -9,8 +12,11 @@ const connectionSettings = {
 };
 
 let client = null;
+
+/** The dat.gui object */
 export let gui = null;
 
+/** Open an MQTT WS connection. Must be called before `onSensorData()`.  */
 export function openConnection(settings) {
     if (settings) {
         connectionSettings = settings;
@@ -18,6 +24,7 @@ export function openConnection(settings) {
     startSubscription();
 }
 
+/** Listeners to changes to the dat.gui connection settings. */
 const datListeners = [];
 if (window.dat) {
     const container = document.getElementById('connection-gui');
@@ -25,6 +32,9 @@ if (window.dat) {
     if (container) {
         container.appendChild(gui.domElement);
     }
+    gui.close();
+
+    // Update connectionSettings from savedSettings
     function updateConnectionSettings(savedSettings) {
         Object.keys(savedSettings).forEach(k => {
             const v = savedSettings[k];
@@ -33,26 +43,29 @@ if (window.dat) {
             }
         });
     }
+
+    // Update the connection settings from the saved settings
     const savedSettings =
         JSON.parse(localStorage[STORAGE_KEY] || '{}')['remembered'] || {};
     updateConnectionSettings(savedSettings);
 
-    const datControllers = [
-        'hostname',
-        'username',
-        'password',
-        'device_id',
-    ].map(name => gui.add(connectionSettings, name));
+    // Call the datListeners when a GUI value changes
+    const datControllers = Object.keys(connectionSettings).map(name =>
+        gui.add(connectionSettings, name)
+    );
     datControllers.forEach(c =>
         c.onFinishChange(() => datListeners.forEach(c => c()))
     );
+
+    // Save to localStorage when a GUI value changes
     datListeners.push(() => {
         localStorage[STORAGE_KEY] = JSON.stringify({
             remembered: connectionSettings,
         });
     });
-    gui.close();
 
+    // Update this page's connection settings when another page writes them to
+    // localStorage
     window.addEventListener('storage', event => {
         if (event.key === STORAGE_KEY) {
             updateConnectionSettings(JSON.parse(event.newValue).remembered);
@@ -62,6 +75,8 @@ if (window.dat) {
     });
 }
 
+// Display a message to the HTML element. `message` is either a string or an
+// object { error: messageSgring }.
 function setMqttConnectionStatus(message) {
     const id = 'mqtt-connection-status';
     const mqttStatusElement =
@@ -144,6 +159,7 @@ datListeners.push(reconnect);
 const onSensorDataCallbacks = [];
 const deviceStates = {};
 
+/** Are the arguments the components of a normalized quaternion? */
 const isValidQuaternion = ([q0, q1, q2, q3]) =>
     Math.abs(q0 ** 2 + q1 ** 2 + q2 ** 2 + q3 ** 2 - 1.0) < 1e-1;
 
@@ -173,8 +189,8 @@ function onMessageArrived(message) {
         device_id,
         local_timestamp,
         orientationMatrix,
+        'euler′': euler.map(e => (e * 180) / Math.PI),
         ...data,
-        euler,
     });
 
     // Simulate a second device, that constructs a new quaternion and

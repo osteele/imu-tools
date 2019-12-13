@@ -27,7 +27,7 @@ def gen_samples(axes=range(3)):
             "timestamp": int(time.time() * 1000),
             "accelerometer": (2048 * cos(s), 2048 * cos(1.2 * s), 2048 * cos(1.6 * s)),
             "calibration": 100,
-            "euler": euler,
+            "euler": [e * 180 / pi for e in euler],
             "gyroscope": (40 + frac, 41 + frac, 42 + frac),
             "magnetometer": (30 + frac, 31 + frac, 32 + frac),
             "quaternion": euler2quat(*euler),

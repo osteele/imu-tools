@@ -50,10 +50,13 @@ This project contains:
 
    You can also reboot the board by pressing the button that is closest to the red LED, on the MCU board.
 
-`pipenv run download` and `pipenv run repl` use the [rshell](https://github.com/dhylands/rshell#rshell) project to communicate with the MCU.
-You can read how `pipenv run` invokes the `repl` command by inspecting the source of `Pipfile`.
+`./download` and `./repl` use the
+[rshell](https://github.com/dhylands/rshell#rshell) project to communicate with
+the MCU.
 
-`pipenv run screen` is an alternative to `pipenv run repl`, that uses the `screen` command instead of `rshell`. `screen` connects to the board more quickly than `repl`, but is more difficult to use.
+`./screen` is an alternative to `./repl`, that uses the `screen` command instead
+of `rshell`. `screen` connects to the board more quickly than `repl`, but is
+more difficult to use.
 
 [MicroPython Development
 Notes](https://paper.dropbox.com/doc/MicroPython-Development--Ai1pmnXzhBdkxZ6SuEPMTDiDAg-sAf2oqgmH5yIbmx27kZqs)
@@ -61,7 +64,7 @@ contains notes on developing MicroPython on the ESP.
 
 ## Viewing the Web Examples
 
-Run `pipenv run webserver` to start a web server.
+Run `./webserver` to start a web server.
 
 <http://127.0.0.1:8000> displays a directory of web pages in the `web` directory
 directory.

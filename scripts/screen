@@ -1,0 +1,3 @@
+#!/usr/bin/env bash -eu
+
+screen /dev/tty.SLAB_USBtoUART 115200

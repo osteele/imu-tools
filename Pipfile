@@ -9,10 +9,6 @@ simulate = "python scripts/mqtt-pub --continuous"
 mqtt-sub = "python scripts/mqtt-sub"
 mqtt-sample-rate = "python scripts/mqtt-sub --sample-rate"
 mqtt2pipe = "python scripts/mqtt-sub --pipe"
-download = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200 rsync pyboard /pyboard"
-repl = "rshell -p /dev/tty.SLAB_USBtoUART -b 115200 repl"
-screen = "screen /dev/tty.SLAB_USBtoUART 115200"
-webserver = "python -m http.server -b 127.0.0.1 -d web"
 
 [packages]
 paho-mqtt = "*"

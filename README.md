@@ -6,7 +6,7 @@ This project contains:
   connected to a BNO055 IMU. This firmware is implemented in MicroPython, relays
   the IMU sensor readings to a web page, an MQTT connection, or the serial port.
 
-- Command-line tools (in the `scripts` directory, and invoked via `pipenv run`)
+- Command-line tools (in the `scripts` directory, and invoked via `poetry`)
   to report, simulate, and measure the sample rate of IMU data, and relay it to
   a named port.
 
@@ -38,25 +38,25 @@ This project contains:
    In a terminal window in this directory, run:
 
     ```sh
-    pipenv run download
+    ./scripts/download
     ```
 
 3. Now reboot the MCU, so that it runs the new code:
 
-     1. In a terminal in this directory, run `pipenv run repl`
+     1. In a terminal in this directory, run `./scripts/repl`
      2. Press `⌃D` to reboot the board. (`⌃` is the control character. Hold it
         down while the `D` is pressed, and then release them both.)
-     3. Press `⌃X` to exit the `pipenv run repl` command.
+     3. Press `⌃X` to exit the `./scripts/repl` command.
 
    You can also reboot the board by pressing the button that is closest to the red LED, on the MCU board.
 
-`./download` and `./repl` use the
+`./scripts/download` and `./scripts/repl` use the
 [rshell](https://github.com/dhylands/rshell#rshell) project to communicate with
 the MCU.
 
-`./screen` is an alternative to `./repl`, that uses the `screen` command instead
-of `rshell`. `screen` connects to the board more quickly than `repl`, but is
-more difficult to use.
+`./scripts/screen` is an alternative to `./scripts/repl`, that uses the `screen`
+command instead of `rshell`. `screen` connects to the board more quickly than
+`repl`, but is more difficult to use.
 
 [MicroPython Development
 Notes](https://paper.dropbox.com/doc/MicroPython-Development--Ai1pmnXzhBdkxZ6SuEPMTDiDAg-sAf2oqgmH5yIbmx27kZqs)
@@ -80,18 +80,18 @@ calibrated, and it fades out when sensor data is not being received.
 
 ## Command-Line Testing
 
-Run `pipenv run mqtt-sub` to run an MQTT client that subscribes to IMU messages
-that are sent to the MQTT broker, and relays them to the terminal.
+`poetry run sub` runs an MQTT client that subscribes to IMU messages that are
+sent to the MQTT broker, and relays them to the terminal.
 
-Run `pipenv run mqtt-pub` to publish a single MQTT message. The message is a
-simulated sensor sample.
+`poetry run pub` publishes an MQTT message. The message is a simulated sensor
+sample.
 
-Run `pipenv run simulate` to continuously publish messages from a simulated IMU
-until the user kills (^C) the script. (This is the same as the `--continuous`
-option to `pipenv run mqtt-pub`.) The simulated sensor readings change over
-time.
+`./scripts/simulate` simulates a device. It continuously publish messages from a
+simulated IMU until the user kills (^C) the script. (This is the same as the
+`--continuous` option to `poetry run pub`.) The simulated sensor readings change
+over time.
 
-`pipenv run simulate --help` gives a list of command-line options. Use
+`./scripts/simulate --help` gives a list of command-line options. Use
 `--device-id` to simulate a particular ID; you can use this to run multiple
 simulations, in different terminals, with different ids.
 
@@ -100,7 +100,7 @@ simulations, in different terminals, with different ids.
 As a proof of concept, IMU data can be used to control the orientation of a
 rigged joint in Blender.
 
-In a terminal, run: `pipenv run mqtt2pipe`
+In a terminal, run: `./scripts/mqtt2pipe`
 
 In another terminal, launch Blender with the ` --python blender/motion.py` option:
 

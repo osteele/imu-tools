@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import itertools
 import json as json_enc
 import random
@@ -11,7 +10,7 @@ import click
 import paho.mqtt.client as mqtt
 from loguru import logger
 
-from config import mqtt_options
+from .config import mqtt_options
 
 logger.remove()
 logger.add(sys.stdout, format="<dim>{time:mm:ss.SS}:</> {message}", level="INFO")

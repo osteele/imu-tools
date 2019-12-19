@@ -4,11 +4,11 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [scripts]
-mqtt-pub = "python scripts/mqtt-pub"
-simulate = "python scripts/mqtt-pub --continuous"
-mqtt-sub = "python scripts/mqtt-sub"
-mqtt-sample-rate = "python scripts/mqtt-sub --sample-rate"
-mqtt2pipe = "python scripts/mqtt-sub --pipe"
+pub = "python imu_tools/pub"
+simulate = "python imu_tools/pub --continuous"
+sub = "python imu_tools/sub"
+sample-rate = "python imu_tools/sub --sample-rate"
+mqtt2pipe = "python imu_tools/sub --pipe"
 
 [packages]
 paho-mqtt = "*"

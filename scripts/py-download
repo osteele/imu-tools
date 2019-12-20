@@ -1,0 +1,3 @@
+#!/usr/bin/env bash -eu
+
+rshell -p /dev/tty.SLAB_USBtoUART -b 115200 rsync pyboard /pyboard

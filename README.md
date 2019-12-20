@@ -37,26 +37,26 @@ This project contains:
 2. Download the source code from the `pyboard` directory in this folder, to the ESP,
    In a terminal window in this directory, run:
 
-    ```sh
-    ./scripts/download
-    ```
+   ```sh
+   ./scripts/py-download
+   ```
 
 3. Now reboot the MCU, so that it runs the new code:
 
-     1. In a terminal in this directory, run `./scripts/repl`
-     2. Press `⌃D` to reboot the board. (`⌃` is the control character. Hold it
-        down while the `D` is pressed, and then release them both.)
-     3. Press `⌃X` to exit the `./scripts/repl` command.
+   1. In a terminal in this directory, run `./scripts/py-repl`
+   2. Press `⌃D` to reboot the board. (`⌃` is the control character. Hold it
+      down while the `D` is pressed, and then release them both.)
+   3. Press `⌃X` to exit the `./scripts/py-repl` command.
 
    You can also reboot the board by pressing the button that is closest to the red LED, on the MCU board.
 
-`./scripts/download` and `./scripts/repl` use the
+`./scripts/py-download` and `./scripts/py-repl` use the
 [rshell](https://github.com/dhylands/rshell#rshell) project to communicate with
 the MCU.
 
-`./scripts/screen` is an alternative to `./scripts/repl`, that uses the `screen`
-command instead of `rshell`. `screen` connects to the board more quickly than
-`repl`, but is more difficult to use.
+`./scripts/esp-screen` is an alternative to `./scripts/py-repl`, that uses the
+`screen` command instead of `rshell`. `esp-screen` connects to the board more
+quickly than `repl`, but is more difficult to use.
 
 [MicroPython Development
 Notes](https://paper.dropbox.com/doc/MicroPython-Development--Ai1pmnXzhBdkxZ6SuEPMTDiDAg-sAf2oqgmH5yIbmx27kZqs)
@@ -75,7 +75,7 @@ directory.
 graph, that automatically scales the y axis as data arrives.
 
 <http://localhost:8000/model.html> displays the bunny, with its orientation
-yolked to the IMU orientation.  The model is red before the sensor is minimally
+yolked to the IMU orientation. The model is red before the sensor is minimally
 calibrated, and it fades out when sensor data is not being received.
 
 ## Command-Line Testing
@@ -102,10 +102,9 @@ rigged joint in Blender.
 
 In a terminal, run: `./scripts/mqtt2pipe`
 
-In another terminal, launch Blender with the ` --python blender/motion.py` option:
+In another terminal, launch Blender with the `--python blender/motion.py` option:
 
-`/Applications/Blender.app/Contents/MacOS/Blender model.blend --python
-blender/motion.py`
+`/Applications/Blender.app/Contents/MacOS/Blender model.blend --python blender/motion.py`
 
 Note: If the pipe buffer fills (for example, because Blender is closed), the
 `mqtt-sub` process will hang. You will need to force quit it (^C) and launch it
@@ -140,3 +139,6 @@ The serial port format is compatible with
 
 `BNO055.py` and `functools.py` are adapted from Radomir Dopieralski's
 [`deshipu/micropython-bno055`](https://github.com/deshipu/micropython-bno055).
+
+This uses [MicroPython](https://micropython.org) and Paho MQTT, and uses
+[rshell](https://github.com/dhylands/rshell).

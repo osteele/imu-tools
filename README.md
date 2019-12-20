@@ -41,27 +41,6 @@ This project contains:
    ./scripts/py-download
    ```
 
-3. Now reboot the MCU, so that it runs the new code:
-
-   1. In a terminal in this directory, run `./scripts/py-repl`
-   2. Press `⌃D` to reboot the board. (`⌃` is the control character. Hold it
-      down while the `D` is pressed, and then release them both.)
-   3. Press `⌃X` to exit the `./scripts/py-repl` command.
-
-   You can also reboot the board by pressing the button that is closest to the red LED, on the MCU board.
-
-`./scripts/py-download` and `./scripts/py-repl` use the
-[rshell](https://github.com/dhylands/rshell#rshell) project to communicate with
-the MCU.
-
-`./scripts/esp-screen` is an alternative to `./scripts/py-repl`, that uses the
-`screen` command instead of `rshell`. `esp-screen` connects to the board more
-quickly than `repl`, but is more difficult to use.
-
-[MicroPython Development
-Notes](https://paper.dropbox.com/doc/MicroPython-Development--Ai1pmnXzhBdkxZ6SuEPMTDiDAg-sAf2oqgmH5yIbmx27kZqs)
-contains notes on developing MicroPython on the ESP.
-
 ## Viewing the Web Examples
 
 Run `./webserver` to start a web server.
@@ -94,6 +73,27 @@ over time.
 `./scripts/simulate --help` gives a list of command-line options. Use
 `--device-id` to simulate a particular ID; you can use this to run multiple
 simulations, in different terminals, with different ids.
+
+## MicroPython development
+
+`./scripts/py-download` downloads the code in `pyboard` to the attached ESP, and
+then reboots the board.
+
+`./scripts/py-repl` opens an [rshell](https://github.com/dhylands/rshell#rshell)
+REPL to the attached ESP. Press `⌃X` to exit the `./scripts/py-repl` command.
+
+`./scripts/esp-screen` is an alternative to `./scripts/py-repl`, that uses the
+`screen` command instead of `rshell`. `esp-screen` connects to the board more
+quickly than `repl`. Consult the documentation for `screen` to see how to exit
+this command.
+
+[MicroPython Development
+Notes](https://paper.dropbox.com/doc/MicroPython-Development--Ai1pmnXzhBdkxZ6SuEPMTDiDAg-sAf2oqgmH5yIbmx27kZqs)
+contains notes on developing MicroPython on the ESP.
+
+While running a REPL on the board, press `⌃D` to reboot the board. (`⌃` is the
+control character. Hold it down while the `D` is pressed, and then release them
+both.)
 
 ## Blender
 

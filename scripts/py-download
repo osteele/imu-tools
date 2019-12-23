@@ -6,5 +6,9 @@ if [ ! -e $SERIAL_PORT ]; then
     exit 1
 fi
 
-poetry run rshell -p $SERIAL_PORT rsync pyboard /pyboard
-poetry run rshell -p $SERIAL_PORT repl \~ 'machine.reset()' \~
+if [ "$#" -eq 0 ]; then
+    poetry run rshell -p $SERIAL_PORT rsync pyboard /pyboard
+    poetry run rshell -p $SERIAL_PORT repl \~ 'machine.reset()' \~
+else
+    poetry run rshell -p $SERIAL_PORT cp "${@}" /pyboard
+fi

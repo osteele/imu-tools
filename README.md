@@ -82,10 +82,10 @@ then reboots the board.
 `./scripts/py-repl` opens an [rshell](https://github.com/dhylands/rshell#rshell)
 REPL to the attached ESP. Press `⌃X` to exit the `./scripts/py-repl` command.
 
-`./scripts/esp-screen` is an alternative to `./scripts/py-repl`, that uses the
-`screen` command instead of `rshell`. `esp-screen` connects to the board more
-quickly than `repl`. Consult the documentation for `screen` to see how to exit
-this command.
+`./scripts/serial-term` is an alternative to `./scripts/py-repl`, that uses the
+[GNU `screen` command](https://www.gnu.org/software/screen/) instead of
+`rshell`. `serial-term` connects to the board more quickly than `py-repl`.
+Consult the documentation for `screen` to see how to exit this command.
 
 [MicroPython Development
 Notes](https://paper.dropbox.com/doc/MicroPython-Development--Ai1pmnXzhBdkxZ6SuEPMTDiDAg-sAf2oqgmH5yIbmx27kZqs)

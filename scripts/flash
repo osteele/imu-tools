@@ -1,0 +1,9 @@
+#!/usr/bin/env bash -eu
+
+SERIAL_PORT=/dev/tty.SLAB_USBtoUART
+if [ ! -e $SERIAL_PORT ]; then
+    echo "No device on port ${SERIAL_PORT}" 1>&2
+    exit 1
+fi
+
+poetry run esptool.py --chip esp32 --port $SERIAL_PORT write_flash -z 0x1000 "$1"

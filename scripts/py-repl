@@ -6,4 +6,4 @@ if [ ! -e $SERIAL_PORT ]; then
     exit 1
 fi
 
-poetry run rshell -p $SERIAL_PORT -b 115200 repl
+poetry run rshell -p $SERIAL_PORT repl

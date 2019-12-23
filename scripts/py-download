@@ -6,5 +6,5 @@ if [ ! -e $SERIAL_PORT ]; then
     exit 1
 fi
 
-poetry run rshell -p $SERIAL_PORT -b 115200 rsync pyboard /pyboard
-poetry run rshell -p $SERIAL_PORT -b 115200 repl \~ 'machine.reset()' \~
+poetry run rshell -p $SERIAL_PORT rsync pyboard /pyboard
+poetry run rshell -p $SERIAL_PORT repl \~ 'machine.reset()' \~

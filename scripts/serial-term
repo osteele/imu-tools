@@ -5,4 +5,4 @@ if [ ! -e $SERIAL_PORT ]; then
     echo "No device on port ${SERIAL_PORT}" 1>&2
     exit 1
 fi
-screen /dev/tty.SLAB_USBtoUART 115200
+screen /dev/tty.SLAB_USBtoUART ${RSHELL_BAUD:-115200}

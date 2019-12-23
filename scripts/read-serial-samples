@@ -9,6 +9,7 @@ Usage:
 import argparse
 import itertools
 import json
+import os
 import random
 import struct
 import sys
@@ -50,7 +51,7 @@ class SerialDevice:
         if not ttys:
             raise ValueError("Device not found")
         self._tty = ttys[0]
-        self._ser = serial.Serial(self._tty, 115200)
+        self._ser = serial.Serial(self._tty, os.getenv("RSHELL_BAUD", 115200))
         self.verbose = verbose
 
     def write(self, line: str):

@@ -45,13 +45,17 @@ class SerialDevice:
 
     def __init__(self, verbose=False):
         """If verbose is true, log sent and received lines."""
-        ttys = glob("/dev/tty.SLAB_USBtoUART") + glob("/dev/tty.usbmodem*")
-        if len(ttys) > 1:
-            raise ValueError("I'm not prepared to handle this many MCUs")
-        if not ttys:
-            raise ValueError("Device not found")
-        self._tty = ttys[0]
-        self._ser = serial.Serial(self._tty, os.getenv("RSHELL_BAUD", 115200))
+        baud = os.getenv("RSHELL_BAUD", 115200)
+        port = os.getenv("RSHELL_PORT", None)
+        if not port:
+            ttys = glob("/dev/tty.SLAB_USBtoUART") + glob("/dev/tty.usbmodem*")
+            if not ttys:
+                raise ValueError("Device not found")
+            if len(ttys) > 1:
+                raise ValueError("I'm not prepared to handle this many MCUs")
+            port = ttys[0]
+        self._tty = port
+        self._ser = serial.Serial(self._tty, baud)
         self.verbose = verbose
 
     def write(self, line: str):

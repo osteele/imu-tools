@@ -1,6 +1,0 @@
-#!/usr/bin/env bash -eu
-
-for file in *.py; do
-    echo "put ${file}"
-    ampy --port /dev/tty.SLAB_USBtoUART put "$file"
-done

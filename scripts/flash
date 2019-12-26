@@ -1,9 +1,19 @@
 #!/usr/bin/env bash -eu
 
 SERIAL_PORT=${RSHELL_PORT:-/dev/tty.SLAB_USBtoUART}
-if [ ! -e $SERIAL_PORT ]; then
+if [ ! -e "$SERIAL_PORT" ]; then
     echo "No device on port ${SERIAL_PORT}" 1>&2
     exit 1
 fi
 
-poetry run esptool.py --chip esp32 --port $SERIAL_PORT write_flash -z 0x1000 "$1"
+erase_flash=0
+if [ "${1:-}" == --erase ]; then
+    erase_flash=1
+    shift
+elif [ "$#" -ne 1 ]; then
+    echo "Usage: $0 [--erase] IMAGE" 1>&2
+    exit 1
+fi
+
+[ $erase_flash -eq 1 ] && poetry run esptool.py --chip esp32 --port "$SERIAL_PORT" erase_flash
+poetry run esptool.py --chip esp32 --port "$SERIAL_PORT" write_flash -z 0x1000 "$1"

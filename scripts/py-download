@@ -1,14 +1,14 @@
 #!/usr/bin/env bash -eu
 
 SERIAL_PORT=${RSHELL_PORT:-/dev/tty.SLAB_USBtoUART}
-if [ ! -e $SERIAL_PORT ]; then
+if [ ! -e "$SERIAL_PORT" ]; then
     echo "No device on port ${SERIAL_PORT}" 1>&2
     exit 1
 fi
 
 if [ "$#" -eq 0 ]; then
-    poetry run rshell -p $SERIAL_PORT rsync pyboard /pyboard
-    poetry run rshell -p $SERIAL_PORT repl \~ 'machine.reset()' \~
+    poetry run rshell -p "$SERIAL_PORT" rsync pyboard /pyboard
+    poetry run rshell -p "$SERIAL_PORT" repl \~ 'machine.reset()' \~
 else
-    poetry run rshell -p $SERIAL_PORT cp "${@}" /pyboard
+    poetry run rshell -p "$SERIAL_PORT" cp "${@}" /pyboard
 fi

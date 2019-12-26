@@ -1,9 +1,9 @@
 #!/usr/bin/env bash -eu
 
 SERIAL_PORT=${RSHELL_PORT:-/dev/tty.SLAB_USBtoUART}
-if [ ! -e $SERIAL_PORT ]; then
+if [ ! -e "$SERIAL_PORT" ]; then
     echo "No device on port ${SERIAL_PORT}" 1>&2
     exit 1
 fi
 
-poetry run rshell -p $SERIAL_PORT repl
+poetry run rshell -p "$SERIAL_PORT" repl

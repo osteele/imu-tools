@@ -1,5 +1,5 @@
-import bluetooth
 from micropython import const
+import bluetooth
 
 _IRQ_CENTRAL_CONNECT = const(1 << 0)
 _IRQ_CENTRAL_DISCONNECT = const(1 << 1)
@@ -22,21 +22,21 @@ connections = set()
 
 def bt_irq_handler(event, data):
     if event == _IRQ_CENTRAL_CONNECT:
-        conn_handle, addr_type, addr = data
+        conn_handle, _addr_type, _addr = data
         print("Connected", conn_handle)
         connections.add(conn_handle)
     elif event == _IRQ_CENTRAL_DISCONNECT:
-        conn_handle, addr_type, addr = data
+        conn_handle, _addr_type, _addr = data
         print("Disconnected", conn_handle)
         connections.remove(conn_handle)
     elif event == _IRQ_GATTS_WRITE:
         conn_handle, attr_handle = data
         print("Write", bt.gatts_read(attr_handle))
     elif event == _IRQ_GATTC_READ_RESULT:
-        conn_handle, value_handle, char_data = data
+        conn_handle, _value_handle, _char_data = data
         print("Read", conn_handle)
     elif event == _IRQ_GATTC_WRITE_STATUS:
-        conn_handle, value_handle, status = data
+        conn_handle, _value_handle, _status = data
         print("Write", conn_handle)
 
 

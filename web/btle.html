@@ -6,38 +6,46 @@
 </head>
 
 <body>
-    <button onclick="connect()">Connect to BLE</button>
+    <button onclick="withConsoleErrors(connect)">Connect to BLE Device</button>
     <script>
-        let UART_ID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
-        let RX_ID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
-        let TX_ID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
-        let enc = new TextEncoder()
-        let dec = new TextDecoder()
-        let rx, tx;
+        const UART_BT_SERVICE_ID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
+        const TX_BT_CHAR_ID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
+        const RX_BT_CHAR_ID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
+        const ENC = new TextEncoder()
+        const DEC = new TextDecoder()
+        let rx, tx
         async function connect() {
-            try {
-                let device = await navigator.bluetooth.requestDevice({
-                    // acceptAllDevices: true, optionalServices: [UART_ID]
-                    filters: [{ namePrefix: "NYUIMA" }], optionalServices: [UART_ID]
-                })
-                console.info('device =', device);
-                let server = await device.gatt.connect()
-                console.info('server =', server)
-                let service = await server.getPrimaryService(UART_ID)
-                console.info('service =', service)
-                rx = await service.getCharacteristic(RX_ID)
-                tx = await service.getCharacteristic(TX_ID)
-                console.info('rx, tx =', rx, tx)
-                await rx.startNotifications()
-                rx.addEventListener('characteristicvaluechanged', ({ target }) =>
-                    console.info('Rx', dec.decode(target.value.buffer))
-                )
-            } catch (err) {
+            let device = await navigator.bluetooth.requestDevice({
+                // acceptAllDevices: true, optionalServices: [UART_BT_SERVICE_ID]
+                filters: [{ namePrefix: "NYUIMA" }], optionalServices: [UART_BT_SERVICE_ID]
+            })
+            console.info('device =', device);
+            const server = await device.gatt.connect()
+            console.info('server =', server)
+            const service = await server.getPrimaryService(UART_BT_SERVICE_ID)
+            console.info('service =', service)
+            rx = await service.getCharacteristic(RX_BT_CHAR_ID)
+            tx = await service.getCharacteristic(TX_BT_CHAR_ID)
+            console.info('rx, tx =', rx, tx)
+            await rx.startNotifications()
+            rx.addEventListener('characteristicvaluechanged', ({ target }) => {
+                const msg = DEC.decode(target.value.buffer)
+                console.log('Rx', msg)
+                if (msg == 'ping\n') {
+                    transmit('pong\n')
+                }
+            })
+        }
+        function withConsoleErrors(fn) {
+            return fn().catch(err =>
                 console.error(err)
-            }
+            )
         }
         function transmit(data) {
-            tx.writeValue(enc.encode(data));
+            tx.writeValue(ENC.encode(data));
+        }
+        function ping(data) {
+            transmit('ping\n')
         }
     </script>
 </body>

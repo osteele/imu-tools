@@ -23,43 +23,49 @@ connections = set()
 def bt_irq_handler(event, data):
     if event == _IRQ_CENTRAL_CONNECT:
         conn_handle, _addr_type, _addr = data
-        print("Connected", conn_handle)
+        print("BT connect", conn_handle)
         connections.add(conn_handle)
     elif event == _IRQ_CENTRAL_DISCONNECT:
         conn_handle, _addr_type, _addr = data
-        print("Disconnected", conn_handle)
+        print("BT disconnect", conn_handle)
         connections.remove(conn_handle)
     elif event == _IRQ_GATTS_WRITE:
         conn_handle, attr_handle = data
-        print("Write", bt.gatts_read(attr_handle))
+        msg = bt.gatts_read(attr_handle)
+        print("BT Rx({}, {})".format(conn_handle, attr_handle), msg)
+        if attr_handle == rx and msg == b"ping\n":
+            transmit("pong\n")
     elif event == _IRQ_GATTC_READ_RESULT:
         conn_handle, _value_handle, _char_data = data
-        print("Read", conn_handle)
+        print("BT Rx", conn_handle)
     elif event == _IRQ_GATTC_WRITE_STATUS:
         conn_handle, _value_handle, _status = data
-        print("Write", conn_handle)
+        print("BT Tx1", conn_handle)
 
 
-def write(data):
+def transmit(data):
     for conn in connections:
         bt.gatts_notify(conn, tx, data)
 
 
 bt = bluetooth.BLE()
 
-print("Activating BLE")
+print("Activating BLE...")
 bt.active(True)
 
-HR_UUID = bluetooth.UUID(0x180D)
+HR_SERVICE_UUID = bluetooth.UUID(0x180D)
 HR_CHAR = (bluetooth.UUID(0x2A37), bluetooth.FLAG_READ | bluetooth.FLAG_NOTIFY)
-HR_SERVICE = (HR_UUID, (HR_CHAR,))
-UART_UUID = bluetooth.UUID("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
-UART_TX = (
+HR_SERVICE = (HR_SERVICE_UUID, (HR_CHAR,))
+UART_SERVICE_UUID = bluetooth.UUID("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
+UART_TX_CHAR = (
     bluetooth.UUID("6E400003-B5A3-F393-E0A9-E50E24DCCA9E"),
     bluetooth.FLAG_READ | bluetooth.FLAG_NOTIFY,
 )
-UART_RX = (bluetooth.UUID("6E400002-B5A3-F393-E0A9-E50E24DCCA9E"), bluetooth.FLAG_WRITE)
-UART_SERVICE = (UART_UUID, (UART_TX, UART_RX))
+UART_RX_CHAR = (
+    bluetooth.UUID("6E400002-B5A3-F393-E0A9-E50E24DCCA9E"),
+    bluetooth.FLAG_WRITE,
+)
+UART_SERVICE = (UART_SERVICE_UUID, (UART_TX_CHAR, UART_RX_CHAR))
 SERVICES = (HR_SERVICE, UART_SERVICE)
 ((hr,), (tx, rx)) = bt.gatts_register_services(SERVICES)
 

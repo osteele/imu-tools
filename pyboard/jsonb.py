@@ -1,15 +1,15 @@
 import struct
 
-NULL_VALUE = 0
-FALSE_VALUE = 1
-TRUE_VALUE = 2
-INT_TYPE = 3
-FLOAT_TYPE = 4
-STRING_TYPE = 5
-LIST_TYPE = 6
-MAP_TYPE = 7
+_NULL_VALUE = 0
+_FALSE_VALUE = 1
+_TRUE_VALUE = 2
+_INT_TYPE = 3
+_FLOAT_TYPE = 4
+_STRING_TYPE = 5
+_LIST_TYPE = 6
+_MAP_TYPE = 7
 
-CONSTS = {None: NULL_VALUE, False: FALSE_VALUE, True: TRUE_VALUE}
+_CONSTS = {None: _NULL_VALUE, False: _FALSE_VALUE, True: _TRUE_VALUE}
 
 schema_fmt = None
 
@@ -18,8 +18,6 @@ def dumps(value):
     global schema_fmt
     if not schema_fmt:
         schema_fmt = "!" + "".join(_iter_encodings(value))
-    for x in _iter_values(value):
-        pass
     return struct.pack(schema_fmt, *_iter_values(value))
 
 
@@ -71,8 +69,7 @@ def calcsize(value):
             size += calcsize(item)
     elif typ == dict:
         for k, v in value.items():
-            size += calcsize(v)
-            # size += calcsize(k) + calcsize(v)
+            size += calcsize(k) + calcsize(v)
     return size
 
 
@@ -80,24 +77,24 @@ def _pack_into(buf, offset, value):
     typ = type(value)
     fmt = _format_str(value)
     if value in (None, False, True):
-        struct.pack_into(fmt, buf, offset, CONSTS[value])
+        struct.pack_into(fmt, buf, offset, _CONSTS[value])
     elif typ == int:
-        struct.pack_into(fmt, buf, offset, INT_TYPE, value)
+        struct.pack_into(fmt, buf, offset, _INT_TYPE, value)
     elif typ == float:
-        struct.pack_into(fmt, buf, offset, FLOAT_TYPE, value)
+        struct.pack_into(fmt, buf, offset, _FLOAT_TYPE, value)
     elif typ == str:
         struct.pack_into(fmt, buf, offset, len(value), value.encode())
     elif typ in (list, tuple):
-        struct.pack_into(fmt, buf, offset, LIST_TYPE, len(value))
+        struct.pack_into(fmt, buf, offset, _LIST_TYPE, len(value))
         offset += struct.calcsize(fmt)
         for item in value:
             offset = _pack_into(buf, offset, item)
         return offset
     elif typ == dict:
-        struct.pack_into(fmt, buf, offset, MAP_TYPE, len(value))
+        struct.pack_into(fmt, buf, offset, _MAP_TYPE, len(value))
         offset += struct.calcsize(fmt)
         for k, v in value.items():
-            # offset = _pack_into(buf, offset, k)
+            offset = _pack_into(buf, offset, k)
             offset = _pack_into(buf, offset, v)
         return offset
     return offset + calcsize(value)

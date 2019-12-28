@@ -54,21 +54,17 @@ print("Activating BLE...")
 bt.active(True)
 
 HR_SERVICE_UUID = bluetooth.UUID(0x180D)
+UART_SERVICE_UUID = bluetooth.UUID("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
+UART_TX_CHAR_UUID = bluetooth.UUID("6E400003-B5A3-F393-E0A9-E50E24DCCA9E")
+UART_RX_CHAR_UUID = bluetooth.UUID("6E400002-B5A3-F393-E0A9-E50E24DCCA9E")
+
 HR_CHAR = (bluetooth.UUID(0x2A37), bluetooth.FLAG_READ | bluetooth.FLAG_NOTIFY)
 HR_SERVICE = (HR_SERVICE_UUID, (HR_CHAR,))
-UART_SERVICE_UUID = bluetooth.UUID("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
-UART_TX_CHAR = (
-    bluetooth.UUID("6E400003-B5A3-F393-E0A9-E50E24DCCA9E"),
-    bluetooth.FLAG_READ | bluetooth.FLAG_NOTIFY,
-)
-UART_RX_CHAR = (
-    bluetooth.UUID("6E400002-B5A3-F393-E0A9-E50E24DCCA9E"),
-    bluetooth.FLAG_WRITE,
-)
+UART_TX_CHAR = (UART_TX_CHAR_UUID, bluetooth.FLAG_READ | bluetooth.FLAG_NOTIFY)
+UART_RX_CHAR = (UART_RX_CHAR_UUID, bluetooth.FLAG_WRITE)
 UART_SERVICE = (UART_SERVICE_UUID, (UART_TX_CHAR, UART_RX_CHAR))
 SERVICES = (HR_SERVICE, UART_SERVICE)
 ((hr,), (tx, rx)) = bt.gatts_register_services(SERVICES)
-
 
 bt.irq(bt_irq_handler)
 
@@ -76,7 +72,7 @@ bt.irq(bt_irq_handler)
 def advertise():
     bt.gap_advertise(
         100,
-        b"\x02\x01\x1a\x03\x03\x10\x10\x0b\tNYUIMA IMU\x0b\xffL\x00\x10\x06\x13\x1a:\xe1u\x0c",
+        b"\x02\x01\x1a\x03\x03\x10\x10\x0b\tNYUSHIMA-P\x0b\xffL\x00\x10\x06\x13\x1a:\xe1u\x0c",
     )
 
 

@@ -17,7 +17,7 @@
         async function connect() {
             let device = await navigator.bluetooth.requestDevice({
                 // acceptAllDevices: true, optionalServices: [UART_BT_SERVICE_ID]
-                filters: [{ namePrefix: "NYUIMA" }], optionalServices: [UART_BT_SERVICE_ID]
+                filters: [{ namePrefix: "NYUSHIMA" }], optionalServices: [UART_BT_SERVICE_ID]
             })
             console.info('device =', device);
             const server = await device.gatt.connect()
@@ -29,7 +29,8 @@
             console.info('rx, tx =', rx, tx)
             await rx.startNotifications()
             rx.addEventListener('characteristicvaluechanged', ({ target }) => {
-                const msg = DEC.decode(target.value.buffer)
+                const value = target.value.buffer;
+                const msg = DEC.decode(value)
                 console.log('Rx', msg)
                 if (msg == 'ping\n') {
                     transmit('pong\n')

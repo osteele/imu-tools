@@ -11,30 +11,52 @@
         const UART_BT_SERVICE_ID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
         const TX_BT_CHAR_ID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
         const RX_BT_CHAR_ID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
+
+        const IMU_SERVICE_UUID = "509b8001-ebe1-4aa5-bc51-11004b78d5cb";
+        const IMU_QUAT_CHAR_UUID = "509b8002-ebe1-4aa5-bc51-11004b78d5cb";
+
         const ENC = new TextEncoder()
         const DEC = new TextDecoder()
-        let rx, tx
+        let rxChar, txChar
         async function connect() {
             let device = await navigator.bluetooth.requestDevice({
-                // acceptAllDevices: true, optionalServices: [UART_BT_SERVICE_ID]
-                filters: [{ namePrefix: "NYUSHIMA" }], optionalServices: [UART_BT_SERVICE_ID]
+                filters: [{ namePrefix: "NYUSHIMA" }], optionalServices: [UART_BT_SERVICE_ID, IMU_SERVICE_UUID]
             })
             console.info('device =', device);
             const server = await device.gatt.connect()
             console.info('server =', server)
-            const service = await server.getPrimaryService(UART_BT_SERVICE_ID)
-            console.info('service =', service)
-            rx = await service.getCharacteristic(RX_BT_CHAR_ID)
-            tx = await service.getCharacteristic(TX_BT_CHAR_ID)
-            console.info('rx, tx =', rx, tx)
-            await rx.startNotifications()
-            rx.addEventListener('characteristicvaluechanged', ({ target }) => {
-                const value = target.value.buffer;
+
+            const uartService = await server.getPrimaryService(UART_BT_SERVICE_ID)
+            console.info('uartService =', uartService)
+            rxChar = await uartService.getCharacteristic(RX_BT_CHAR_ID)
+            txChar = await uartService.getCharacteristic(TX_BT_CHAR_ID)
+            console.info('rx, tx =', rxChar, txChar)
+
+            await rxChar.startNotifications()
+            rxChar.addEventListener('characteristicvaluechanged', ({ target }) => {
+                const { buffer } = target.value
                 const msg = DEC.decode(value)
                 console.log('Rx', msg)
                 if (msg == 'ping\n') {
                     transmit('pong\n')
                 }
+            })
+
+            const imuService = await server.getPrimaryService(IMU_SERVICE_UUID)
+            console.info('imuService =', imuService)
+            const quatChar = await imuService.getCharacteristic(IMU_QUAT_CHAR_UUID)
+            await quatChar.startNotifications()
+            quatChar.addEventListener('characteristicvaluechanged', ({ target }) => {
+                const { value } = target
+                const ar = new Uint8Array(4)
+                function get32(n) {
+                    for (let i = 0; i < 4; ++i) {
+                        ar[i] = value.getUint8(n + 3 - i)
+                    }
+                    return new DataView(ar.buffer).getFloat32(0)
+                }
+                // console.log('IMU.quat', value.getFloat32(0))
+                console.log('IMU.quat', get32(0), get32(4), get32(8), get32(12))
             })
         }
         function withConsoleErrors(fn) {
@@ -43,7 +65,7 @@
             )
         }
         function transmit(data) {
-            tx.writeValue(ENC.encode(data));
+            txChar.writeValue(ENC.encode(data));
         }
         function ping(data) {
             transmit('ping\n')

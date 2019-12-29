@@ -36,7 +36,7 @@
             rxChar.addEventListener('characteristicvaluechanged', ({ target }) => {
                 const { buffer } = target.value
                 const msg = DEC.decode(value)
-                console.log('Rx', msg)
+                console.log('UART.Rx', msg)
                 if (msg == 'ping\n') {
                     transmit('pong\n')
                 }
@@ -46,6 +46,7 @@
             console.info('imuService =', imuService)
             const quatChar = await imuService.getCharacteristic(IMU_QUAT_CHAR_UUID)
             await quatChar.startNotifications()
+            let sampleTimes = []
             quatChar.addEventListener('characteristicvaluechanged', ({ target }) => {
                 const { value } = target
                 const ar = new Uint8Array(4)
@@ -55,8 +56,13 @@
                     }
                     return new DataView(ar.buffer).getFloat32(0)
                 }
+                const now = +new Date()
+                sampleTimes = [now, ...sampleTimes.filter(n => n > now - 1000)]
+                if (Math.floor(now / 1000) > Math.floor(sampleTimes[1] / 1000)) {
+                    console.info(`samples: ${sampleTimes.length}/sec`)
+                }
                 // console.log('IMU.quat', value.getFloat32(0))
-                console.log('IMU.quat', get32(0), get32(4), get32(8), get32(12))
+                // console.log('IMU.quat', get32(0), get32(4), get32(8), get32(12))
             })
         }
         function withConsoleErrors(fn) {

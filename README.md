@@ -38,7 +38,7 @@ This project contains:
    In a terminal window in this directory, run:
 
    ```sh
-   ./scripts/py-download
+   ./scripts/py-upload
    ```
 
 ## Viewing the Web Examples
@@ -76,8 +76,8 @@ simulations, in different terminals, with different ids.
 
 ## MicroPython development
 
-`./scripts/py-download` downloads the code in `pyboard` to the attached ESP, and
-then reboots the board.
+`./scripts/py-upload` copies the code in `pyboard` to the attached ESP, and then
+reboots the board.
 
 `./scripts/py-repl` opens an [rshell](https://github.com/dhylands/rshell#rshell)
 REPL to the attached ESP. Press `⌃X` to exit the `./scripts/py-repl` command.

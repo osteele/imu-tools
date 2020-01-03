@@ -4,19 +4,19 @@
 <head>
     <title>Bluetooth Connection</title>
     <style>
-        .connected .unlessConnected,
+        body.connected .unlessConnected,
         .ifConnected {
             display: none
         }
 
-        .connected .ifConnected {
+        body.connected .ifConnected {
             display: inherit
         }
     </style>
 </head>
 
 <body>
-    <button class="unlessConnected" onclick="withConsoleErrors(connect)()">
+    <button id="bt-connection-button" class="unlessConnected">
         Connect to BLE Device
     </button>
     <button class="ifConnected" onclick="disconnect()">
@@ -26,6 +26,21 @@
     <pre id="imu-q"></pre>
 </body>
 
-<script src="js/ble.js"></script>
+<script type="module">
+    import { onSensorData, disconnect } from "./js/ble.js";
+
+    let sampleTimes = [];
+
+    onSensorData(({ local_timestamp: ts, quaternion: quat }) => {
+        sampleTimes = [ts, ...sampleTimes.filter(n => n > ts - 1000)];
+        if (Math.floor(ts / 1000) > Math.floor(sampleTimes[1] / 1000)) {
+            // console.info(`samples: ${sampleTimes.length}/sec`);
+            document.getElementById(
+                'sample-rate'
+            ).innerText = `${sampleTimes.length} samples/sec`;
+        }
+        document.getElementById('imu-q').innerText = JSON.stringify(quat);
+    })
+</script>
 
 </html>

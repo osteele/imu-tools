@@ -57,6 +57,18 @@ graph, that automatically scales the y axis as data arrives.
 yolked to the IMU orientation. The model is red before the sensor is minimally
 calibrated, and it fades out when sensor data is not being received.
 
+## Bluetooth
+
+<https://github.com/osteele/Arduino-BLE-IMU> is alternate firmware, written in
+Arduino C++, that sends IMU data over a Bluetooth Low Energy (BLE) connection
+instead of MQTT.
+
+To use it, replace `import { onSensorData } from './imu-connection.js';` by
+`import { onSensorData } from './ble.js';`.
+
+This adds a button to the document body, that causes the software to scan for an
+BLE device.
+
 ## Command-Line Testing
 
 `poetry run sub` runs an MQTT client that subscribes to IMU messages that are

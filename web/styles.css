@@ -1,5 +1,5 @@
 body {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     margin: 0;
 }
 
@@ -7,6 +7,14 @@ body {
     position: absolute;
     right: 0;
     bottom: 20px;
+}
+#bt-connection-button {
+    position: absolute;
+    z-index: 1;
+}
+
+body.connected #bt-connection-button {
+    display: none;
 }
 
 /* Adapted from http://bl.ocks.org/simenbrekken/6634070 */

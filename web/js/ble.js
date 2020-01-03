@@ -47,10 +47,10 @@ async function connect() {
     quatChar.addEventListener('characteristicvaluechanged', ({ target }) => {
         const { value } = target;
         const quat = [
-            decodeFloat32(value, 0),
-            decodeFloat32(value, 4),
-            decodeFloat32(value, 8),
-            decodeFloat32(value, 12),
+            decodeFloat32(value, 6),
+            decodeFloat32(value, 10),
+            decodeFloat32(value, 14),
+            decodeFloat32(value, 18),
         ];
         const [q0, q1, q2, q3] = quat;
         const orientationMatrix = quatToMatrix(q3, q1, q0, q2);

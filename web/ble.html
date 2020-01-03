@@ -3,13 +3,26 @@
 
 <head>
     <title>Bluetooth Connection</title>
+    <style>
+        .connected .unlessConnected,
+        .ifConnected {
+            display: none
+        }
+
+        .connected .ifConnected {
+            display: inherit
+        }
+    </style>
 </head>
 
 <body>
-    <button onclick="withConsoleErrors(connect)()">
+    <button class="unlessConnected" onclick="withConsoleErrors(connect)()">
         Connect to BLE Device
     </button>
-    <p id="sample-rate"></p>
+    <button class="ifConnected" onclick="disconnect()">
+        Disconnect
+    </button>
+    <p id="sample-rate" class="ifConnected"></p>
     <pre id="imu-q"></pre>
 </body>
 

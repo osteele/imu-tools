@@ -10,6 +10,7 @@ const BT_IMU_QUAT_CHAR_UUID = '509b8002-ebe1-4aa5-bc51-11004b78d5cb';
 const ENC = new TextEncoder();
 const DEC = new TextDecoder();
 
+let server;
 let rxChar, txChar;
 
 async function connect() {
@@ -18,8 +19,9 @@ async function connect() {
         optionalServices: [BT_UART_SERVICE_ID, BT_IMU_SERVICE_UUID],
     });
     console.info('device =', device);
-    const server = await device.gatt.connect();
+    server = await device.gatt.connect();
     console.info('server =', server);
+    document.body.className = 'connected';
 
     const uartService = await server.getPrimaryService(BT_UART_SERVICE_ID);
     console.info('uartService =', uartService);
@@ -64,6 +66,11 @@ async function connect() {
         // console.log('IMU.quat', value.getFloat32(0))
         // console.log('IMU.quat', get32(0), get32(4), get32(8), get32(12))
     });
+}
+
+async function disconnect() {
+    server.disconnect();
+    document.body.className = '';
 }
 
 const withConsoleErrors = fn => args =>

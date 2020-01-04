@@ -5,13 +5,16 @@ const { DateTime, Duration } = luxon;
 const deviceMap = {};
 
 onSensorData(data => {
-    const { device_id: id } = data;
+    const { deviceId: deviceId } = data;
     const now = +new Date();
-    const timestamp = data.local_timestamp;
-    const timestamps = deviceMap[id]
-        ? [timestamp, ...deviceMap[id].timestamps.filter(n => n > now - 1000)]
+    const timestamp = data.receivedAt;
+    const timestamps = deviceMap[deviceId]
+        ? [
+              timestamp,
+              ...deviceMap[deviceId].timestamps.filter(n => n > now - 1000),
+          ]
         : [timestamp];
-    deviceMap[id] = { id, timestamp, timestamps };
+    deviceMap[deviceId] = { deviceId, timestamp, timestamps };
 });
 
 function App() {
@@ -36,7 +39,7 @@ function App() {
     );
 }
 
-function Device({ id, timestamp, timestamps }) {
+function Device({ deviceId, timestamp, timestamps }) {
     const now = new Date();
     const brightness = Math.min(
         0.8,
@@ -45,8 +48,8 @@ function Device({ id, timestamp, timestamps }) {
     const color = `hsl(0,0%,${100 * brightness}%)`;
     const frameRate = timestamps.filter(n => n > now - 1000).length;
     return (
-        <tr key={id} style={{ color }}>
-            <td className="device-id">{id}</td>
+        <tr key={deviceId} style={{ color }}>
+            <td className="device-id">{deviceId}</td>
             <td>{frameRate}</td>
             <td>{ageString(DateTime.fromMillis(timestamp))}</td>
         </tr>

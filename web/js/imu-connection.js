@@ -8,7 +8,7 @@ const connectionSettings = {
     hostname: 'localhost',
     username: '',
     password: '',
-    device_id: '',
+    deviceId: '',
 };
 
 let client = null;
@@ -119,8 +119,8 @@ function startSubscription() {
         timeout: 3,
         useSSL,
         onSuccess: () => {
-            const device_id = connectionSettings.device_id.trim();
-            let topicString = 'imu/' + (device_id || '#');
+            const deviceId = connectionSettings.deviceId.trim();
+            let topicString = 'imu/' + (deviceId || '#');
             setMqttConnectionStatus(
                 'Connected to mqtt://' + hostname + ':' + port
             );
@@ -164,7 +164,7 @@ const isValidQuaternion = ([q0, q1, q2, q3]) =>
     Math.abs(q0 ** 2 + q1 ** 2 + q2 ** 2 + q3 ** 2 - 1.0) < 1e-1;
 
 function onMessageArrived(message) {
-    const device_id = message.topic.split('/').pop();
+    const deviceId = message.topic.split('/').pop();
     const data = JSON.parse(message.payloadString);
     const quat = data.quaternion;
 
@@ -181,13 +181,13 @@ function onMessageArrived(message) {
 
     const [q0, q1, q2, q3] = quat;
     const orientationMatrix = quatToMatrix(q3, q1, q0, q2);
-    const local_timestamp = +new Date();
+    const receivedAt = +new Date();
 
     // The BNO055 Euler angles are buggy. Reconstruct them from the quaternions.
     const euler = quatToEuler(q3, q1, q0, q2);
     setDeviceData({
-        device_id,
-        local_timestamp,
+        deviceId,
+        receivedAt,
         orientationMatrix,
         'euler′': euler.map(e => (e * 180) / Math.PI),
         ...data,
@@ -201,14 +201,14 @@ function onMessageArrived(message) {
         const [q0_, q1_, q2_, q3_] = eulerToQuat(e0, e2, e1);
         const om2 = quatToMatrix(q3_, q1_, q0_, q2_);
         setDeviceData({
-            local_timestamp,
+            receivedAt,
             ...data,
-            ...{ device_id: device_id + '′', orientationMatrix: om2 },
+            ...{ deviceId: deviceId + '′', orientationMatrix: om2 },
         });
     }
 
     function setDeviceData(data) {
-        deviceStates[data.device_id] = data;
+        deviceStates[data.deviceId] = data;
         let erroneousCallbacks = [];
 
         onSensorDataCallbacks.forEach(callback => {

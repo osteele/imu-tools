@@ -52,8 +52,8 @@ async function connect() {
         const messageVersion = value.getUint8(i++);
         if (messageVersion !== 1) return;
         let data = {
-            device_id: device.id,
-            local_timestamp: +new Date(),
+            deviceId: device.id,
+            receivedAt: +new Date(),
         };
         const flags = value.getUint8(i++);
         i += 2;

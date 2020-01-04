@@ -68,9 +68,7 @@ export function draw() {
     const models = Object.values(devices);
     // apply the physics simulation just to the models that have recent sensor data
     updatePhysics(
-        models.filter(
-            ({ local_timestamp }) => currentTime - local_timestamp < 500
-        )
+        models.filter(({ receivedAt }) => currentTime - receivedAt < 500)
     );
 
     models.forEach(data => {
@@ -92,7 +90,7 @@ export function draw() {
         }
 
         // Fade the model out, if the sensor data is stale
-        const age = Math.max(0, currentTime - data.local_timestamp - 250);
+        const age = Math.max(0, currentTime - data.receivedAt - 250);
         const alpha = Math.max(5, 255 - age / 10);
         fill(255, 255, 255, alpha);
 
@@ -198,6 +196,6 @@ function updatePhysics(models) {
 }
 
 onSensorData(data => {
-    const { device_id } = data;
-    devices[device_id] = { ...(devices[device_id] || {}), ...data };
+    const { deviceId } = data;
+    devices[deviceId] = { ...(devices[deviceId] || {}), ...data };
 });

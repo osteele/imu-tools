@@ -32,7 +32,7 @@
     document.getElementById("bt-disconnect-button").onclick = disconnect;
     let sampleTimes = [];
 
-    onSensorData(({ local_timestamp: ts, quaternion: quat }) => {
+    onSensorData(({ receivedAt: ts, quaternion: quat }) => {
         sampleTimes = [ts, ...sampleTimes.filter(n => n > ts - 1000)];
         if (Math.floor(ts / 1000) > Math.floor(sampleTimes[1] / 1000)) {
             // console.info(`samples: ${sampleTimes.length}/sec`);

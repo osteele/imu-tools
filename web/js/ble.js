@@ -26,6 +26,7 @@ async function connect() {
     server = await device.gatt.connect();
     // console.info('server =', server);
     document.body.className += ' connected';
+    device.addEventListener('gattserverdisconnected', onDisconnected);
 
     const uartService = await server.getPrimaryService(BLE_UART_SERVICE_ID);
     // console.info('uartService =', uartService);
@@ -81,12 +82,15 @@ function decodeFloat32(value, n) {
     return new DataView(ar.buffer).getFloat32(0);
 }
 
-export async function disconnect() {
-    server.disconnect();
+function onDisconnected() {
     document.body.className = document.body.className.replace(
         /(\s|^)connected(\s|$)/,
         ''
     );
+}
+
+export async function disconnect() {
+    server.disconnect();
 }
 
 const withConsoleErrors = fn => args =>

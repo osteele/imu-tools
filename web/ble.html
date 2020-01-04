@@ -19,7 +19,7 @@
     <button id="bt-connection-button" class="unlessConnected">
         Connect to BLE Device
     </button>
-    <button class="ifConnected" onclick="disconnect()">
+    <button id="bt-disconnect-button" class="ifConnected">
         Disconnect
     </button>
     <p id="sample-rate" class="ifConnected"></p>
@@ -29,6 +29,7 @@
 <script type="module">
     import { onSensorData, disconnect } from "./js/ble.js";
 
+    document.getElementById("bt-disconnect-button").onclick = disconnect;
     let sampleTimes = [];
 
     onSensorData(({ local_timestamp: ts, quaternion: quat }) => {

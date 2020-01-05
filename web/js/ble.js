@@ -4,6 +4,9 @@ const BLE_UART_SERVICE_ID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 const BLE_UART_TX_CHAR_ID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
 const BLE_UART_RX_CHAR_ID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 
+const BLE_MAC_ADDRESS_SERVICE_UUID = '709f7001-37e3-439e-a338-23f00067988b';
+const BLE_MAC_ADDRESS_CHAR_UUID = '709f7002-37e3-439e-a338-23f00067988b';
+
 const BLE_IMU_SERVICE_UUID = '509b8001-ebe1-4aa5-bc51-11004b78d5cb';
 const BLE_IMU_SENSOR_CHAR_UUID = '509b8002-ebe1-4aa5-bc51-11004b78d5cb';
 const BLE_IMU_DEVICE_INFO_CHAR_UUID = '509b8003-ebe1-4aa5-bc51-11004b78d5cb';
@@ -21,7 +24,11 @@ const callbacks = [];
 async function connect() {
     let device = await navigator.bluetooth.requestDevice({
         filters: [{ services: [BLE_IMU_SERVICE_UUID] }],
-        optionalServices: [BLE_IMU_DEVICE_INFO_CHAR_UUID, BLE_UART_SERVICE_ID],
+        optionalServices: [
+            BLE_IMU_DEVICE_INFO_CHAR_UUID,
+            BLE_MAC_ADDRESS_SERVICE_UUID,
+            BLE_UART_SERVICE_ID,
+        ],
     });
     // console.info('device =', device);
     server = await device.gatt.connect();
@@ -44,14 +51,17 @@ async function connect() {
         }
     });
 
-    const imuService = await server.getPrimaryService(BLE_IMU_SERVICE_UUID);
-    // console.info('imuService =', imuService);
-
-    const imuDeviceNameChar = await imuService.getCharacteristic(
-        BLE_IMU_DEVICE_INFO_CHAR_UUID
+    const macAddressService = await server.getPrimaryService(
+        BLE_MAC_ADDRESS_SERVICE_UUID
+    );
+    const imuDeviceNameChar = await macAddressService.getCharacteristic(
+        BLE_MAC_ADDRESS_CHAR_UUID
     );
     let deviceNameView = await imuDeviceNameChar.readValue();
     const deviceName = DEC.decode(deviceNameView);
+
+    const imuService = await server.getPrimaryService(BLE_IMU_SERVICE_UUID);
+    // console.info('imuService =', imuService);
 
     const imuSensorChar = await imuService.getCharacteristic(
         BLE_IMU_SENSOR_CHAR_UUID
@@ -129,7 +139,7 @@ let connectButton = document.getElementById('bt-connection-button');
 if (!connectButton) {
     connectButton = document.createElement('button');
     connectButton.id = 'bt-connection-button';
-    connectButton.innerText = 'Connect to BLE IMU';
+    connectButton.innerText = 'BLE Connect';
     document.body.appendChild(connectButton);
 }
 connectButton.onclick = withConsoleErrors(connect);

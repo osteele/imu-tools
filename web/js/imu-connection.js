@@ -1,6 +1,6 @@
 import { eulerToQuat, quatToEuler, quatToMatrix } from './utils.js';
 
-/** localstorage key for connection settings. Set this with `openConnection()`.
+/** localStorage key for connection settings. Set this with `openConnection()`.
  */
 const STORAGE_KEY = 'imu-tools:mqtt-connection';
 
@@ -187,10 +187,12 @@ function onMessageArrived(message) {
     const euler = quatToEuler(q3, q1, q0, q2);
     setDeviceData({
         deviceId,
-        receivedAt,
-        orientationMatrix,
-        'euler′': euler.map(e => (e * 180) / Math.PI),
-        ...data,
+        data: {
+            receivedAt,
+            orientationMatrix,
+            'euler′': euler.map(e => (e * 180) / Math.PI),
+            ...data,
+        },
     });
 
     // Simulate a second device, that constructs a new quaternion and

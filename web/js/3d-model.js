@@ -195,7 +195,10 @@ function updatePhysics(models) {
     });
 }
 
-onSensorData(data => {
-    const { deviceId } = data;
-    devices[deviceId] = { ...(devices[deviceId] || {}), ...data };
-});
+onSensorData(
+    ({ deviceId, data }) =>
+        (devices[deviceId] = {
+            ...(devices[deviceId] || {}),
+            ...data,
+        })
+);

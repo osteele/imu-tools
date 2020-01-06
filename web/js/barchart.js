@@ -1,12 +1,6 @@
 import { onSensorData } from './imu-connection.js';
 
-const IGNORED_PROPERTIES = [
-    'device_id',
-    'calibration',
-    'timestamp',
-    'local_timestamp',
-    'orientationMatrix',
-];
+const IGNORED_PROPERTIES = ['calibration', 'orientationMatrix', 'receivedAt'];
 
 const BAR_WIDTH = 25;
 const SUBGRAPH_HEIGHT = 300;
@@ -81,4 +75,6 @@ function formatPrecision(n) {
     return String(n).replace(/(\.\d\d)\d+/, '$1');
 }
 
-onSensorData(data => (sensorData = { ...data }));
+onSensorData(({ data }) => {
+    sensorData = { ...data };
+});

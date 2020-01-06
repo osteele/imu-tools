@@ -114,17 +114,16 @@ function addSample(sample) {
 }
 
 onSensorData(
-    throttled(function(data) {
-        const device_id = data
+    throttled(({ deviceId, data }) => {
         const [ax, ay, az] = data.accelerometer
         const [gx, gy, gz] = data.gyroscope
         const [mx, my, mz] = data.magnetometer
         const [e0, e1, e2] = data.euler
-        // const [q0, q1, q2, q3] = data.quaternion
+        // const [q0, q1, q2, q3] = sensors.quaternion
         // addSample({ device_id, e0, e1, e2 })
-        addSample({ device_id, ax, ay, az })
-        addSample({ device_id, mx, my, mz })
-        addSample({ device_id, gx, gy, gz })
+        addSample({ deviceId, ax, ay, az })
+        addSample({ deviceId, mx, my, mz })
+        addSample({ deviceId, gx, gy, gz })
         // addSample({ device_id, q0, q1, q2, q3 })
     })
 )

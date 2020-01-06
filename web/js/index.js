@@ -5,13 +5,15 @@ const { DateTime, Duration } = luxon;
 const deviceMap = {};
 
 onSensorData(data => {
-    const { deviceId: deviceId } = data;
     const now = +new Date();
-    const timestamp = data.receivedAt;
+    const {
+        deviceId: deviceId,
+        data: { receivedAt: timestamp },
+    } = data;
     const timestamps = deviceMap[deviceId]
         ? [
               timestamp,
-              ...deviceMap[deviceId].timestamps.filter(n => n > now - 1000),
+              ...deviceMap[deviceId].timestamps.filter(ts => ts > now - 1000),
           ]
         : [timestamp];
     deviceMap[deviceId] = { deviceId, timestamp, timestamps };

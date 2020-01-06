@@ -35,8 +35,7 @@ function addSampleScalar(name, value, timestamp) {
 }
 
 onSensorData(
-    throttled(data => {
-        // const { device_id } = data
+    throttled(({ deviceId, data }) => {
         // const [a0, a1, a2] = data.accelerometer
         const [e0, e1, e2] = data.euler
         const values = { e0, e1, e2 }

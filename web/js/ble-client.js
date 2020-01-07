@@ -22,7 +22,7 @@ let rxChar, txChar;
 
 const callbacks = [];
 
-async function connect() {
+export async function connect() {
     let device = await navigator.bluetooth.requestDevice({
         filters: [{ services: [BLE_IMU_SERVICE_UUID] }],
         optionalServices: [BLE_MAC_ADDRESS_SERVICE_UUID, BLE_UART_SERVICE_UUID],
@@ -172,7 +172,12 @@ if (!connectButton) {
 }
 connectButton.onclick = withConsoleErrors(connect);
 
-const hideConnectButton = () => (connectButton.style.display = 'none');
+export let bleAvailable = true;
+
+const hideConnectButton = () => {
+    bleAvailable = false;
+    connectButton.style.display = 'none';
+};
 
 if (navigator.bluetooth) {
     navigator.bluetooth

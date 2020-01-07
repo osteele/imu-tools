@@ -1,4 +1,4 @@
-import { onSensorData } from './imu-connection.js';
+import { onSensorData, bleAvailable, bleConnect } from './imu-connection.js';
 import { isMobile, quatToMatrix } from './utils.js';
 
 let modelObj; // setup initializes this to a p5.js 3D model
@@ -202,3 +202,10 @@ onSensorData(
             ...data,
         })
 );
+
+export function keyPressed(evt) {
+    if (evt.key.match(/b/i) && bleAvailable) {
+        alert('connect');
+        bleConnect();
+    }
+}

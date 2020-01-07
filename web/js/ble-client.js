@@ -167,3 +167,11 @@ if (!connectButton) {
     document.body.appendChild(connectButton);
 }
 connectButton.onclick = withConsoleErrors(connect);
+
+const hideConnectButton = () => (connectButton.style.display = 'none');
+
+if (navigator.bluetooth) {
+    navigator.bluetooth
+        .getAvailability()
+        .then(flag => flag || hideConnectButton());
+} else hideConnectButton();

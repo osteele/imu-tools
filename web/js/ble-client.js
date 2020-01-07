@@ -34,9 +34,11 @@ export async function connect() {
     device.addEventListener('gattserverdisconnected', onDisconnected);
 
     await subscribeUartService(server);
-    const [deviceName, setBLEDeviceName] = await subscribeMacAddressService(
-        server
-    );
+    let {
+        deviceId,
+        bleDeviceName,
+        setBLEDeviceName,
+    } = await subscribeMacAddressService(server);
     await subscribeImuService(server);
 
     async function subscribeUartService(server) {
@@ -62,17 +64,26 @@ export async function connect() {
         const macAddressService = await server.getPrimaryService(
             BLE_MAC_ADDRESS_SERVICE_UUID
         );
-        const deviceNameChar = await macAddressService.getCharacteristic(
+
+        const deviceIdChar = await macAddressService.getCharacteristic(
             BLE_MAC_ADDRESS_CHAR_UUID
         );
-        const deviceNameView = await deviceNameChar.readValue();
-        const deviceName = DEC.decode(deviceNameView);
+        const deviceIdView = await deviceIdChar.readValue();
+        const deviceId = DEC.decode(deviceIdView);
+
         const bleDeviceNameChar = await macAddressService.getCharacteristic(
             BLE_BLE_NAME_CHAR_UUID
         );
+        const bleDeviceNameView = await bleDeviceNameChar.readValue();
+        const bleDeviceName_ = DEC.decode(bleDeviceNameView);
         const setBLEDeviceName = data =>
-            bleDeviceNameChar.writeValue(ENC.encode(data));
-        return [deviceName, setBLEDeviceName];
+            bleDeviceNameChar.writeValue(ENC.encode((bleDeviceName = data)));
+        // await bleDeviceNameChar.startNotifications();
+        // bleDeviceNameChar.addEventListener(
+        //     'characteristicvaluechanged',
+        //     ({ target }) => (bleDeviceName = DEC.decode(target.value))
+        // );
+        return { deviceId, bleDeviceName: bleDeviceName_, setBLEDeviceName };
     }
 
     async function subscribeImuService(server) {
@@ -89,7 +100,7 @@ export async function connect() {
             'characteristicvaluechanged',
             ({ target }) => {
                 calibration = target.value.getUint8(0);
-                console.info('calibration', calibration);
+                console.log('calibration', calibration);
             }
         );
 
@@ -103,7 +114,14 @@ export async function connect() {
                 let data = decodeSensorData(target.value);
                 if (!data) return;
                 data = { receivedAt: +new Date(), calibration, ...data };
-                const record = { deviceId: deviceName, setBLEDeviceName, data };
+                const record = {
+                    deviceId,
+                    ble: {
+                        deviceName: bleDeviceName,
+                        setDeviceName: setBLEDeviceName,
+                    },
+                    data,
+                };
                 callbacks.forEach(fn => fn(record));
             }
         );
@@ -154,8 +172,8 @@ export async function disconnect() {
     server.disconnect();
 }
 
-const withConsoleErrors = fn => args =>
-    fn.apply(null, args).catch(err => console.error(err));
+const withConsoleErrors = fn => args => fn.apply(null, args);
+// fn.apply(null, args).catch(err => console.error(err));
 
 const transmit = data => txChar.writeValue(ENC.encode(data));
 

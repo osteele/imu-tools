@@ -21,6 +21,7 @@ onSensorData(device => {
 
 function App() {
     const [devices, setDevices] = useState([]);
+    const [editDeviceId, setEditDeviceId] = useState();
 
     useEffect(() => {
         const id = setInterval(() => setDevices(Object.values(deviceMap)), 100);
@@ -31,17 +32,36 @@ function App() {
         <div>No devices are online</div>
     ) : (
         <table className="table">
-            <tr>
-                <th>Device ID</th>
-                <th>Sample Rate</th>
-                <th>Last Seen</th>
-            </tr>
-            {devices.map(Device)}
+            <tbody>
+                <tr>
+                    <th>Device ID</th>
+                    <th>BLE Name</th>
+                    <th>Sample Rate</th>
+                    <th>Last Seen</th>
+                </tr>
+                {devices.map(record => {
+                    const { deviceId } = record.device;
+                    return (
+                        <Device
+                            record={record}
+                            key={deviceId}
+                            isEditing={editDeviceId === deviceId}
+                            setEditing={flag =>
+                                setEditDeviceId(flag && deviceId)
+                            }
+                        />
+                    );
+                })}
+            </tbody>
         </table>
     );
 }
 
-function Device({ device, timestamp, timestamps }) {
+function Device({
+    record: { device, timestamp, timestamps },
+    isEditing,
+    setEditing,
+}) {
     const now = new Date();
     const { deviceId } = device;
     const brightness = Math.min(
@@ -50,17 +70,41 @@ function Device({ device, timestamp, timestamps }) {
     );
     const color = `hsl(0,0%,${100 * brightness}%)`;
     const frameRate = timestamps.filter(n => n > now - 1000).length;
-    function clicked() {
+    function setGlobal() {
         window.device = device;
     }
     return (
-        <tr key={deviceId} style={{ color }}>
-            <td className="device-id" onClick={clicked}>
+        <tr style={{ color }}>
+            <td className="device-id" onClick={setGlobal}>
                 {deviceId}
+            </td>
+            <td>
+                {device.ble ? (
+                    <Editable
+                        isEditing={isEditing}
+                        setEditing={setEditing}
+                        onChange={name => device.ble.setDeviceName(name)}
+                        value={device.ble.deviceName}
+                    />
+                ) : (
+                    <div>{device.ble.deviceName}</div>
+                )}
             </td>
             <td>{frameRate}</td>
             <td>{ageString(DateTime.fromMillis(timestamp))}</td>
         </tr>
+    );
+}
+
+function Editable({ value, isEditing, setEditing, onChange }) {
+    function done(evt) {
+        onChange(evt.target.value);
+        setEditing(false);
+    }
+    return isEditing ? (
+        <input type="text" defaultValue={value} onBlur={done} />
+    ) : (
+        <div onClick={() => setEditing(true)}>{value}</div>
     );
 }
 

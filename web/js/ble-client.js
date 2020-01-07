@@ -34,7 +34,9 @@ async function connect() {
     device.addEventListener('gattserverdisconnected', onDisconnected);
 
     await subscribeUartService(server);
-    const deviceName = await subscribeMacAddressService(server);
+    const [deviceName, setBLEDeviceName] = await subscribeMacAddressService(
+        server
+    );
     await subscribeImuService(server);
 
     async function subscribeUartService(server) {
@@ -65,10 +67,12 @@ async function connect() {
         );
         const deviceNameView = await deviceNameChar.readValue();
         const deviceName = DEC.decode(deviceNameView);
-        const bleNameChar = await macAddressService.getCharacteristic(
+        const bleDeviceNameChar = await macAddressService.getCharacteristic(
             BLE_BLE_NAME_CHAR_UUID
         );
-        return deviceName;
+        const setBLEDeviceName = data =>
+            bleDeviceNameChar.writeValue(ENC.encode(data));
+        return [deviceName, setBLEDeviceName];
     }
 
     async function subscribeImuService(server) {
@@ -98,8 +102,8 @@ async function connect() {
             ({ target }) => {
                 let data = decodeSensorData(target.value);
                 if (!data) return;
-                data = { calibration, receivedAt: +new Date(), ...data };
-                const record = { deviceId: deviceName, data };
+                data = { receivedAt: +new Date(), calibration, ...data };
+                const record = { deviceId: deviceName, setBLEDeviceName, data };
                 callbacks.forEach(fn => fn(record));
             }
         );

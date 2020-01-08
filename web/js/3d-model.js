@@ -205,7 +205,6 @@ onSensorData(
 
 export function keyPressed(evt) {
     if (evt.key.match(/b/i) && bleAvailable) {
-        alert('connect');
         bleConnect();
     }
 }

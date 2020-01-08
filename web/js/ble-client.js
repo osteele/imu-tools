@@ -6,7 +6,7 @@ const BLE_UART_RX_CHAR_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 
 const BLE_MAC_ADDRESS_SERVICE_UUID = '709f0001-37e3-439e-a338-23f00067988b';
 const BLE_MAC_ADDRESS_CHAR_UUID = '709f0002-37e3-439e-a338-23f00067988b';
-const BLE_BLE_NAME_CHAR_UUID = '709f0003-37e3-439e-a338-23f00067988b';
+const BLE_DEVICE_NAME_CHAR_UUID = '709f0003-37e3-439e-a338-23f00067988b';
 
 const BLE_IMU_SERVICE_UUID = '509b0001-ebe1-4aa5-bc51-11004b78d5cb';
 const BLE_IMU_SENSOR_CHAR_UUID = '509b0002-ebe1-4aa5-bc51-11004b78d5cb';
@@ -34,7 +34,7 @@ export async function connect() {
     await subscribeUartService(server);
     let {
         deviceId,
-        bleDeviceName,
+        deviceName: bleDeviceName,
         setBLEDeviceName,
     } = await subscribeMacAddressService(server);
     await subscribeImuService(server);
@@ -47,22 +47,18 @@ export async function connect() {
         const deviceIdChar = await macAddressService.getCharacteristic(
             BLE_MAC_ADDRESS_CHAR_UUID
         );
-        const deviceIdView = await deviceIdChar.readValue();
-        const deviceId = DEC.decode(deviceIdView);
+        const deviceId = DEC.decode(await deviceIdChar.readValue());
 
-        const bleDeviceNameChar = await macAddressService.getCharacteristic(
-            BLE_BLE_NAME_CHAR_UUID
+        const deviceNameChar = await macAddressService.getCharacteristic(
+            BLE_DEVICE_NAME_CHAR_UUID
         );
-        const bleDeviceNameView = await bleDeviceNameChar.readValue();
-        const bleDeviceName_ = DEC.decode(bleDeviceNameView);
-        const setBLEDeviceName = data =>
-            bleDeviceNameChar.writeValue(ENC.encode((bleDeviceName = data)));
-        // await bleDeviceNameChar.startNotifications();
-        // bleDeviceNameChar.addEventListener(
-        //     'characteristicvaluechanged',
-        //     ({ target }) => (bleDeviceName = DEC.decode(target.value))
-        // );
-        return { deviceId, bleDeviceName: bleDeviceName_, setBLEDeviceName };
+        const deviceName = DEC.decode(await deviceNameChar.readValue());
+        async function setBLEDeviceName(deviceName) {
+            await deviceNameChar.writeValue(ENC.encode(deviceName));
+            const newDeviceName = DEC.decode(await deviceNameChar.readValue());
+            bleDeviceName = newDeviceName;
+        }
+        return { deviceId, deviceName, setBLEDeviceName };
     }
 
     async function subscribeImuService(server) {

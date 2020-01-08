@@ -118,7 +118,7 @@ function Editable({ value, isEditing, setEditing, onChange }) {
             onKeyUp={handleKey}
         />
     ) : (
-        <div onClick={() => setEditing(true)}>{value}</div>
+        <div onClick={() => setEditing(true)}>{value || '<default>'}</div>
     );
 }
 

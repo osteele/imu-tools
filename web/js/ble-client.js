@@ -17,18 +17,15 @@ const BLE_IMU_QUATERNION_FLAG = 0x20;
 const ENC = new TextEncoder();
 const DEC = new TextDecoder();
 
-let server;
-let rxChar, txChar;
-
-const callbacks = [];
+const onSensorDataCallbacks = [];
 
 export async function connect() {
-    let device = await navigator.bluetooth.requestDevice({
+    const device = await navigator.bluetooth.requestDevice({
         filters: [{ services: [BLE_IMU_SERVICE_UUID] }],
         optionalServices: [BLE_MAC_ADDRESS_SERVICE_UUID, BLE_UART_SERVICE_UUID],
     });
     // console.info('device =', device);
-    server = await device.gatt.connect();
+    const server = await device.gatt.connect();
     // console.info('server =', server);
     document.body.className += ' connected';
     device.addEventListener('gattserverdisconnected', onDisconnected);
@@ -40,25 +37,6 @@ export async function connect() {
         setBLEDeviceName,
     } = await subscribeMacAddressService(server);
     await subscribeImuService(server);
-
-    async function subscribeUartService(server) {
-        const uartService = await server.getPrimaryService(
-            BLE_UART_SERVICE_UUID
-        );
-        // console.info('uartService =', uartService);
-        rxChar = await uartService.getCharacteristic(BLE_UART_RX_CHAR_UUID);
-        txChar = await uartService.getCharacteristic(BLE_UART_TX_CHAR_UUID);
-        // console.info('rx, tx =', rxChar, txChar);
-
-        await rxChar.startNotifications();
-        rxChar.addEventListener('characteristicvaluechanged', ({ target }) => {
-            const msg = DEC.decode(target.value);
-            console.log('UART.Rx:', msg);
-            if (msg == 'ping') {
-                transmit('pong');
-            }
-        });
-    }
 
     async function subscribeMacAddressService(server) {
         const macAddressService = await server.getPrimaryService(
@@ -122,7 +100,7 @@ export async function connect() {
                     },
                     data,
                 };
-                callbacks.forEach(fn => fn(record));
+                onSensorDataCallbacks.forEach(fn => fn(record));
             }
         );
     }
@@ -175,11 +153,34 @@ export async function disconnect() {
 const withConsoleErrors = fn => args => fn.apply(null, args);
 // fn.apply(null, args).catch(err => console.error(err));
 
-const transmit = data => txChar.writeValue(ENC.encode(data));
+/*
+ * UART service
+ */
 
-const ping = () => transmit('ping\n');
+async function subscribeUartService(server) {
+    const uartService = await server.getPrimaryService(BLE_UART_SERVICE_UUID);
+    // console.info('uartService =', uartService);
+    const rxChar = await uartService.getCharacteristic(BLE_UART_RX_CHAR_UUID);
+    const txChar = await uartService.getCharacteristic(BLE_UART_TX_CHAR_UUID);
+    // console.info('rx, tx =', rxChar, txChar);
 
-export const onSensorData = fn => callbacks.push(fn);
+    const transmit = data => txChar.writeValue(ENC.encode(data));
+
+    await rxChar.startNotifications();
+    rxChar.addEventListener('characteristicvaluechanged', ({ target }) => {
+        const msg = DEC.decode(target.value);
+        console.log('UART.Rx:', msg);
+        if (msg == 'ping') {
+            transmit('pong');
+        }
+    });
+
+    const ping = () => transmit('ping\n');
+
+    return { transmit, ping };
+}
+
+export const onSensorData = fn => onSensorDataCallbacks.push(fn);
 
 let connectButton = document.getElementById('bt-connection-button');
 if (!connectButton) {

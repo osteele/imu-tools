@@ -97,12 +97,26 @@ function Device({
 }
 
 function Editable({ value, isEditing, setEditing, onChange }) {
-    function done(evt) {
-        onChange(evt.target.value);
+    function handleBlur({ target }) {
+        onChange(target.value);
         setEditing(false);
     }
+    function handleKey({ key, target }) {
+        if (key === 'Enter') {
+            onChange(target.value);
+            setEditing(false);
+        }
+        if (key === 'Escape') {
+            setEditing(false);
+        }
+    }
     return isEditing ? (
-        <input type="text" defaultValue={value} onBlur={done} />
+        <input
+            type="text"
+            defaultValue={value}
+            onBlur={handleBlur}
+            onKeyUp={handleKey}
+        />
     ) : (
         <div onClick={() => setEditing(true)}>{value}</div>
     );

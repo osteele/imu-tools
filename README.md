@@ -33,12 +33,18 @@ which publishes sensor data via BLE instead of MQTT.
 
 ## Flashing the ESP
 
-1. Follow the instructions
-   [here](https://www.notion.so/MicroPython-4e7c9edd5b954c74bb4c08e5eac74c7f) to
-   install MicroPython on an ESP32.
+1. Download a GENERIC image from [MicroPython Downloads](https://micropython.org/download#esp32).
+   For example, `esp32-idf3-20191220-v1.12.bin`.
 
-2. Download the source code from the `pyboard` directory in this folder, to the ESP,
-   In a terminal window in this directory, run:
+2. Flash the ESP. If you downloaded the image to
+   `images/esp32-idf3-20191220-v1.12.bin`, then run:
+
+   ```sh
+   ./scripts/flash images/esp32-idf3-20191220-v1.12.bin
+   ```
+
+3. Upload the Python source code to the ESP. In a terminal window in this
+   directory, run:
 
    ```sh
    ./scripts/py-upload
@@ -56,7 +62,7 @@ directory.
 <http://127.0.0.1:8000/chart.html> uses HighCharts to display another live
 graph, that automatically scales the y axis as data arrives.
 
-<http://localhost:8000/model.html> displays the bunny, with its orientation
+<http://localhost:8000/3d-model.html> displays the bunny, with its orientation
 yolked to the IMU orientation. The model is red before the sensor is minimally
 calibrated, and it fades out when sensor data is not being received.
 

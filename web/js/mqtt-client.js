@@ -227,9 +227,9 @@ function onMessageArrived(message) {
 }
 
 /**
- * Register a callback that is applied to each sensor messages.
+ * Register a callback that is applied to each sensor message.
  *
- * @param {*} callback
+ * @param {*} fn
  */
 export function onSensorData(callback) {
     if (!client) {

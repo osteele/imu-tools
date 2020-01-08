@@ -19,6 +19,7 @@ const DEC = new TextDecoder();
 
 const onSensorDataCallbacks = [];
 
+/** Connect to a BLE device. */
 export async function connect() {
     const device = await navigator.bluetooth.requestDevice({
         filters: [{ services: [BLE_IMU_SERVICE_UUID] }],
@@ -180,7 +181,14 @@ async function subscribeUartService(server) {
     return { transmit, ping };
 }
 
-export const onSensorData = fn => onSensorDataCallbacks.push(fn);
+/**
+ * Register a callback that is applied to each sensor message.
+ *
+ * @param {*} fn
+ */
+export function onSensorData(fn) {
+    onSensorDataCallbacks.push(fn);
+}
 
 let connectButton = document.getElementById('bt-connection-button');
 if (!connectButton) {
@@ -191,6 +199,9 @@ if (!connectButton) {
 }
 connectButton.onclick = withConsoleErrors(connect);
 
+/**
+ * True iff BLE is available.
+ */
 export let bleAvailable = true;
 
 const hideConnectButton = () => {

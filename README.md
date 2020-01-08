@@ -19,6 +19,9 @@ This project contains:
   an MQTT broker that is relaying data in the format provided by the tools in
   this directory.
 
+It is also designed to work with <https://github.com/osteele/Arduino-BLE-IMU>,
+which publishes sensor data via BLE instead of MQTT.
+
 ## Installation
 
 1. Clone this repo.
@@ -63,11 +66,8 @@ calibrated, and it fades out when sensor data is not being received.
 Arduino C++, that sends IMU data over a Bluetooth Low Energy (BLE) connection
 instead of MQTT.
 
-To use it, replace `import { onSensorData } from './imu-connection.js';` by
-`import { onSensorData } from './ble.js';`.
-
-This adds a button to the document body, that causes the software to scan for an
-BLE device.
+If the Web Bluetooth API is available (currently only in Chrome), a button “BLE
+Connect" will be added to the page.
 
 ## Command-Line Testing
 

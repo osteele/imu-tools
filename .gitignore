@@ -2,3 +2,4 @@
 .pytest_cache
 pyboard/config.py
 esp32-*.bin
+node_modules/

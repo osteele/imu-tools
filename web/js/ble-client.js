@@ -21,23 +21,27 @@ const onSensorDataCallbacks = [];
 
 /** Connect to a BLE device. */
 export async function connect() {
-    const device = await navigator.bluetooth.requestDevice({
+    const bleDevice = await navigator.bluetooth.requestDevice({
         filters: [{ services: [BLE_IMU_SERVICE_UUID] }],
         optionalServices: [BLE_MAC_ADDRESS_SERVICE_UUID, BLE_UART_SERVICE_UUID],
     });
     // console.info('device =', device);
-    const server = await device.gatt.connect();
+    const server = await bleDevice.gatt.connect();
     // console.info('server =', server);
     document.body.className += ' connected';
-    device.addEventListener('gattserverdisconnected', onDisconnected);
+    bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
 
     await subscribeUartService(server);
     let {
         deviceId,
-        deviceName: bleDeviceName,
-        setBLEDeviceName,
+        deviceName,
+        setDeviceName,
+        deviceNameChangeNotifier,
     } = await subscribeMacAddressService(server);
     await subscribeImuService(server);
+
+    const device = { deviceId, deviceName, setDeviceName, bleDevice };
+    deviceNameChangeNotifier.listen(name => (device.deviceName = name));
 
     async function subscribeMacAddressService(server) {
         const macAddressService = await server.getPrimaryService(
@@ -53,12 +57,21 @@ export async function connect() {
             BLE_DEVICE_NAME_CHAR_UUID
         );
         const deviceName = DEC.decode(await deviceNameChar.readValue());
-        async function setBLEDeviceName(deviceName) {
+        const deviceNameChangeListeners = [];
+        const deviceNameChangeNotifier = {
+            listen: fn => deviceNameChangeListeners.push(fn),
+        };
+        async function setDeviceName(deviceName) {
             await deviceNameChar.writeValue(ENC.encode(deviceName));
-            const newDeviceName = DEC.decode(await deviceNameChar.readValue());
-            bleDeviceName = newDeviceName;
+            const newName = DEC.decode(await deviceNameChar.readValue());
+            deviceNameChangeListeners.forEach(fn => fn(newName));
         }
-        return { deviceId, deviceName, setBLEDeviceName };
+        return {
+            deviceId,
+            deviceName,
+            setDeviceName,
+            deviceNameChangeNotifier,
+        };
     }
 
     async function subscribeImuService(server) {
@@ -91,10 +104,7 @@ export async function connect() {
                 data = { receivedAt: +new Date(), calibration, ...data };
                 const record = {
                     deviceId,
-                    ble: {
-                        deviceName: bleDeviceName,
-                        setDeviceName: setBLEDeviceName,
-                    },
+                    device,
                     data,
                 };
                 onSensorDataCallbacks.forEach(fn => fn(record));

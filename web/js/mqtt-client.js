@@ -186,6 +186,7 @@ function onMessageArrived(message) {
     // The BNO055 Euler angles are buggy. Reconstruct them from the quaternions.
     const euler = quatToEuler(q3, q1, q0, q2);
     setDeviceData({
+        device: { deviceId },
         deviceId,
         data: {
             receivedAt,

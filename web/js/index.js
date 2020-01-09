@@ -4,12 +4,10 @@ const { DateTime, Duration } = luxon;
 
 const deviceMap = {};
 
-onSensorData(device => {
+onSensorData(({ device, data }) => {
     const now = +new Date();
-    const {
-        deviceId: deviceId,
-        data: { receivedAt: timestamp },
-    } = device;
+    const { deviceId } = device;
+    const { receivedAt: timestamp } = data;
     const timestamps = deviceMap[deviceId]
         ? [
               timestamp,
@@ -35,7 +33,7 @@ function App() {
             <tbody>
                 <tr>
                     <th>Device ID</th>
-                    <th>BLE Name</th>
+                    <th>Name</th>
                     <th>Sample Rate</th>
                     <th>Last Seen</th>
                 </tr>
@@ -79,15 +77,15 @@ function Device({
                 {deviceId}
             </td>
             <td>
-                {device.ble ? (
+                {device.deviceName ? (
                     <Editable
                         isEditing={isEditing}
                         setEditing={setEditing}
-                        onChange={name => device.ble.setDeviceName(name)}
-                        value={device.ble.deviceName}
+                        onChange={name => device.setDeviceName(name)}
+                        value={device.deviceName}
                     />
                 ) : (
-                    <div>{device.ble.deviceName}</div>
+                    <div>{device.deviceName}</div>
                 )}
             </td>
             <td>{frameRate}</td>

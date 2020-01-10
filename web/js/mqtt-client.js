@@ -1,3 +1,4 @@
+import { decodeSensorData } from './sensor-encoding.js';
 import { eulerToQuat, quatToEuler, quatToMatrix } from './utils.js';
 
 /** localStorage key for connection settings. Set this with `openConnection()`.
@@ -163,9 +164,22 @@ const deviceStates = {};
 const isValidQuaternion = ([q0, q1, q2, q3]) =>
     Math.abs(q0 ** 2 + q1 ** 2 + q2 ** 2 + q3 ** 2 - 1.0) < 1e-1;
 
+const LBRACE_CODE = '{'.charCodeAt(0);
+
+function decodePayload(message) {
+    const buffer = message.payloadBytes.buffer;
+    if (buffer[0] === LBRACE_CODE) return JSON.parse(message.payloadString);
+    const ar0 = new Uint8Array(buffer);
+    const topicLen = ar0[3];
+    const dv = new DataView(buffer, 4 + topicLen);
+    const version = dv.getUint8(0);
+    if (version != 0x01) return null;
+    return decodeSensorData(dv);
+}
+
 function onMessageArrived(message) {
     const deviceId = message.topic.split('/').pop();
-    const data = JSON.parse(message.payloadString);
+    const data = decodePayload(message);
     const quat = data.quaternion;
 
     // Devices on the current protocol send an initial presence message, that

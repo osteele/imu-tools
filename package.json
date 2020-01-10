@@ -2,15 +2,16 @@
   "name": "imu-tools",
   "version": "1.0.0",
   "description": "Command-line scripts for BLE IMU connection.",
-  "main": "scripts/ble-sub.js",
+  "main": "scripts/ble2mqtt.ts",
   "dependencies": {
+    "mqtt": "^3.0.0",
     "ts-node": "^8.5.4",
     "typescript": "^3.7.4",
     "webbluetooth": "^2.0.0"
   },
   "devDependencies": {},
   "scripts": {
-    "sub": "ts-node scripts/ble-sub.js"
+    "ble2mqtt": "ts-node scripts/ble2mqtt.ts"
   },
   "repository": "git:osteele/imu-tools.git",
   "author": "Oliver Steele <steele@osteele.com>",

@@ -1,4 +1,5 @@
 #!/usr/bin/env npx ts-node
+import * as mqtt from "mqtt";
 import { Bluetooth } from "webbluetooth";
 
 const BLE_MAC_ADDRESS_SERVICE_UUID = "709f0001-37e3-439e-a338-23f00067988b";
@@ -14,7 +15,13 @@ const BLE_IMU_QUATERNION_FLAG = 0x20;
 const ENC = new TextEncoder();
 const DEC = new TextDecoder();
 
+//{encoding: 'binary'}
+const mqttClient = mqtt.connect("mqtt://localhost");
 const bluetoothDevices = [];
+
+mqttClient.on("connect", function() {
+  console.log("mqtt connect");
+});
 
 function deviceFound(bluetoothDevice: BluetoothDevice, selectFn: () => void) {
   if (bluetoothDevices.some(({ id }) => id === bluetoothDevice.id)) return false;
@@ -27,8 +34,14 @@ async function showImu(server) {
   const { deviceName, deviceId } = await subscribeMacAddressService(server);
   console.log(`${deviceId}: ${deviceName}`);
   const imuDataNotifier = await subscribeImuService(server);
-  let counter = 0;
-  imuDataNotifier.listen(data => counter++ < 10 && console.log(JSON.stringify(data)));
+  // let counter = 0;
+  imuDataNotifier.listen((data, buffer) => {
+    // if (++counter > 2) return;
+    const topic = `imu/${deviceId}`;
+    let payload = Buffer.from(buffer);
+    console.log("publish", topic, payload);
+    mqttClient.publish(topic, payload);
+  });
 }
 
 async function subscribeMacAddressService(server) {
@@ -78,7 +91,7 @@ async function subscribeImuService(server) {
         calibration,
         ...data
       };
-      listeners.forEach(fn => fn(data));
+      listeners.forEach(fn => fn(data, target.value.buffer));
     }
   });
   return {
@@ -127,7 +140,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
     const device = await bluetooth.requestDevice(options);
     const server = await device.gatt.connect();
     await showImu(server);
-    await sleep(1000);
+    while (true) await sleep(1000);
   } catch (error) {
     console.log(error);
   }

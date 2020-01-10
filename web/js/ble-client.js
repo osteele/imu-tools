@@ -1,4 +1,4 @@
-import { quatToMatrix } from './utils.js';
+import { decodeSensorData } from './sensor-encoding.js';
 
 const BLE_UART_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 const BLE_UART_TX_CHAR_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
@@ -11,8 +11,6 @@ const BLE_DEVICE_NAME_CHAR_UUID = '709f0003-37e3-439e-a338-23f00067988b';
 const BLE_IMU_SERVICE_UUID = '509b0001-ebe1-4aa5-bc51-11004b78d5cb';
 const BLE_IMU_SENSOR_CHAR_UUID = '509b0002-ebe1-4aa5-bc51-11004b78d5cb';
 const BLE_IMU_CALIBRATION_CHAR_UUID = '509b0003-ebe1-4aa5-bc51-11004b78d5cb';
-
-const BLE_IMU_QUATERNION_FLAG = 0x20;
 
 const ENC = new TextEncoder();
 const DEC = new TextDecoder();
@@ -141,39 +139,6 @@ async function subscribeImuService(server) {
     return {
         listen: fn => listeners.push(fn),
     };
-}
-
-function decodeSensorData(dataView) {
-    let data = {};
-
-    let i = 0;
-    const nextUint8 = () => dataView.getUint8(i++);
-    const nextUint16 = () => dataView.getUint16((i += 2) - 2);
-    const nextFloat32 = () => decodeFloat32(dataView, (i += 4) - 4);
-    const nextFloat32Array = n =>
-        Array(n)
-            .fill()
-            .map(nextFloat32);
-
-    const messageVersion = nextUint8();
-    if (messageVersion !== 1) return null;
-    const flags = nextUint8();
-    nextUint16();
-    if (flags & BLE_IMU_QUATERNION_FLAG) {
-        const quat = nextFloat32Array(4);
-        const [q0, q1, q2, q3] = quat;
-        const orientationMatrix = quatToMatrix(q3, q1, q0, q2);
-        data = { orientationMatrix, quaternion: quat, ...data };
-    }
-    return data;
-
-    function decodeFloat32(value, n) {
-        const ar = new Uint8Array(4);
-        for (let i = 0; i < 4; ++i) {
-            ar[i] = value.getUint8(n + 3 - i);
-        }
-        return new DataView(ar.buffer).getFloat32(0);
-    }
 }
 
 /*

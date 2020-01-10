@@ -64,14 +64,15 @@ def print_message(msg, *, only=None, output=None):
     if not msg:
         return
     data = msg.payload
-    try:
-        data = data.decode()
-    except UnicodeError:
-        pass  # use the undecoded payload
-    try:
-        data = json.loads(data)
-    except json.JSONDecodeError:
-        pass  # use the undecoded payload
+    if data and data[0] == ord("{"):
+        try:
+            data = data.decode()
+        except UnicodeError:
+            pass  # use the undecoded payload
+        try:
+            data = json.loads(data)
+        except json.JSONDecodeError:
+            pass  # use the undecoded payload
     if output:
         qs = data["quaternion"]
         print("quaternion: " + ", ".join(map(str, qs)), file=output, flush=True)

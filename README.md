@@ -29,9 +29,9 @@ all the IMUs on the network.
 ![](docs/img/mqtt-many.png). This architecture MQTT Gateway allows a
 web page to draw information from many MCUs.
 
-![](docs/img/cloud-mqtt.png). Rmote MQTT Gateway. The same as above,
+![](docs/img/cloud-mqtt.png). Remote MQTT Gateway. The same as above,
 but the MQTT gateway can run on a server with greater availability than a
-laoptop. This has the advantage that multiple laptops can all subscribe to data
+laptop. This has the advantage that multiple laptops can all subscribe to data
 from a fleet of sensors. It has the disadvantage that the development machine
 must be on the same LAN as the MQTT broker, or it must be remote for less
 security and greater latency than a local deployment.

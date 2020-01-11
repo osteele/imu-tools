@@ -19,8 +19,39 @@ This project contains:
   an MQTT broker that is relaying data in the format provided by the tools in
   this directory.
 
-It is also designed to work with <https://github.com/osteele/Arduino-BLE-IMU>,
-which publishes sensor data via BLE instead of MQTT.
+## Modes of Operation
+
+![](docs/img/local-mqtt.png) Local MQTT Gateway. An ESP32 connects via
+WiFi to an MQTT broker running on a developer laptop. A web app, such as a React
+or p5.js application, can connect to this broker to read the sensor data from
+all the IMUs on the network.
+
+![](docs/img/mqtt-many.png). This architecture MQTT Gateway allows a
+web page to draw information from many MCUs.
+
+![](docs/img/cloud-mqtt.png). Rmote MQTT Gateway. The same as above,
+but the MQTT gateway can run on a server with greater availability than a
+laoptop. This has the advantage that multiple laptops can all subscribe to data
+from a fleet of sensors. It has the disadvantage that the development machine
+must be on the same LAN as the MQTT broker, or it must be remote for less
+security and greater latency than a local deployment.
+
+![](docs/img/ble.png). Alternate ESP firmware, in
+<https://github.com/osteele/Arduino-BLE-IMU>, which publishes sensor data via
+BLE instead of MQTT. This permits use at lower power levels, without WIFi, and
+without the need for an MQTT broker.
+
+Currently, only the Chrome browser supports Web Bluetooth; and, the user has to
+manually initiate each BLE connection each time the page is reloaded. This is a
+bother during development, and when working multiple devices. As a workaround,
+the system can also be used in the mode:
+
+![](docs/img/ble-relay.png). The BLE -> MQTT Relay is a
+command-line application that connects as a Central BLE device to IMU BLE
+Peripherals, and relays their sensor data to a (local or remote) MQTT broker.
+
+The Serial -> MQTT Gateway that publishes information from an MCU that is
+connected to a computer's serial port, to a local or remote MQTT broker.
 
 ## Installation
 

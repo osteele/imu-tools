@@ -26,19 +26,25 @@ async function requestDevices(
   callback: (_: BluetoothDevice) => void,
   msBetweenScans = 1000
 ) {
-  const seenDeviceIds = [];
-  const deviceFound = (device: BluetoothDevice, selectFn: () => void) => {
-    if (seenDeviceIds.some(({ id }) => id === device.id)) return false;
-    seenDeviceIds.push({ id: device.id, select: selectFn });
-    return true;
-  };
+  const seenDeviceIds = new Set();
+  const deviceFound = (device: BluetoothDevice, selectFn: () => void) =>
+    !seenDeviceIds.has(device.id);
   const bluetooth = new Bluetooth({ deviceFound });
   while (true) {
     console.info("Scanning BLE...");
     const device = await bluetooth.requestDevice(options).catch(err => {
       if (!err.match(/\bno devices found\b/)) throw err;
     });
-    if (device) callback(device);
+    if (device) {
+      const deviceId = device.id;
+      console.log(`Connected BLE device id=${deviceId}`);
+      seenDeviceIds.add(deviceId);
+      device.addEventListener("gattserverdisconnected", () => {
+        console.log(`Disconnected BLE device id=${deviceId}`);
+        seenDeviceIds.delete(deviceId);
+      });
+      callback(device);
+    }
     await sleep(msBetweenScans);
   }
 }

@@ -77,7 +77,7 @@ if (window.dat) {
 }
 
 // Display a message to the HTML element. `message` is either a string or an
-// object { error: messageSgring }.
+// object { error: messageString }.
 function setMqttConnectionStatus(message) {
     const id = 'mqtt-connection-status';
     const mqttStatusElement =

@@ -5,9 +5,9 @@ connection from an ESP, and consuming it in a web page.
 
 it contains these components:
 
-- A MicroPython program (in `./pyboard`) that runs on an ESP8266 or ESP32. It publishes sensor
-  data from a connected to BNO055 IMU, a simulated IMU, to an MQTT connection,
-  or the serial port.
+- A MicroPython program (in `./pyboard`) that runs on an ESP8266 or ESP32. It
+  publishes sensor data from a connected to BNO055 IMU, a simulated IMU, to an
+  MQTT connection, or the serial port.
 
 - Web pages (in the `web` directory) that display IMU data as graphs, charts,
   and 3D models using React, p5.js, Highcharts, and D3. These serve as examples
@@ -25,7 +25,7 @@ it contains these components:
 - An npm package [imu-tools npm
   package](https://www.npmjs.com/package/imu-tools) that that can be included in
   a web page in order to subscribe to an MQTT broker that is relaying data in
-  the format provided by the tools in this directory.
+  the **format** provided by the tools in this directory.
 
 - An experimental demonstration of rigging a Blender model to IMU output.
 
@@ -44,8 +44,8 @@ all the IMUs on the network.
 ![](docs/img/2providers.png). This architecture MQTT Gateway allows a
 web page to draw information from many MCUs.
 
-![](docs/img/2providers.png). It also allows several computers to subscribe to data from the
-same sensors. This is useful for an installation.
+![](docs/img/2providers.png). It also allows several computers to subscribe to
+data from the same sensors. This is useful for an installation.
 
 ![](docs/img/cloud-mqtt.png). Remote MQTT Gateway. The same as above,
 but the MQTT gateway can run on a server with greater availability than a

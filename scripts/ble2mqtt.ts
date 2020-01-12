@@ -12,34 +12,50 @@ const BLE_IMU_CALIBRATION_CHAR_UUID = "509b0003-ebe1-4aa5-bc51-11004b78d5cb";
 
 const BLE_IMU_QUATERNION_FLAG = 0x20;
 
-const ENC = new TextEncoder();
+const LOG_MESSAGE_PUBLISH = false;
+
 const DEC = new TextDecoder();
 
-//{encoding: 'binary'}
-const mqttClient = mqtt.connect("mqtt://localhost");
-const bluetoothDevices = [];
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-mqttClient.on("connect", function() {
-  console.log("mqtt connect");
+const MQTT_URL = "mqtt://localhost";
+const mqttClient = mqtt.connect(MQTT_URL);
+
+mqttClient.on("connect", a => {
+  console.log(`Connected to ${MQTT_URL}`);
 });
 
-function deviceFound(bluetoothDevice: BluetoothDevice, selectFn: () => void) {
-  if (bluetoothDevices.some(({ id }) => id === bluetoothDevice.id)) return false;
-  bluetoothDevices.push({ id: bluetoothDevice.id, select: selectFn });
-  // console.log(`${bluetoothDevices.length}: name=${bluetoothDevice.name}`);
-  return true;
+async function requestDevices(
+  options: RequestDeviceOptions,
+  callback: (_: BluetoothDevice) => void,
+  msBetweenScans = 1000
+) {
+  const seenDeviceIds = [];
+  const deviceFound = (device: BluetoothDevice, selectFn: () => void) => {
+    if (seenDeviceIds.some(({ id }) => id === device.id)) return false;
+    seenDeviceIds.push({ id: device.id, select: selectFn });
+    return true;
+  };
+  const bluetooth = new Bluetooth({ deviceFound });
+  while (true) {
+    const device = await bluetooth.requestDevice(options).catch(err => {
+      if (!err.match(/\bno devices found\b/)) throw err;
+    });
+    if (device) {
+      callback(device);
+    }
+    await sleep(msBetweenScans);
+  }
 }
 
 async function showImu(server) {
   const { deviceName, deviceId } = await subscribeMacAddressService(server);
   console.log(`${deviceId}: ${deviceName}`);
   const imuDataNotifier = await subscribeImuService(server);
-  // let counter = 0;
-  imuDataNotifier.listen((data, buffer) => {
-    // if (++counter > 2) return;
+  imuDataNotifier.listen(buffer => {
     const topic = `imu/${deviceId}`;
     let payload = Buffer.from(buffer);
-    console.log("publish", topic, payload);
+    if (LOG_MESSAGE_PUBLISH) console.log("publish", topic, payload);
     mqttClient.publish(topic, payload);
   });
 }
@@ -65,9 +81,12 @@ async function subscribeMacAddressService(server) {
  * BLE IMU Service
  */
 
-async function subscribeImuService(server) {
+interface BluetoothRemoteGATTCharacteristicEventTarget {
+  value: DataView;
+}
+
+async function subscribeImuService(server: BluetoothRemoteGATTServer) {
   const imuService = await server.getPrimaryService(BLE_IMU_SERVICE_UUID);
-  // console.info('imuService =', imuService);
 
   const imuCalibrationChar = await imuService.getCharacteristic(
     BLE_IMU_CALIBRATION_CHAR_UUID
@@ -76,7 +95,8 @@ async function subscribeImuService(server) {
   let calibration = calibrationView.getUint8(0);
   await imuCalibrationChar.startNotifications();
   imuCalibrationChar.addEventListener("characteristicvaluechanged", ({ target }) => {
-    calibration = target.value.getUint8(0);
+    const bleTarget = <BluetoothRemoteGATTCharacteristicEventTarget>(<unknown>target);
+    calibration = bleTarget.value.getUint8(0);
     console.log("calibration", calibration);
   });
 
@@ -84,18 +104,12 @@ async function subscribeImuService(server) {
   const listeners = [];
   await imuSensorChar.startNotifications();
   imuSensorChar.addEventListener("characteristicvaluechanged", ({ target }) => {
-    let data = decodeSensorData(target.value);
-    if (data) {
-      data = {
-        receivedAt: +new Date(),
-        calibration,
-        ...data
-      };
-      listeners.forEach(fn => fn(data, target.value.buffer));
-    }
+    const bleTarget = <BluetoothRemoteGATTCharacteristicEventTarget>(<unknown>target);
+    const { buffer } = bleTarget.value;
+    listeners.forEach(fn => fn(buffer));
   });
   return {
-    listen: fn => listeners.push(fn)
+    listen: (fn: (_: Buffer) => void) => listeners.push(fn)
   };
 }
 
@@ -130,19 +144,19 @@ function decodeSensorData(dataView) {
   }
 }
 
-const bluetooth = new Bluetooth({ deviceFound });
-
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-
 (async () => {
   try {
+    console.info("Scanning BLE...");
     const options = { filters: [{ services: [BLE_IMU_SERVICE_UUID] }] };
-    const device = await bluetooth.requestDevice(options);
-    const server = await device.gatt.connect();
-    await showImu(server);
-    while (true) await sleep(1000);
+    await requestDevices(options, async device => {
+      const server = await device.gatt.connect();
+      showImu(server);
+    });
   } catch (error) {
     console.log(error);
+    // console.log(error.message);
+    // s    Object.properties(error).forEach((key, value)=>console.info('k', key, value))
+    // console.log(error.message === "requestDevice error: no devices found");
   }
   process.exit(0);
 })();

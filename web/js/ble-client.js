@@ -23,9 +23,7 @@ export async function connect() {
         filters: [{ services: [BLE_IMU_SERVICE_UUID] }],
         optionalServices: [BLE_MAC_ADDRESS_SERVICE_UUID, BLE_UART_SERVICE_UUID],
     });
-    // console.info('device =', device);
     const server = await bleDevice.gatt.connect();
-    // console.info('server =', server);
     document.body.className += ' connected';
     bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
 
@@ -147,23 +145,17 @@ async function subscribeImuService(server) {
 
 async function subscribeUartService(server) {
     const uartService = await server.getPrimaryService(BLE_UART_SERVICE_UUID);
-    // console.info('uartService =', uartService);
     const rxChar = await uartService.getCharacteristic(BLE_UART_RX_CHAR_UUID);
     const txChar = await uartService.getCharacteristic(BLE_UART_TX_CHAR_UUID);
-    // console.info('rx, tx =', rxChar, txChar);
-
     const transmit = data => txChar.writeValue(ENC.encode(data));
+    const ping = () => transmit('ping\n');
 
     await rxChar.startNotifications();
     rxChar.addEventListener('characteristicvaluechanged', ({ target }) => {
         const msg = DEC.decode(target.value);
         console.log('UART.Rx:', msg);
-        if (msg == 'ping') {
-            transmit('pong');
-        }
+        if (msg == 'ping') transmit('pong');
     });
-
-    const ping = () => transmit('ping\n');
 
     return { transmit, ping };
 }
@@ -177,27 +169,34 @@ export function onSensorData(fn) {
     onSensorDataCallbacks.push(fn);
 }
 
-let connectButton = document.getElementById('bt-connection-button');
-if (!connectButton) {
-    connectButton = document.createElement('button');
-    connectButton.id = 'bt-connection-button';
-    connectButton.innerText = 'BLE Connect';
-    document.body.appendChild(connectButton);
+/*
+ * Connection button
+ */
+
+function makeConnectionButton() {
+    const button = document.createElement('button');
+    button.id = 'bt-connection-button';
+    button.innerText = 'BLE Connect';
+    document.body.appendChild(button);
+    return button;
 }
-connectButton.onclick = withConsoleErrors(connect);
+
+const connectionButton =
+    document.getElementById('bt-connection-button') || makeConnectionButton();
+connectionButton.onclick = withConsoleErrors(connect);
+
+function hideConnectionButton() {
+    connectionButton.style.display = 'none';
+}
 
 /**
  * True iff BLE is available.
  */
-export let bleAvailable = true;
+export let bleAvailable = Boolean(navigator.bluetooth);
 
-const hideConnectButton = () => {
-    bleAvailable = false;
-    connectButton.style.display = 'none';
-};
-
-if (navigator.bluetooth) {
-    navigator.bluetooth
-        .getAvailability()
-        .then(flag => flag || hideConnectButton());
-} else hideConnectButton();
+if (bleAvailable) {
+    navigator.bluetooth.getAvailability().then(flag => {
+        bleAvailable = flag;
+        if (!bleAvailable) hideConnectionButton();
+    });
+} else hideConnectionButton();

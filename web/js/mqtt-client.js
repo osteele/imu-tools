@@ -168,7 +168,9 @@ const LBRACE_CODE = '{'.charCodeAt(0);
 
 function decodePayload(message) {
     const buffer = message.payloadBytes.buffer;
-    if (buffer[0] === LBRACE_CODE) return JSON.parse(message.payloadString);
+    if (message.payloadBytes[0] === LBRACE_CODE) {
+        return JSON.parse(message.payloadString);
+    }
     const ar0 = new Uint8Array(buffer);
     const topicLen = ar0[3];
     const dv = new DataView(buffer, 4 + topicLen);
@@ -180,7 +182,7 @@ function decodePayload(message) {
 function onMessageArrived(message) {
     const deviceId = message.topic.split('/').pop();
     const data = decodePayload(message);
-    const quat = data.quaternion;
+    const { quaternion: quat } = data;
 
     // Devices on the current protocol send an initial presence message, that
     // doesn't include sensor data. Don't pass these on.

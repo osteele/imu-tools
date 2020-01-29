@@ -168,9 +168,8 @@ const LBRACE_CODE = '{'.charCodeAt(0);
 
 function decodePayload(message) {
     const buffer = message.payloadBytes.buffer;
-    if (message.payloadBytes[0] === LBRACE_CODE) {
+    if (message.payloadBytes[0] === LBRACE_CODE)
         return JSON.parse(message.payloadString);
-    }
     const ar0 = new Uint8Array(buffer);
     const topicLen = ar0[3];
     const dv = new DataView(buffer, 4 + topicLen);
@@ -182,18 +181,15 @@ function decodePayload(message) {
 function onMessageArrived(message) {
     const deviceId = message.topic.split('/').pop();
     const data = decodePayload(message);
+    if (!data) return;
     const { quaternion: quat } = data;
 
     // Devices on the current protocol send an initial presence message, that
     // doesn't include sensor data. Don't pass these on.
-    if (!quat) {
-        return;
-    }
+    if (!quat) return;
 
     // Discard invalid quaternions. These come from the Gravity sensor.
-    if (!isValidQuaternion(quat)) {
-        return;
-    }
+    if (!isValidQuaternion(quat)) return;
 
     const [q0, q1, q2, q3] = quat;
     const orientationMatrix = quatToMatrix(q3, q1, q0, q2);

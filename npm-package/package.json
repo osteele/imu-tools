@@ -1,28 +1,31 @@
 {
-    "name": "imu-tools",
-    "author": "Oliver Steele <steele@osteele.com> (https://osteele.com/)",
-    "version": "0.0.9",
-    "description": "Web browser subscription to MQTT IMU sensor data",
-    "license": "MIT",
-    "main": "index.js",
-    "unpkg": "index.js",
-    "scripts": {
-        "example": "http-server example",
-        "prepare": "cp ../web/js/{imu-connection,utils}.js . && mv imu-connection.js index.js",
-        "test": "echo \"Warning: no test specified\""
-    },
-    "files": [
-        "/index.js",
-        "/utils.js"
-    ],
-    "repository": "github:osteele/imu-tools",
-    "keywords": [
-        "mqtt",
-        "imu",
-        "bno055"
-    ],
-    "homepage": "https://github.com/osteele/imu-tools/npm-package",
-    "devDependencies": {
-        "http-server": "^0.12.0"
-    }
+  "name": "imu-tools",
+  "author": "Oliver Steele <steele@osteele.com> (https://osteele.com/)",
+  "version": "0.0.9",
+  "description": "Web browser subscription to BLE and MQTT IMU sensor data",
+  "license": "MIT",
+  "main": "index.js",
+  "unpkg": "index.js",
+  "scripts": {
+    "example": "http-server example",
+    "prepare": "cp ../web/js/{ble-client,imu-connection,mqtt-client,sensor-encoding,utils}.js . && mv imu-connection.js index.js",
+    "test": "echo \"Warning: no test specified\""
+  },
+  "files": [
+    "/ble-client.js",
+    "/index.js",
+    "/mqtt-client.js",
+    "/sensor-encoding.js",
+    "/utils.js"
+  ],
+  "repository": "github:osteele/imu-tools",
+  "keywords": [
+    "mqtt",
+    "imu",
+    "bno055"
+  ],
+  "homepage": "https://github.com/osteele/imu-tools/npm-package",
+  "devDependencies": {
+    "http-server": "^0.12.0"
+  }
 }

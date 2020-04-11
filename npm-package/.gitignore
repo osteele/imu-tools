@@ -1,3 +1,6 @@
+ble-client.js
 index.js
+mqtt-client.js
+sensor-encoding.js
 utils.js
 node_modules/

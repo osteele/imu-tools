@@ -20,8 +20,14 @@ const onSensorDataCallbacks = [];
 /** Connect to a BLE device. */
 export async function connect() {
     const bleDevice = await navigator.bluetooth.requestDevice({
-        filters: [{ services: [BLE_IMU_SERVICE_UUID] }],
-        optionalServices: [BLE_MAC_ADDRESS_SERVICE_UUID, BLE_UART_SERVICE_UUID],
+        // FIXME: replace acceptAllDevices by filters
+        // filters: [{ services: [BLE_IMU_SERVICE_UUID] }],
+        acceptAllDevices: true,
+        optionalServices: [
+            BLE_IMU_SERVICE_UUID,
+            BLE_MAC_ADDRESS_SERVICE_UUID,
+            BLE_UART_SERVICE_UUID,
+        ],
     });
     const server = await bleDevice.gatt.connect();
     document.body.className += ' connected';
@@ -37,14 +43,14 @@ export async function connect() {
     let imuDataNotifier = await subscribeImuService(server);
 
     const device = { deviceId, deviceName, setDeviceName, bleDevice };
-    deviceNameChangeNotifier.listen(name => (device.deviceName = name));
-    imuDataNotifier.listen(data => {
+    deviceNameChangeNotifier.listen((name) => (device.deviceName = name));
+    imuDataNotifier.listen((data) => {
         const record = {
             deviceId,
             device,
             data,
         };
-        onSensorDataCallbacks.forEach(fn => fn(record));
+        onSensorDataCallbacks.forEach((fn) => fn(record));
     });
 }
 
@@ -64,12 +70,12 @@ async function subscribeMacAddressService(server) {
     const deviceName = DEC.decode(await deviceNameChar.readValue());
     const deviceNameChangeListeners = [];
     const deviceNameChangeNotifier = {
-        listen: fn => deviceNameChangeListeners.push(fn),
+        listen: (fn) => deviceNameChangeListeners.push(fn),
     };
     async function setDeviceName(deviceName) {
         await deviceNameChar.writeValue(ENC.encode(deviceName));
         const newName = DEC.decode(await deviceNameChar.readValue());
-        deviceNameChangeListeners.forEach(fn => fn(newName));
+        deviceNameChangeListeners.forEach((fn) => fn(newName));
     }
     return {
         deviceId,
@@ -90,7 +96,7 @@ export async function disconnect() {
     server.disconnect();
 }
 
-const withConsoleErrors = fn => args => fn.apply(null, args);
+const withConsoleErrors = (fn) => (args) => fn.apply(null, args);
 // fn.apply(null, args).catch(err => console.error(err));
 
 /*
@@ -130,12 +136,12 @@ async function subscribeImuService(server) {
                     calibration,
                     ...data,
                 };
-                listeners.forEach(fn => fn(data));
+                listeners.forEach((fn) => fn(data));
             }
         }
     );
     return {
-        listen: fn => listeners.push(fn),
+        listen: (fn) => listeners.push(fn),
     };
 }
 
@@ -147,7 +153,7 @@ async function subscribeUartService(server) {
     const uartService = await server.getPrimaryService(BLE_UART_SERVICE_UUID);
     const rxChar = await uartService.getCharacteristic(BLE_UART_RX_CHAR_UUID);
     const txChar = await uartService.getCharacteristic(BLE_UART_TX_CHAR_UUID);
-    const transmit = data => txChar.writeValue(ENC.encode(data));
+    const transmit = (data) => txChar.writeValue(ENC.encode(data));
     const ping = () => transmit('ping\n');
 
     await rxChar.startNotifications();
@@ -195,7 +201,7 @@ function hideConnectionButton() {
 export let bleAvailable = Boolean(navigator.bluetooth);
 
 if (bleAvailable) {
-    navigator.bluetooth.getAvailability().then(flag => {
+    navigator.bluetooth.getAvailability().then((flag) => {
         bleAvailable = flag;
         if (!bleAvailable) hideConnectionButton();
     });

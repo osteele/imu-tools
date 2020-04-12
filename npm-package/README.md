@@ -1,12 +1,14 @@
 # IMU BLE / MQTT Subscription
 
-This package allows code in a web page to subscribe to IMU sensor data.
+This package allows code in a web page to subscribe to data that is published by
+an ESP32 connected to a BNO055 IMU. The ESP32 should be running either the
+MicroPython code in [imu-tools](https://github.com/osteele/imu-tools), or the
+Arduino (C++) code in
+[Arduino-BLE-IMU](https://github.com/osteele/Arduino-BLE-IMU). See those
+projects for information on how to configure the ESP32.
 
-It is designed to work with data published by the tools in the
-[osteele/imu-tools](https://github.com/osteele/imu-tools) repository.
-
-See that repository for additional information and setup instructions for the
-IMU.
+Additional examples are in
+[osteele/imu-client-examples](https://github.com/osteele/imu-client-examples).
 
 ## Usage
 
@@ -21,7 +23,7 @@ Add the following to `sketch.js` to import the `onSensorData` function, and use
 it to subscribe to sensor data:
 
 ```js
-import { onSensorData } from "https://cdn.jsdelivr.net/npm/imu-tools@0/index.js";
+import { onSensorData } from "https://cdn.jsdelivr.net/npm/imu-tools/index.js";
 
 onSensorData((data) => console.info("sensor data:", data));
 ```

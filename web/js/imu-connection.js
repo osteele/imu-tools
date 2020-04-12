@@ -14,6 +14,18 @@ const devices = {};
 export function onSensorData(fn) {
     let errored = false;
     function wrapper(device) {
+        // If no Euler angle is present, reconstruct it from the quaternion
+        let data = device.data;
+        if (data.quaternion && !data.euler) {
+            const [q0, q1, q2, q3] = data.quaternion;
+            const euler = quatToEuler(q3, q1, q0, q2);
+            data = {
+                ...data,
+                euler: euler.map((e) => (e * 180) / Math.PI),
+            };
+            device = { ...device, data };
+        }
+
         devices[device.deviceId] = device;
 
         // Ignore the callback after the first error, to avoid repeating the

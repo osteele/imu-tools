@@ -37,7 +37,7 @@ if (window.dat) {
 
     // Update connectionSettings from savedSettings
     function updateConnectionSettings(savedSettings) {
-        Object.keys(savedSettings).forEach(k => {
+        Object.keys(savedSettings).forEach((k) => {
             const v = savedSettings[k];
             if (typeof connectionSettings[k] === typeof v) {
                 connectionSettings[k] = v;
@@ -51,11 +51,11 @@ if (window.dat) {
     updateConnectionSettings(savedSettings);
 
     // Call the datListeners when a GUI value changes
-    const datControllers = Object.keys(connectionSettings).map(name =>
+    const datControllers = Object.keys(connectionSettings).map((name) =>
         gui.add(connectionSettings, name)
     );
-    datControllers.forEach(c =>
-        c.onFinishChange(() => datListeners.forEach(c => c()))
+    datControllers.forEach((c) =>
+        c.onFinishChange(() => datListeners.forEach((c) => c()))
     );
 
     // Save to localStorage when a GUI value changes
@@ -67,11 +67,11 @@ if (window.dat) {
 
     // Update this page's connection settings when another page writes them to
     // localStorage
-    window.addEventListener('storage', event => {
+    window.addEventListener('storage', (event) => {
         if (event.key === STORAGE_KEY) {
             updateConnectionSettings(JSON.parse(event.newValue).remembered);
-            datListeners.forEach(c => c());
-            datControllers.forEach(c => c.updateDisplay());
+            datListeners.forEach((c) => c());
+            datControllers.forEach((c) => c.updateDisplay());
         }
     });
 }
@@ -109,7 +109,7 @@ function startSubscription() {
     const clientId = 'myclientid_' + parseInt(Math.random() * 100, 10);
     client = new Paho.Client(hostname, Number(port), '/ws', clientId);
     client.onMessageArrived = onMessageArrived;
-    client.onConnectionLost = res => {
+    client.onConnectionLost = (res) => {
         setMqttConnectionStatus({
             error: 'MQTT connection lost: ' + res.errorMessage,
         });
@@ -127,7 +127,7 @@ function startSubscription() {
             );
             client.subscribe(topicString, { qos: 1 });
         },
-        onFailure: message => {
+        onFailure: (message) => {
             setMqttConnectionStatus({
                 error: 'MQTT connection failed: ' + message.errorMessage,
             });
@@ -203,7 +203,7 @@ function onMessageArrived(message) {
         data: {
             receivedAt,
             orientationMatrix,
-            'euler′': euler.map(e => (e * 180) / Math.PI),
+            'euler′': euler.map((e) => (e * 180) / Math.PI),
             ...data,
         },
     });
@@ -224,18 +224,10 @@ function onMessageArrived(message) {
 
     function setDeviceData(data) {
         deviceStates[data.deviceId] = data;
-        let erroneousCallbacks = [];
 
-        onSensorDataCallbacks.forEach(callback => {
-            try {
-                callback(data, deviceStates);
-            } catch (err) {
-                console.error('error', err, 'during execution of', callback);
-                erroneousCallbacks.push(callback);
-            }
+        onSensorDataCallbacks.forEach((callback) => {
+            callback(data, deviceStates);
         });
-        // Remove the callback after the first error. After that it gets annoying.
-        erroneousCallbacks.forEach(removeSensorDataCallback);
     }
 }
 

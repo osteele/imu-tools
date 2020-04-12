@@ -169,10 +169,10 @@ async function subscribeUartService(server) {
 /**
  * Register a callback that is applied to each sensor message.
  *
- * @param {*} fn
+ * @param {*} callback
  */
-export function onSensorData(fn) {
-    onSensorDataCallbacks.push(fn);
+export function onSensorData(callback) {
+    onSensorDataCallbacks.push(callback);
 }
 
 /*

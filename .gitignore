@@ -3,3 +3,5 @@
 pyboard/config.py
 esp32-*.bin
 node_modules/
+imu_tools.egg-info/
+*.pyc

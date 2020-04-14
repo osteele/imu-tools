@@ -75,7 +75,13 @@ connected to a computer's serial port, to a local or remote MQTT broker.
 
 1. Clone this repo.
 
-2. Either: (1) Follow the instructions
+2. Install [poetry](https://python-poetry.org/docs/#installation). On macOS
+   running Homebrew, you can also install it via `brew install poetry`.
+
+3. Run `poetry install`
+
+4. Install RabibitMQ, or find a RabbitMQ broker. Either: (1) Follow the
+   instructions
    [here](https://www.notion.so/RabbitMQ-7fd3ba693d924e1e893377f719bb5f14) to
    install RabbitMQ on your computer; or (2) get an MQTT hostname, username, and
    password from your instructor, and use it in the instructions below.

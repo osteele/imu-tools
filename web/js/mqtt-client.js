@@ -1,5 +1,5 @@
 import { decodeSensorData } from './sensor-encoding.js';
-import { eulerToQuat, quatToEuler, quatToMatrix } from './utils.js';
+import { eulerToQuat, imuQuatToEuler, quatToMatrix } from './utils.js';
 
 /** localStorage key for connection settings. Set this with `openConnection()`.
  */
@@ -197,14 +197,14 @@ function onMessageArrived(message) {
     const receivedAt = +new Date();
 
     // The BNO055 Euler angles are buggy. Reconstruct them from the quaternions.
-    const euler = quatToEuler(q3, q1, q0, q2);
+    // const euler = quatToEuler(q3, q1, q0, q2);
     setDeviceData({
         device: { deviceId },
         deviceId,
         data: {
             receivedAt,
             orientationMatrix,
-            'euler′': euler.map((e) => (e * 180) / Math.PI),
+            eulerʹ: imuQuatToEuler(quat),
             ...data,
         },
     });
@@ -215,11 +215,11 @@ function onMessageArrived(message) {
     if (false) {
         const [e0, e1, e2] = euler;
         const [q0_, q1_, q2_, q3_] = eulerToQuat(e0, e2, e1);
-        const om2 = quatToMatrix(q3_, q1_, q0_, q2_);
+        const mʹ = quatToMatrix(q3_, q1_, q0_, q2_);
         setDeviceData({
             receivedAt,
             ...data,
-            ...{ deviceId: deviceId + '′', orientationMatrix: om2 },
+            ...{ deviceId: deviceId + '′', orientationMatrix: mʹ },
         });
     }
 

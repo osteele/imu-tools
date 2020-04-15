@@ -22,6 +22,13 @@ export function quatToEuler(q0, q1, q2, q3) {
     return [rx, ry, rz];
 }
 
+export function imuQuatToEuler([q0, q1, q2, q3]) {
+    const radians = quatToEuler(q3, q1, q2, q0);
+    const degrees = radians.map((e) => (e * 180) / Math.PI);
+    if (degrees[2] < 0) degrees[2] += 360;
+    return degrees;
+}
+
 /** Convert a quaternion to a 4 x 4 transformation matrix.
  */
 export function quatToMatrix(w, x, y, z) {

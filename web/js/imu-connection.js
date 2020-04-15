@@ -3,7 +3,7 @@ import * as mqttClient from './mqtt-client.js';
 export { bleAvailable, connect as bleConnect } from './ble-client.js';
 export { openConnection as mqttConnect } from './mqtt-client.js';
 export * from './mqtt-client.js';
-import { quatToEuler } from './utils.js';
+import { imuQuatToEuler } from './utils.js';
 
 const devices = {};
 
@@ -18,11 +18,9 @@ export function onSensorData(fn) {
         // If no Euler angle is present, reconstruct it from the quaternion
         let data = device.data;
         if (data.quaternion && !data.euler) {
-            const [q0, q1, q2, q3] = data.quaternion;
-            const euler = quatToEuler(q3, q1, q0, q2);
             data = {
                 ...data,
-                euler: euler.map((e) => (e * 180) / Math.PI),
+                euler: imuQuatToEuler(data.quaternion),
             };
             device = { ...device, data };
         }

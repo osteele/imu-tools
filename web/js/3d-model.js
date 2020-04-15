@@ -52,9 +52,7 @@ if (window.dat && !isMobile) {
 export function setup() {
     createCanvas(windowWidth, windowHeight, WEBGL);
     loadModelFromSettings();
-    createButton('Calibrate')
-        .position(0, 0)
-        .mousePressed(calibrateModels);
+    createButton('Calibrate').position(0, 0).mousePressed(calibrateModels);
 }
 
 export function draw() {
@@ -71,7 +69,7 @@ export function draw() {
         models.filter(({ receivedAt }) => currentTime - receivedAt < 500)
     );
 
-    models.forEach(data => {
+    models.forEach((data) => {
         push();
         // Place the object in world coordinates
         if (data.position) {
@@ -120,7 +118,7 @@ export function draw() {
 // This will cause it to be drawn in its native orientation whenever
 function calibrateModels() {
     const models = Object.values(devices);
-    models.forEach(model => {
+    models.forEach((model) => {
         const [q0, q1, q2, q3] = model.quaternion;
         const mat = quatToMatrix(q3, q1, q0, q2);
         const inv = math.inv([
@@ -142,12 +140,12 @@ function calibrateModels() {
     settings.rx = 0;
     settings.ry = 0;
     settings.rz = 0;
-    Object.values(datControllers).forEach(c => c.updateDisplay());
+    Object.values(datControllers).forEach((c) => c.updateDisplay());
 }
 
 function drawAxes() {
     strokeWeight(3);
-    [0, 1, 2].forEach(axis => {
+    [0, 1, 2].forEach((axis) => {
         const color = [0, 0, 0];
         const vector = [0, 0, 0, 0, 0, 0];
         color[axis] = 128;
@@ -159,7 +157,7 @@ function drawAxes() {
 
 function updatePhysics(models) {
     // initialize positions and velocities of new models
-    models.forEach(data => {
+    models.forEach((data) => {
         if (!data.position) {
             // Offset models from the origin so they disperse
             const e = 0.0001;
@@ -170,28 +168,28 @@ function updatePhysics(models) {
     });
 
     // Apply spring forces between every object pair
-    models.forEach(d1 => {
-        models.forEach(d2 => {
+    models.forEach((d1) => {
+        models.forEach((d2) => {
             if (d1 === d2) {
                 return;
             }
             const v = d1.position.map((p0, i) => d2.position[i] - p0);
             const len = Math.sqrt(v[0] ** 2 + v[1] ** 2 + v[2] ** 2);
-            const v_norm = v.map(x => x / len);
+            const v_norm = v.map((x) => x / len);
             const f = SPRING_K * (len - SPRING_LENGTH);
-            const fv = v_norm.map(x => x * f);
+            const fv = v_norm.map((x) => x * f);
             d1.velocity = d1.velocity.map((x, i) => x + fv[i]);
             d2.velocity = d2.velocity.map((x, i) => x - fv[i]);
         });
     });
 
     // Add velocities to positions. Spring positions to origin. Damp velocities.
-    models.forEach(data => {
+    models.forEach((data) => {
         const { position, velocity } = data;
         data.position = position.map(
             (x, i) => (x + velocity[i]) * ORIGIN_SPRING_K
         );
-        data.velocity = velocity.map(v => v * VISCOSITY);
+        data.velocity = velocity.map((v) => v * VISCOSITY);
     });
 }
 

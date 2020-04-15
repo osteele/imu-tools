@@ -11,7 +11,7 @@ onSensorData(({ device, data }) => {
     const timestamps = deviceMap[deviceId]
         ? [
               timestamp,
-              ...deviceMap[deviceId].timestamps.filter(ts => ts > now - 1000),
+              ...deviceMap[deviceId].timestamps.filter((ts) => ts > now - 1000),
           ]
         : [timestamp];
     deviceMap[deviceId] = { device, timestamp, timestamps };
@@ -37,14 +37,14 @@ function App() {
                     <th>Sample Rate</th>
                     <th>Last Seen</th>
                 </tr>
-                {devices.map(record => {
+                {devices.map((record) => {
                     const { deviceId } = record.device;
                     return (
                         <Device
                             record={record}
                             key={deviceId}
                             isEditing={editDeviceId === deviceId}
-                            setEditing={flag =>
+                            setEditing={(flag) =>
                                 setEditDeviceId(flag && deviceId)
                             }
                         />
@@ -67,7 +67,7 @@ function Device({
         Math.max(0, +new Date() - timestamp - 250) / 5000
     );
     const color = `hsl(0,0%,${100 * brightness}%)`;
-    const frameRate = timestamps.filter(n => n > now - 1000).length;
+    const frameRate = timestamps.filter((n) => n > now - 1000).length;
     function setGlobal() {
         window.device = device;
     }
@@ -81,7 +81,7 @@ function Device({
                     <Editable
                         isEditing={isEditing}
                         setEditing={setEditing}
-                        onChange={name => device.setDeviceName(name)}
+                        onChange={(name) => device.setDeviceName(name)}
                         value={device.deviceName}
                     />
                 ) : (

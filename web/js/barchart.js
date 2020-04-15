@@ -22,7 +22,7 @@ export function draw() {
     let subgraphX = 10;
     let subgraphY = 10;
     const keys = Object.keys(sensorData)
-        .filter(name => !IGNORED_PROPERTIES.includes(name))
+        .filter((name) => !IGNORED_PROPERTIES.includes(name))
         .sort();
     keys.forEach((key, i) => {
         let values = sensorData[key];

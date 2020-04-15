@@ -19,10 +19,7 @@ const x = d3.time
     .domain([now - (limit - 2), now - duration])
     .range([0, width])
 
-const y = d3.scale
-    .linear()
-    .domain([0, 100])
-    .range([height, 0])
+const y = d3.scale.linear().domain([0, 100]).range([height, 0])
 
 const line = d3.svg
     .line()
@@ -41,12 +38,7 @@ const axis = svg
     .append('g')
     .attr('class', 'x axis')
     .attr('transform', 'translate(0,' + height + ')')
-    .call(
-        (x.axis = d3.svg
-            .axis()
-            .scale(x)
-            .orient('bottom'))
-    )
+    .call((x.axis = d3.svg.axis().scale(x).orient('bottom')))
 
 const paths = svg.append('g')
 
@@ -65,7 +57,7 @@ function findGroup(name) {
         group = {
             value: 0,
             color: colors[Object.keys(groups).length % colors.length],
-            data: d3.range(limit).map(function() {
+            data: d3.range(limit).map(function () {
                 return 0
             }),
         }
@@ -95,10 +87,7 @@ function addSample(sample) {
 
     x.domain([now - (limit - 2) * duration, now - duration])
 
-    axis.transition()
-        .duration(duration)
-        .ease('linear')
-        .call(x.axis)
+    axis.transition().duration(duration).ease('linear').call(x.axis)
 
     paths
         .attr('transform', null)

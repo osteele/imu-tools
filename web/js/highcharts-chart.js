@@ -40,7 +40,7 @@ onSensorData(
         const [e0, e1, e2] = data.euler
         const values = { e0, e1, e2 }
         const timestamp = new Date().getTime()
-        Object.keys(values).forEach(k => {
+        Object.keys(values).forEach((k) => {
             addSampleScalar(k, values[k], timestamp)
         })
     })

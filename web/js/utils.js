@@ -49,7 +49,7 @@ export function quatToMatrix(w, x, y, z) {
  */
 export function throttled(callback) {
     const buffer = [];
-    return data => {
+    return (data) => {
         if (buffer.length === 0) {
             requestAnimationFrame(() => {
                 callback(buffer.pop());

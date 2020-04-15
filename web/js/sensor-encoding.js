@@ -9,10 +9,7 @@ export function decodeSensorData(dataView) {
     const nextUint8 = () => dataView.getUint8(i++);
     const nextUint16 = () => dataView.getUint16((i += 2) - 2);
     const nextFloat32 = () => decodeFloat32(dataView, (i += 4) - 4);
-    const nextFloat32Array = n =>
-        Array(n)
-            .fill()
-            .map(nextFloat32);
+    const nextFloat32Array = (n) => Array(n).fill().map(nextFloat32);
 
     const messageVersion = nextUint8();
     if (messageVersion !== 1) return null;

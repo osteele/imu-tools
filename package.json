@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Command-line scripts for BLE IMU connection.",
   "main": "scripts/ble2mqtt.ts",
+  "private": true,
   "dependencies": {
     "mqtt": "^3.0.0",
     "ts-node": "^8.5.4",

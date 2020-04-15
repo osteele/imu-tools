@@ -10,19 +10,33 @@ const PALETTE = ['red', 'green', 'blue', 'gray', 'orange', 'pink'];
 let sensorData = {};
 let ranges = {}; // sensor name => [min, max] observed range
 let freeze = false;
+let step = false;
 
 export function setup() {
     createCanvas(windowWidth, windowHeight);
 
     onSensorData(({ data }) => {
-        if (!freeze) sensorData = { ...data };
+        if (!freeze || step) sensorData = { ...data };
+        step = false;
     });
     const button = createButton('Freeze');
     button.position(100, 0);
     button.mousePressed(() => {
         freeze = !freeze;
-        button.elt.innerText = freeze ? 'Resume' : 'Freeze';
+        if (freeze) {
+            button.elt.innerText = 'Resume';
+            stepButton.show();
+        } else {
+            button.elt.innerText = 'Freeze';
+            stepButton.hide();
+        }
     });
+    const stepButton = createButton('Sample');
+    stepButton.position(170, 0);
+    stepButton.mousePressed(() => {
+        step = true;
+    });
+    stepButton.hide();
 }
 
 export function draw() {

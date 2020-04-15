@@ -31,9 +31,10 @@ export function onSensorData(fn) {
         // Ignore the callback after the first error, to avoid repeating the
         // error message on each message.
         if (errored) return;
-        // annoying. Stop calling the function if throws an exception. Use
-        // `try...finally` instead of `try...catch` because the latter destroys
-        // the stacktrace, in Chrome Version <= 80.0.3987.163.
+
+        // Stop calling the function if throws an exception. Use `try...finally`
+        // instead of `try...catch` because the latter destroys the stacktrace,
+        // as of Chrome 80.0.3987.163.
         // https://bugs.chromium.org/p/chromium/issues/detail?id=60240
         let failed = true;
         try {
@@ -45,6 +46,8 @@ export function onSensorData(fn) {
             }
         }
     }
+
+    // subscribe to both BLE and MQTT connections.
     bleClient.onSensorData(wrapper);
     mqttClient.onSensorData(wrapper);
 }

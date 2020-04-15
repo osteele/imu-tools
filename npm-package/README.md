@@ -10,10 +10,10 @@ projects for information on how to configure the ESP32.
 Additional examples are in
 [osteele/imu-client-examples](https://github.com/osteele/imu-client-examples).
 
-## Usage
+## Usage – MQTT
 
-To use this, include the MQTT library in the header (between the `<head>` and
-the `</head>` tags) of the HTML file:
+To use this code with an MQTT broker, include the MQTT library in the header
+(between the `<head>` and the `</head>` tags) of the HTML file:
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/paho-mqtt@1.1.0/paho-mqtt.js"></script>
@@ -28,7 +28,7 @@ import { onSensorData } from "https://cdn.jsdelivr.net/npm/imu-tools/index.js";
 onSensorData((data) => console.info("sensor data:", data));
 ```
 
-## Connection Settings Control Panel
+### Connection Settings Control Panel
 
 By default, the web page connects to an MQTT broker running on the local machine,
 

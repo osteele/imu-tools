@@ -9,9 +9,20 @@ const PALETTE = ['red', 'green', 'blue', 'gray', 'orange', 'pink'];
 
 let sensorData = {};
 let ranges = {}; // sensor name => [min, max] observed range
+let freeze = false;
 
 export function setup() {
     createCanvas(windowWidth, windowHeight);
+
+    onSensorData(({ data }) => {
+        if (!freeze) sensorData = { ...data };
+    });
+    const button = createButton('Freeze');
+    button.position(100, 0);
+    button.mousePressed(() => {
+        freeze = !freeze;
+        button.elt.innerText = freeze ? 'Resume' : 'Freeze';
+    });
 }
 
 export function draw() {
@@ -33,21 +44,21 @@ export function draw() {
         const subgraphWidth = values.length * (BAR_WIDTH + 2);
         if (subgraphX + subgraphWidth > width) {
             subgraphX = 10;
-            subgraphY += SUBGRAPH_HEIGHT + 45;
+            subgraphY += SUBGRAPH_HEIGHT + 85;
         }
         push();
         translate(subgraphX, subgraphY);
 
         // update the range
-        drawBars(key, values, PALETTE[i % PALETTE.length]);
+        barChart(key, values, PALETTE[i % PALETTE.length]);
 
         pop();
         subgraphX += subgraphWidth + 50;
     });
 }
 
-function drawBars(key, values, barColor) {
-    const label = key[0].toUpperCase() + key.slice(1);
+function barChart(key, values, barColor) {
+    const label = capitalize(key);
 
     // update the running max and min from the new values
     let [min, max] = ranges[key] || [0, 0];
@@ -61,20 +72,29 @@ function drawBars(key, values, barColor) {
 
     fill(barColor);
     textSize(14);
-    text(label, 0, 0 + SUBGRAPH_HEIGHT + 40);
+    text(label, 0, SUBGRAPH_HEIGHT + 80);
+    textSize(9);
     values.forEach((v, i) => {
         const x = i * (BAR_WIDTH + 2);
         const yMid = SUBGRAPH_HEIGHT / 2 + 25;
         const height = (v * SUBGRAPH_HEIGHT) / 2 / Math.max(-min, max);
         rect(x, yMid - 0.5, BAR_WIDTH, 1);
         rect(x, yMid, BAR_WIDTH, height);
+        push();
+        translate(x, SUBGRAPH_HEIGHT + 40);
+        angleMode(DEGREES);
+        rotate(60);
+        text(formatPrecision(v), 0, 0);
+        pop();
     });
 }
 
+/** Capitalize the first letter, e.g. "euler" => "Euler" */
+function capitalize(str) {
+    return str && str[0].toUpperCase() + str.slice(1);
+}
+
+/** Format to two decimals, e.g. 123.345 => "123.45" */
 function formatPrecision(n) {
     return String(n).replace(/(\.\d\d)\d+/, '$1');
 }
-
-onSensorData(({ data }) => {
-    sensorData = { ...data };
-});

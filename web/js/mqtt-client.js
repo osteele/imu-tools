@@ -6,7 +6,7 @@ import { eulerToQuat, quatToEuler, quatToMatrix } from './utils.js';
 const STORAGE_KEY = 'imu-tools:mqtt-connection';
 
 const connectionSettings = {
-    hostname: 'localhost',
+    hostname: '',
     username: '',
     password: '',
     deviceId: '',
@@ -98,7 +98,8 @@ function setMqttConnectionStatus(message) {
 }
 
 function startSubscription() {
-    let hostname = connectionSettings.hostname || 'localhost';
+    let hostname = connectionSettings.hostname;
+    if (!hostname) return;
     let port = 15675;
     const useSSL = Boolean(hostname.match(/^wss:\/\//));
     hostname = hostname.replace(/^wss?:\/\//, '');

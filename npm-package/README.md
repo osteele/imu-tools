@@ -23,17 +23,24 @@ Add the following to `sketch.js` to import the `onSensorData` function, and use
 it to subscribe to sensor data:
 
 ```js
-import { onSensorData } from "https://cdn.jsdelivr.net/npm/imu-tools/index.js";
+import {
+  mqttConnect,
+  onSensorData,
+} from "https://cdn.jsdelivr.net/npm/imu-tools/index.js";
 
+mqttConnect({ hostname: "example.com" });
 onSensorData((data) => console.info("sensor data:", data));
 ```
 
+The `hostname` option to `mqttConnect` can also specify a port number:
+`"example.com:1877"`. The options may also include `username`, `password`, and
+`deviceid`. If `deviceId` is specified, only messages from the specified device
+are processed.
+
 ### Connection Settings Control Panel
 
-By default, the web page connects to an MQTT broker running on the local machine,
-
-This can be changed, by enabling a control panel that allows the user to specify
-the MQTT connection settings.
+The MQTT broker can be set by enabling a control panel that allows the user to
+specify the MQTT connection settings.
 
 Add the following to the HTML header:
 

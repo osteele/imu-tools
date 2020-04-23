@@ -1,7 +1,7 @@
 {
   "name": "imu-tools",
   "author": "Oliver Steele <steele@osteele.com> (https://osteele.com/)",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Web browser subscription to BLE and MQTT IMU sensor data",
   "license": "MIT",
   "main": "index.js",

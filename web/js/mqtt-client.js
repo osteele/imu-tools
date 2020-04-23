@@ -224,6 +224,10 @@ function onMessageArrived(message) {
     }
 
     function setDeviceData(data) {
+        if (data.eulerʹ && !data.euler) {
+            data = { euler: data.eulerʹ, ...data };
+            delete data.eulerʹ;
+        }
         deviceStates[data.deviceId] = data;
 
         onSensorDataCallbacks.forEach((callback) => {

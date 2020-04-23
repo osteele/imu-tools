@@ -98,7 +98,11 @@ def main(*, user, host, port, password, device_id, axis, message, continuous, ra
     client.on_log = True
     if user:
         client.username_pw_set(user, password=password)
-    client.connect(host, port)
+    try:
+        client.connect(host, port)
+    except ConnectionRefusedError as err:
+        print(err, f"connecting to {user}@{host}:{port}")
+        sys.exit(1)
 
     axes = list(map(int, axis.split(",")))
     samples = (

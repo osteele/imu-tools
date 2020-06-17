@@ -107,7 +107,7 @@ connected to a computer's serial port, to a local or remote MQTT broker.
 
 ## Viewing the Web Examples
 
-Run `./webserver` to start a web server.
+Run `./scripts/webserver` to start a web server.
 
 <http://127.0.0.1:8000> displays a directory of web pages in the `web` directory
 directory.

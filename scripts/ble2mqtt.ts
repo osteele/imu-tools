@@ -15,10 +15,12 @@ const LOG_MESSAGE_PUBLISH = false;
 
 const DEC = new TextDecoder();
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const mqttClient = mqtt.connect(MQTT_URL);
-const mqttConnectionPromise = new Promise(resolve => mqttClient.on("connect", resolve));
+const mqttConnectionPromise = new Promise((resolve) =>
+  mqttClient.on("connect", resolve)
+);
 
 // Run forever, scanning for BLE devices.
 async function requestDevices(
@@ -27,20 +29,20 @@ async function requestDevices(
   msBetweenScans = 1000
 ) {
   const seenDeviceIds = new Set();
-  const deviceFound = (device: BluetoothDevice, selectFn: () => void) =>
+  const deviceFound = (device: BluetoothDevice, _selectFn: () => void) =>
     !seenDeviceIds.has(device.id);
   const bluetooth = new Bluetooth({ deviceFound });
   while (true) {
     console.info("Scanning BLE...");
-    const device = await bluetooth.requestDevice(options).catch(err => {
+    const device = await bluetooth.requestDevice(options).catch((err) => {
       if (!err.match(/\bno devices found\b/)) throw err;
     });
     if (device) {
       const deviceId = device.id;
-      console.log(`Connected BLE device id=${deviceId}`);
+      console.log(`Connected to BLE device id=${deviceId}`);
       seenDeviceIds.add(deviceId);
       device.addEventListener("gattserverdisconnected", () => {
-        console.log(`Disconnected BLE device id=${deviceId}`);
+        console.log(`Disconnected from BLE device id=${deviceId}`);
         seenDeviceIds.delete(deviceId);
       });
       callback(device);
@@ -53,7 +55,7 @@ async function relayMessages(server: BluetoothRemoteGATTServer) {
   const { deviceName, deviceId } = await subscribeMacAddressService(server);
   console.log(`${deviceId}: ${deviceName}`);
   const notifier = await subscribeImuService(server);
-  notifier.listen(buffer => {
+  notifier.listen((buffer) => {
     const topic = `imu/${deviceId}`;
     let payload = Buffer.from(buffer);
     if (LOG_MESSAGE_PUBLISH) console.log("publish", topic, payload);
@@ -95,22 +97,31 @@ async function subscribeImuService(server: BluetoothRemoteGATTServer) {
   let calibrationView = await imuCalibrationChar.readValue();
   let calibrationValue = calibrationView.getUint8(0);
   await imuCalibrationChar.startNotifications();
-  imuCalibrationChar.addEventListener("characteristicvaluechanged", ({ target }) => {
-    const bleTarget = <BluetoothRemoteGATTCharacteristicEventTarget>(<unknown>target);
-    calibrationValue = bleTarget.value.getUint8(0);
-    console.log("calibration", calibrationValue);
-  });
+  imuCalibrationChar.addEventListener(
+    "characteristicvaluechanged",
+    ({ target }) => {
+      const bleTarget = <BluetoothRemoteGATTCharacteristicEventTarget>(
+        (<unknown>target)
+      );
+      calibrationValue = bleTarget.value.getUint8(0);
+      console.log("calibration", calibrationValue);
+    }
+  );
 
-  const imuSensorChar = await imuService.getCharacteristic(BLE_IMU_SENSOR_CHAR_UUID);
+  const imuSensorChar = await imuService.getCharacteristic(
+    BLE_IMU_SENSOR_CHAR_UUID
+  );
   const listeners = [];
   await imuSensorChar.startNotifications();
   imuSensorChar.addEventListener("characteristicvaluechanged", ({ target }) => {
-    const bleTarget = <BluetoothRemoteGATTCharacteristicEventTarget>(<unknown>target);
+    const bleTarget = <BluetoothRemoteGATTCharacteristicEventTarget>(
+      (<unknown>target)
+    );
     const { buffer } = bleTarget.value;
-    listeners.forEach(fn => fn(buffer));
+    listeners.forEach((fn) => fn(buffer));
   });
   return {
-    listen: (fn: (_: Buffer) => void) => listeners.push(fn)
+    listen: (fn: (_: Buffer) => void) => listeners.push(fn),
   };
 }
 
@@ -118,7 +129,7 @@ async function main() {
   await mqttConnectionPromise;
   console.log(`Connected to ${MQTT_URL}`);
   const options = { filters: [{ services: [BLE_IMU_SERVICE_UUID] }] };
-  await requestDevices(options, async device => {
+  await requestDevices(options, async (device) => {
     const server = await device.gatt.connect();
     relayMessages(server);
   });

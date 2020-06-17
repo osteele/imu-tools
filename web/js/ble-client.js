@@ -20,14 +20,8 @@ const onSensorDataCallbacks = [];
 /** Connect to a BLE device. */
 export async function connect() {
     const bleDevice = await navigator.bluetooth.requestDevice({
-        // FIXME: replace acceptAllDevices by filters
-        // filters: [{ services: [BLE_IMU_SERVICE_UUID] }],
-        acceptAllDevices: true,
-        optionalServices: [
-            BLE_IMU_SERVICE_UUID,
-            BLE_MAC_ADDRESS_SERVICE_UUID,
-            BLE_UART_SERVICE_UUID,
-        ],
+        filters: [{ services: [BLE_IMU_SERVICE_UUID] }],
+        optionalServices: [BLE_MAC_ADDRESS_SERVICE_UUID, BLE_UART_SERVICE_UUID],
     });
     const server = await bleDevice.gatt.connect();
     document.body.className += ' connected';

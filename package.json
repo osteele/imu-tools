@@ -5,10 +5,10 @@
   "main": "scripts/ble2mqtt.ts",
   "private": true,
   "dependencies": {
-    "mqtt": "^3.0.0",
-    "ts-node": "^8.5.4",
-    "typescript": "^3.7.4",
-    "webbluetooth": "^2.0.0"
+    "mqtt": "^4.1.0",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.5",
+    "webbluetooth": "^2.1.0"
   },
   "devDependencies": {},
   "scripts": {

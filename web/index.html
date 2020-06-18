@@ -13,13 +13,17 @@
             vertical-align: text-bottom;
         }
 
-        .device-id {
+        td.device-id {
             font-family: monospace;
             font-size: 12pt;
         }
 
         td input {
             font-size: 16px;
+        }
+
+        td .empty {
+            font-style: italic;
         }
     </style>
 
@@ -71,6 +75,6 @@
     src="./js/mqtt-client.js"></script>
 <script data-presets="es2015,stage-2" data-plugins="transform-es2015-modules-umd" type="text/babel"
     src="./js/imu-connection.js"></script>
-<script data-plugins="transform-es2015-modules-umd" type="text/jsx" src="./js/index.js"></script>
+<script data-plugins="transform-es2015-modules-umd" type="text/jsx" src="./js/dashboard.js"></script>
 
 </html>

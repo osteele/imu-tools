@@ -5,15 +5,13 @@ const { DateTime, Duration } = luxon;
 const deviceMap = {};
 
 onSensorData(({ device, data }) => {
-    const now = +new Date();
+    const now = new Date();
     const { deviceId } = device;
     const { receivedAt: timestamp } = data;
-    const timestamps = deviceMap[deviceId]
-        ? [
-              timestamp,
-              ...deviceMap[deviceId].timestamps.filter((ts) => ts > now - 1000),
-          ]
-        : [timestamp];
+    const timestamps = [
+        timestamp,
+        ...(deviceMap[deviceId] ? deviceMap[deviceId].timestamps : []),
+    ].filter((ts) => now - ts < 1000);
     deviceMap[deviceId] = { device, timestamp, timestamps };
 });
 
@@ -45,7 +43,7 @@ function App() {
                             key={deviceId}
                             isEditing={editDeviceId === deviceId}
                             setEditing={(flag) =>
-                                setEditDeviceId(flag && deviceId)
+                                setEditDeviceId(flag ? deviceId : null)
                             }
                         />
                     );
@@ -77,16 +75,13 @@ function Device({
                 {deviceId}
             </td>
             <td>
-                {device.deviceName ? (
-                    <Editable
-                        isEditing={isEditing}
-                        setEditing={setEditing}
-                        onChange={(name) => device.setDeviceName(name)}
-                        value={device.deviceName}
-                    />
-                ) : (
-                    <div>{device.deviceName}</div>
-                )}
+                <Editable
+                    editable={Boolean(device.setDeviceName)}
+                    isEditing={isEditing}
+                    setEditing={setEditing}
+                    onChange={(name) => device.setDeviceName(name)}
+                    value={device.deviceName}
+                />
             </td>
             <td>{frameRate}</td>
             <td>{ageString(DateTime.fromMillis(timestamp))}</td>
@@ -94,29 +89,35 @@ function Device({
     );
 }
 
-function Editable({ value, isEditing, setEditing, onChange }) {
-    function handleBlur({ target }) {
+function Editable({ value, editable, isEditing, setEditing, onChange }) {
+    function commitChange({ target }) {
         onChange(target.value);
         setEditing(false);
     }
     function handleKey({ key, target }) {
-        if (key === 'Enter') {
-            onChange(target.value);
-            setEditing(false);
-        }
-        if (key === 'Escape') {
-            setEditing(false);
+        switch (key) {
+            case 'Enter':
+                commitChange({ target });
+                break;
+            case 'Escape':
+                setEditing(false);
+                break;
         }
     }
     return isEditing ? (
         <input
             type="text"
             defaultValue={value}
-            onBlur={handleBlur}
+            onBlur={commitChange}
             onKeyUp={handleKey}
         />
     ) : (
-        <div onClick={() => setEditing(true)}>{value || '<default>'}</div>
+        <div
+            onClick={() => setEditing(editable)}
+            className={value ? '' : 'empty'}
+        >
+            {value || '<default>'}
+        </div>
     );
 }
 

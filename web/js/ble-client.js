@@ -1,9 +1,5 @@
 import { decodeSensorData } from './sensor-encoding.js';
 
-const BLE_UART_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-const BLE_UART_TX_CHAR_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
-const BLE_UART_RX_CHAR_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
-
 const BLE_MAC_ADDRESS_SERVICE_UUID = '709f0001-37e3-439e-a338-23f00067988b';
 const BLE_MAC_ADDRESS_CHAR_UUID = '709f0002-37e3-439e-a338-23f00067988b';
 const BLE_DEVICE_NAME_CHAR_UUID = '709f0003-37e3-439e-a338-23f00067988b';
@@ -17,65 +13,100 @@ const DEC = new TextDecoder();
 
 const onSensorDataCallbacks = [];
 
-/** Connect to a BLE device. */
+/** Connect to a BLE IMU peripheral. */
 export async function connect() {
     const bleDevice = await navigator.bluetooth.requestDevice({
+        // acceptAllDevices: true,
         filters: [{ services: [BLE_IMU_SERVICE_UUID] }],
-        optionalServices: [BLE_MAC_ADDRESS_SERVICE_UUID, BLE_UART_SERVICE_UUID],
+        optionalServices: [
+            BLE_IMU_SERVICE_UUID,
+            BLE_MAC_ADDRESS_SERVICE_UUID,
+        ],
     });
     const server = await bleDevice.gatt.connect();
     document.body.className += ' connected';
     bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
 
-    await subscribeUartService(server);
-    let {
-        deviceId,
-        deviceName,
-        setDeviceName,
-        deviceNameChangeNotifier,
-    } = await subscribeMacAddressService(server);
-    let imuDataNotifier = await subscribeImuService(server);
-
+    let { deviceId, deviceName, setDeviceName, deviceNameChangeNotifier } = await subscribeMacAddressService(server);
     const device = { deviceId, deviceName, setDeviceName, bleDevice };
-    deviceNameChangeNotifier.listen((name) => (device.deviceName = name));
-    imuDataNotifier.listen((data) => {
+    deviceNameChangeNotifier.listen(name => { device.deviceName = name });
+
+    let imuDataNotifier = await subscribeImuService(server);
+    imuDataNotifier.listen(data => {
         const record = {
             deviceId,
             device,
             data,
         };
-        onSensorDataCallbacks.forEach((fn) => fn(record));
+        onSensorDataCallbacks.forEach(fn => fn(record));
     });
 }
 
-async function subscribeMacAddressService(server) {
-    const macAddressService = await server.getPrimaryService(
-        BLE_MAC_ADDRESS_SERVICE_UUID
-    );
-
-    const deviceIdChar = await macAddressService.getCharacteristic(
-        BLE_MAC_ADDRESS_CHAR_UUID
-    );
-    const deviceId = DEC.decode(await deviceIdChar.readValue());
-
-    const deviceNameChar = await macAddressService.getCharacteristic(
-        BLE_DEVICE_NAME_CHAR_UUID
-    );
-    const deviceName = DEC.decode(await deviceNameChar.readValue());
-    const deviceNameChangeListeners = [];
-    const deviceNameChangeNotifier = {
-        listen: (fn) => deviceNameChangeListeners.push(fn),
-    };
-    async function setDeviceName(deviceName) {
-        await deviceNameChar.writeValue(ENC.encode(deviceName));
-        const newName = DEC.decode(await deviceNameChar.readValue());
-        deviceNameChangeListeners.forEach((fn) => fn(newName));
+async function subscribeServices(server, services) {
+    const result = {};
+    for (const entry of Object.entries(services)) {
+        const [serviceUuid, chars] = entry;
+        const service = await server.getPrimaryService(serviceUuid);
+        result[serviceUuid] = {};
+        for (const entry of Object.entries(chars)) {
+            const [charUuid, spec] = entry;
+            let { decoder, encoder, format } = spec;
+            switch (format) {
+                case 's':
+                    decoder = decoder || (value => DEC.decode(value));
+                    encoder = encoder || (value => ENC.encode(value));
+                    break;
+            }
+            decoder = decoder || (value => value);
+            encoder = encoder || (value => value);
+            const char = await service.getCharacteristic(charUuid);
+            const listeners = [];
+            let subscribed = false;
+            result[serviceUuid][charUuid] = {
+                async get() {
+                    const value = await char.readValue();
+                    return decoder(value);
+                },
+                async set(value) {
+                    await char.writeValue(encoder(value));
+                    const decoded = decoder(await char.readValue());
+                    listeners.forEach((fn) => fn(decoded));
+                },
+                async onChange(fn) {
+                    if (!subscribed && !char.properties.write) {
+                        subscribed = true;
+                        await char.startNotifications();
+                        char.addEventListener('characteristicvaluechanged', ({ target: { value } }) => {
+                            const decoded = decoder(value);
+                            listeners.forEach((fn) => fn(decoded));
+                        });
+                    }
+                    listeners.push(fn);
+                },
+            }
+        }
     }
+    return result;
+}
+
+async function subscribeMacAddressService(server) {
+    let {
+        [BLE_MAC_ADDRESS_SERVICE_UUID]: {
+            [BLE_MAC_ADDRESS_CHAR_UUID]: { get: deviceIdPromise },
+            [BLE_DEVICE_NAME_CHAR_UUID]: { get: deviceNamePromise, set: setDeviceName, onChange: deviceNameChangeNotifier },
+        }
+    } = await subscribeServices(server, {
+        [BLE_MAC_ADDRESS_SERVICE_UUID]: {
+            [BLE_MAC_ADDRESS_CHAR_UUID]: { format: 's' },
+            [BLE_DEVICE_NAME_CHAR_UUID]: { format: 's' },
+        },
+    });
+    let deviceId = await deviceIdPromise();
+    let deviceName = await deviceNamePromise();
     return {
-        deviceId,
-        deviceName,
-        setDeviceName,
-        deviceNameChangeNotifier,
+        deviceId, deviceName, setDeviceName, deviceNameChangeNotifier: {
+            listen: deviceNameChangeNotifier
+        }
     };
 }
 
@@ -98,67 +129,33 @@ const withConsoleErrors = (fn) => (args) => fn.apply(null, args);
  */
 
 async function subscribeImuService(server) {
-    const imuService = await server.getPrimaryService(BLE_IMU_SERVICE_UUID);
-    // console.info('imuService =', imuService);
-
-    const imuCalibrationChar = await imuService.getCharacteristic(
-        BLE_IMU_CALIBRATION_CHAR_UUID
-    );
-    let calibrationView = await imuCalibrationChar.readValue();
-    let calibration = calibrationView.getUint8(0);
-    await imuCalibrationChar.startNotifications();
-    imuCalibrationChar.addEventListener(
-        'characteristicvaluechanged',
-        ({ target }) => {
-            calibration = target.value.getUint8(0);
-            console.log('calibration', calibration);
+    let {
+        [BLE_IMU_SERVICE_UUID]: {
+            [BLE_IMU_CALIBRATION_CHAR_UUID]: { get: calibrationP, onChange: onCalibrationChange },
+            [BLE_IMU_SENSOR_CHAR_UUID]: { onChange: onSensorChange },
         }
-    );
-
-    const imuSensorChar = await imuService.getCharacteristic(
-        BLE_IMU_SENSOR_CHAR_UUID
-    );
-    const listeners = [];
-    await imuSensorChar.startNotifications();
-    imuSensorChar.addEventListener(
-        'characteristicvaluechanged',
-        ({ target }) => {
-            let data = decodeSensorData(target.value);
-            if (data) {
-                data = {
-                    receivedAt: +new Date(),
-                    calibration,
-                    ...data,
-                };
-                listeners.forEach((fn) => fn(data));
-            }
-        }
-    );
-    return {
-        listen: (fn) => listeners.push(fn),
-    };
-}
-
-/*
- * BLE UART service
- */
-
-async function subscribeUartService(server) {
-    const uartService = await server.getPrimaryService(BLE_UART_SERVICE_UUID);
-    const rxChar = await uartService.getCharacteristic(BLE_UART_RX_CHAR_UUID);
-    const txChar = await uartService.getCharacteristic(BLE_UART_TX_CHAR_UUID);
-    const transmit = (data) => txChar.writeValue(ENC.encode(data));
-    const ping = () => transmit('ping\n');
-
-    await rxChar.startNotifications();
-    rxChar.addEventListener('characteristicvaluechanged', ({ target }) => {
-        const msg = DEC.decode(target.value);
-        console.log('UART.Rx:', msg);
-        if (msg == 'ping') transmit('pong');
+    } = await subscribeServices(server, {
+        [BLE_IMU_SERVICE_UUID]: {
+            [BLE_IMU_CALIBRATION_CHAR_UUID]: { decoder: value => value.getUint8(0) },
+            [BLE_IMU_SENSOR_CHAR_UUID]: { decoder: decodeSensorData },
+        },
     });
-
-    return { transmit, ping };
+    let calibration = await calibrationP();
+    let listeners = [];
+    onCalibrationChange(value => calibration = value);
+    onSensorChange(data => {
+        if (data) {
+            data = {
+                receivedAt: +new Date(),
+                calibration,
+                ...data,
+            };
+            listeners.forEach((fn) => fn(data));
+        }
+    });
+    return { listen: fn => listeners.push(fn) }
 }
+
 
 /**
  * Register a callback that is applied to each sensor message.
@@ -176,7 +173,7 @@ export function onSensorData(callback) {
 function makeConnectionButton() {
     const button = document.createElement('button');
     button.id = 'bt-connection-button';
-    button.innerText = 'BLE Connect';
+    button.innerText = 'Connect Bluetooth';
     document.body.appendChild(button);
     return button;
 }

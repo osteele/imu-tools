@@ -36,25 +36,28 @@ code in this repository is also designed to work\ with
 
 ## Modes of Operation
 
-![](docs/img/local-mqtt.png) Local MQTT Gateway. An ESP32 connects via
-WiFi to an MQTT broker running on a developer laptop. A web app, such as a React
-or p5.js application, can connect to this broker to read the sensor data from
-all the IMUs on the network.
+![Diagram of connection to local MQTT](docs/img/local-mqtt.png) Local MQTT
+Gateway. An ESP32 connects via WiFi to an MQTT broker running on a developer
+laptop. A web app, such as a React or p5.js application, can connect to this
+broker to read the sensor data from all the IMUs on the network.
 
-![](docs/img/2providers.png). This architecture MQTT Gateway allows a
-web page to draw information from many MCUs.
+![Diagram of two IMUs connected to a single MQTT
+broker](docs/img/2providers.png). This architecture MQTT Gateway allows a web
+page to draw information from many MCUs.
 
-![](docs/img/2providers.png). It also allows several computers to subscribe to
-data from the same sensors. This is useful for an installation.
+![Diagram of two computers connected to a single MQTT
+broker](docs/img/2consumers.png). It also allows several computers to subscribe
+to data from the same sensors. This is useful for an installation.
 
-![](docs/img/cloud-mqtt.png). Remote MQTT Gateway. The same as above,
-but the MQTT gateway can run on a server with greater availability than a
-laptop. This has the advantage that multiple laptops can all subscribe to data
-from a fleet of sensors. It has the disadvantage that the development machine
-must be on the same LAN as the MQTT broker, or it must be remote for less
-security and greater latency than a local deployment.
+![Diagram of the MQTT broker running on its own node](docs/img/cloud-mqtt.png).
+Remote MQTT Gateway. The same as above, but the MQTT gateway can run on a server
+with greater availability than a laptop. This has the advantage that multiple
+laptops can all subscribe to data from a fleet of sensors. It has the
+disadvantage that the development machine must be on the same LAN as the MQTT
+broker, or it must be remote for less security and greater latency than a local
+deployment.
 
-![](docs/img/ble.png). Alternate ESP firmware, in
+![Diagram of Bluetooth connection](docs/img/ble.png). Alternate ESP firmware, in
 <https://github.com/osteele/Arduino-BLE-IMU>, which publishes sensor data via
 BLE instead of MQTT. This permits use at lower power levels, without WIFi, and
 without the need for an MQTT broker.
@@ -64,9 +67,10 @@ manually initiate each BLE connection each time the page is reloaded. This is a
 bother during development, and when working multiple devices. As a workaround,
 the system can also be used in the mode:
 
-![](docs/img/ble-relay.png). The BLE -> MQTT Relay is a
-command-line application that connects as a Central BLE device to IMU BLE
-Peripherals, and relays their sensor data to a (local or remote) MQTT broker.
+![Diagram of Bluetooth to MQTT relay](docs/img/ble-relay.png). The BLE -> MQTT
+Relay is a command-line application that connects as a Central BLE device to IMU
+BLE Peripherals, and relays their sensor data to a (local or remote) MQTT
+broker.
 
 The Serial -> MQTT Gateway that publishes information from an MCU that is
 connected to a computer's serial port, to a local or remote MQTT broker.
@@ -131,10 +135,13 @@ Follow the instructions in that repository to upload it to an ESP32.
 
 There are two means of using this data:
 
-1. In a browser. In Chrome, any of the demos (or a program that uses the
-   imu-tools npm package) will include a “BLE Connect". This opens the browser's
-   Bluetooth connection dialog. The button disappears once a device has been
-   connected; press the `b` key to connect a second (and third, etc.) device.
+1. In a [browser that supports Bluetooth](https://caniuse.com/web-bluetooth)
+   (e.g. Chrome or Edge; not Safari or Firefox). In Chrome, any of the demos (or
+   a program that uses the imu-tools npm package) will include a “Connect
+   Bluetooth" button. Clicking on this button opens the browser's Bluetooth
+   connection dialog. The button disappears once a device has been connected;
+   press the `b` key to bring up the connection dialog in order to connect to a
+   second (and third, etc.) device.
 2. Run the BLE->MQTT gateway.
    1. Once: in the command line, run `npm install`.
    2. Each time you start a development session: run `npm run ble2mqtt`.
